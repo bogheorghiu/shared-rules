@@ -7,6 +7,9 @@
 review and can ship to users before it is ready.
 
 - Branch from `dev` and open PRs against `dev`, never against `main`.
+- `dev` is unprotected, so a session may merge its own PR into `dev` without asking,
+  but only once CI is green on the PR's current head. Unprotected means nothing else
+  checks; green CI is the only gate.
 - Test thoroughly on `dev`: the CI suites run on every PR and on every push to `dev`
   (`.github/workflows/tests.yml`), and `tests/live/` covers behaviour end to end.
 - Merge `dev` into `main` only for a release, and only when the owner asks: a tested,
