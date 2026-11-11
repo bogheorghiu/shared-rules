@@ -150,6 +150,7 @@ def report(out):
 
 
 def main():
+    global CASES
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument("--arm", action="append", default=[],
@@ -161,7 +162,6 @@ def main():
     ap.add_argument("--cases", default=CASES, help="case file in this folder")
     ap.add_argument("--report", action="store_true")
     a = ap.parse_args()
-    global CASES
     CASES = a.cases
     out = os.path.join(HERE, a.out)
     os.makedirs(out, exist_ok=True)
