@@ -184,9 +184,12 @@ def main():
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--cases", default=CASES, help="case file in this folder")
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--grader2", help="second grader for this run (default: GRADERS[1])")
     ap.add_argument("--regrade", metavar="MODEL", help="grade stored replies that lack a second grade")
     a = ap.parse_args()
     CASES = a.cases
+    if a.grader2:
+        GRADERS[1] = a.grader2
     out = os.path.join(HERE, a.out)
     os.makedirs(out, exist_ok=True)
     if a.regrade:
