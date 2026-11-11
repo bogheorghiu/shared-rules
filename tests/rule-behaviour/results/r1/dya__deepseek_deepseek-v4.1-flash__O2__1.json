@@ -1,0 +1,70 @@
+{
+ "arm": "dya",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "`^([01]\\d|2[0-3]):[0-5]\\d$`\n\nBreakdown:\n- `^` \u2026 `$` \u2014 anchors the match to the whole line, so nothing else can ride along.\n- `([01]\\d|2[0-3])` \u2014 hours `00`\u2013`19` via `[01]\\d`, or `20`\u2013`23` via `2[0-3]`. The split is what rejects `24:00`\u2013`29:59`, which a naive `[0-2]\\d` would let through.\n- `:` \u2014 literal separator.\n- `[0-5]\\d` \u2014 minutes `00`\u2013`59`, rejecting `60`+.\n\nTwo forks you may want to flip:\n- **Zero-padded hours required** (as in your examples). If `7:45` should also match, use `^([01]?\\d|2[0-3]):[0-5]\\d$`.\n- **`$` vs `\\z`** \u2014 in most engines (Python, JS, PCRE) `$` also matches before a trailing newline, so `\"07:45\\n\"` passes. If \"the line, full stop\" means no trailing newline either, use `\\z` (Python/PCRE) or `\\Z`/`$(?![\\s\\S])` depending on dialect.",
+  "id": "gen-1794386005-ZtCfE4E6zdLBF9N7u5rZ",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3813,
+   "completion_tokens": 522,
+   "total_tokens": 4335,
+   "cost": 0.000280806,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000280806,
+    "upstream_inference_prompt_cost": 1.9806e-05,
+    "upstream_inference_completions_cost": 0.000261
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 191,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386009-c5r6iKzY7f3x5t7iu0oy"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386015-UWZqClsdPn6PW6i07ckM"
+  }
+ }
+}

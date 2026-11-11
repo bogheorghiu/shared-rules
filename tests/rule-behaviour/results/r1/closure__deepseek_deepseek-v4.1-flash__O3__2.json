@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "**Short version:** git can't find a common ancestor commit between the two branches, so it refuses to merge them. You have to tell it explicitly that combining two independent histories is what you actually want.\n\n## Why it happens\n\nA merge works by finding the **merge base** \u2014 the most recent commit both branches descend from \u2014 and replaying the changes since then. If there is no shared commit at all, there's no base, and git won't guess how to reconcile two histories that never met.\n\nCommon ways you end up there:\n\n- `git init` locally, make commits, then `git remote add origin <github-url>` where that remote **already has commits** (a README, a license, an initial commit from the web UI). Now your `main` and the remote's `main` share zero commits.\n- You're joining two projects that were each initialized separately (`git remote add` one into the other and try to merge).\n- A shallow clone (`--depth`) has truncated history so the base wasn't fetched.\n\n## The fix\n\nIf you genuinely want both histories combined:\n\n```\ngit pull origin main --allow-unrelated-histories\n# or, when merging directly:\ngit merge other-branch --allow-unrelated-histories\n```\n\nThe flag tells git to proceed as if the two histories shared an empty common ancestor. Expect conflicts \u2014 files that exist in both starting states (often the same README, `.gitignore`, etc.) will collide, and you resolve them by hand as in any merge.\n\n## Why you might *not* want that flag\n\nThe error is sometimes protecting you. `--allow-unrelated-histories` is right when you mean to fuse two real histories. It's the wrong tool when the situation is really:\n\n- **You wanted the remote's content to win, no history preserved** \u2014 then you don't want a merge at all. E.g. point at the remote and reset to it:\n  ```\n  git fetch origin\n  git reset --hard origin/main\n  ```\n  (This discards your local commits \u2014 only if that's the intent.)\n- **You committed before adding the remote and just want to layer on top** \u2014 rebase onto the remote instead of merging, if that reads cleaner to you:\n  ```\n  git pull --rebase origin main --allow-unrelated-histories\n  ```\n\nThe choice hinges on which history you intend to keep. If you tell me what you did right before hitting this \u2014 fresh `git init` plus an existing GitHub repo is the usual culprit \u2014 I can say which of these actually applies.",
+  "id": "gen-1794385889-fMbaoWriOix4ZLdNd12V",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4280,
+   "completion_tokens": 810,
+   "total_tokens": 5090,
+   "cost": 0.00042684,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00042684,
+    "upstream_inference_prompt_cost": 2.184e-05,
+    "upstream_inference_completions_cost": 0.000405
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 314,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you tell me what you did right before hitting this \u2014 fresh `git init` plus an existing GitHub repo is the usual culprit \u2014 I can say which of these actually applies.",
+    "none"
+   ],
+   "id": "gen-1794385900-ODO9IdCxkrulRnIpjrLi"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385901-t8wtNZTXryAvyAAjOCLR"
+  }
+ }
+}

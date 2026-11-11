@@ -1,0 +1,60 @@
+{
+ "arm": "dyb",
+ "case": "D6",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Fine as a stopgap \u2014 but `--runInBand` doesn't fix the interference, it removes the parallelism that let two test files overlap. Two different bugs hide behind it, and both come back the moment anything runs that project's tests concurrently:\n\n- **Shared external resource** \u2014 a hardcoded port, a fixture/temp file, a DB row or table, a lockfile. Collision needs two *processes*, so serializing cures the symptom and leaves the bug.\n- **Timing-sensitive assertion** \u2014 a `waitFor`/timeout that only trips when parallel workers contend for CPU. `--runInBand` gives it the whole machine, so it passes for the wrong reason.\n\nEither way, the next thing to trip is CI sharding (`--shard=1/2` runs in parallel again), a second jest invocation, or a teammate who runs `npx jest --maxWorkers=4` and bypasses the project config. Cheap check to tell the two apart: keep workers on and run just the suspect file alongside a handful of others \u2014 if the failure needs a *specific* partner file, it's the shared resource; if it fails against any load, it's timing. Then the fix lands on the actual culprit instead of the whole project's wall-clock.",
+  "id": "gen-1794386112-mAXPKyzu9WT0htg6icdX",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3893,
+   "completion_tokens": 1374,
+   "total_tokens": 5267,
+   "cost": 0.000706774,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3584,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000706774,
+    "upstream_inference_prompt_cost": 1.9774e-05,
+    "upstream_inference_completions_cost": 0.000687
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1188,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386128-Tkqq2vwOCFlCYJBYFsZs"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386146-A1RWaPILHhZAzu32GrKe"
+  }
+ }
+}

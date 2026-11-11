@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The `put` method is the likely leak. It stores every attempt under a key that includes `time.time()`, so each call adds a new entry and nothing removes it:\n\n```python\nself._d[(job_id, attempt, time.time())] = result\n```\n\nRetries and repeated puts for the same job never overwrite each other, so the dict grows without bound. `get` also scans the whole dict on every call, so lookups slow down as it grows.\n\nOne discrepancy: the `sed` output ends at line 80, but the snapshot points at `cache.py:88`, which wasn't printed. The `put` line is at 76 in the code shown, so either the file changed since the snapshot or the line numbers came from a different version. Before I rely on this, I want to confirm which code the running worker loaded and check how often `put` is called.\n\nTOOL: sed -n 84,92p worker/cache.py\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|_d\\b\" worker/ lib/ 2>/dev/null\nTOOL: git -C . log -1 --format='%H %cd' -- worker/cache.py\n\nOnce I see those results, I'll confirm which line allocates the 31 MiB and what calls `put` at the rate that produces 400k entries in ten minutes. Then the fix is a choice you need to make: a bounded policy such as keeping the last N attempts per job, or a TTL, instead of keeping every attempt forever. The \"keep every attempt for debugging\" comment suggests you want attempt history, so the right bound depends on how long you need it. Is that history used by anything beyond debugging, and how long after a job finishes does someone need to read it?",
+  "id": "gen-1794385132-T8QjDAlkpW65AdDepHZL",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1477,
+   "total_tokens": 6852,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001276,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.0007385
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 946,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The `put` method is the likely leak. It stores every attempt under a key that includes `time.time()`, so each call adds a new entry and nothing removes it"
+   ],
+   "id": "gen-1794385141-ap4CwlJdiJ5lV6rsYEt7"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The `put` method is the likely leak."
+   ],
+   "id": "gen-1794385146-SwdsV9iiVWQbMxvh2LuJ"
+  }
+ }
+}

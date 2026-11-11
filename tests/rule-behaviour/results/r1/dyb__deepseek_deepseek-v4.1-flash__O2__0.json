@@ -1,0 +1,70 @@
+{
+ "arm": "dyb",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```\n^(?:[01][0-9]|2[0-3]):[0-5][0-9]$\n```\n\nHow it maps to the request:\n\n- `[01][0-9]` covers `00`\u2013`19`; `2[0-3]` covers `20`\u2013`23` \u2014 together, exactly the valid hour range, no more.\n- `[0-5][0-9]` is exactly `00`\u2013`59` for the minutes.\n- `^` \u2026 `$` is what makes it \"nothing else on the line\" \u2014 without those it would match the time inside `\"meeting at 07:45 tomorrow\"`.\n\nTwo forks I decided, flagged so you can flip them:\n\n- **Leading zero is required.** Both your examples have it, and `07:45` is the usual 24-hour convention; if you also want `7:45`, use `^(?:[01]?[0-9]|2[0-3]):[0-5][0-9]$`.\n- **I used `[0-9]`, not `\\d`.** In Python (`re`) and some other flavors `\\d` also matches non-ASCII digits like `\u0664`, which you almost certainly don't want. If your engine is ASCII-only here, `^(?:[01]\\d|2[0-3]):[0-5]\\d$` is equivalent.\n\nOne engine caveat on the \"nothing else on the line\" part: in Perl/PCRE/Java, `$` matches at end of string *or* just before a final newline, so this would accept `\"07:45\\n\"`. If that matters, use `\\z` instead of `$` (Perl/PCRE/Java), or `\\Z` in Python \u2014 or just validate a line you've already stripped of its terminator.",
+  "id": "gen-1794386155-QmYdHDAfwia4WUjstU1U",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3805,
+   "completion_tokens": 745,
+   "total_tokens": 4550,
+   "cost": 0.000392002,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000392002,
+    "upstream_inference_prompt_cost": 1.9502e-05,
+    "upstream_inference_completions_cost": 0.0003725
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 297,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386162-nMnjXeL5qFp4JarSHlpO"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386167-A8jMWwdYsn5qZd5JFrcE"
+  }
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "Two things in that snippet, and only one of them is the leak.\n\n**The leak is the key.** `(job_id, attempt, time.time())` makes every `put` a distinct key, so repeated puts for the same `(job_id, attempt)` \u2014 retries, replays, the same job re-run \u2014 append instead of overwrite. Combined with no eviction, the dict only grows. That matches the 408k new entries at ~31 MiB.\n\n**The retention serves nothing as written.** `get` returns `hits[-1]`, the last-inserted value for a job. It never reads attempt 1 of 3, never reads anything but the newest. So \"keep every attempt for debugging\" buys a log's worth of data at the cost of unbounded RSS \u2014 a log is where that belongs, not a dict with no ceiling. If the why really is debugging, the fix is to log the attempts and keep one result.\n\nBefore I write the change, two checks:\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|cache\\.get(\" worker/ --include=*.py | head -40\n\nTOOL: grep -rln \"lru_cache\\|LRU\\|cachetools\\|OrderedDict\\|def put\\|class .*Cache\" worker/ lib/ --include=*.py\n\nWhy both: the first tells me whether `get` is ever called in a way that needs more than the newest result (if some caller wants an older attempt, keying by `job_id` alone would break it \u2014 the \"small diff that breaks a caller isn't small\" case). The second tells me whether a bounded cache already exists in this codebase, since reusing it beats writing a second one.",
+  "id": "gen-1794385831-QJYlwoi3x0GuLocBE3KF",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4626,
+   "completion_tokens": 1157,
+   "total_tokens": 5783,
+   "cost": 0.000601904,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 4352,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000601904,
+    "upstream_inference_prompt_cost": 2.3404e-05,
+    "upstream_inference_completions_cost": 0.0005785
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 853,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "Before I write the change, two checks: TOOL: grep -rn \"ResultCache\\|\\.put(\\|cache\\.get(\" worker/ --include=*.py | head -40"
+   ],
+   "id": "gen-1794385843-Oehvm3KJkUElPtf6yOpD"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "\u201cThe leak is the key\u201d and \u201clog the attempts and keep one result.\u201d"
+   ],
+   "id": "gen-1794385849-gmzYvL1HjFSSOL6bTiCw"
+  }
+ }
+}

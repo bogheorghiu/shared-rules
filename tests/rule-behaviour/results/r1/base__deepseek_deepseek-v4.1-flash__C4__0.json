@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "Confirmed, and the diff plus the source agree. Line 88 is the `put` store \u2014 that's your leak.\n\n**Root cause, two compounding facts:**\n\n1. **Unbounded growth.** `self._d` is a plain dict with no eviction. Every completed job appends an entry forever. `count=412034 (+408112)` over ten minutes \u2014 that's ~680 new entries/second, matching `size=31.2 MiB (+30.9 MiB)`. At 40 MB/hr steady-state against your RSS growth, this is the whole leak; the `handlers.py` and `json` deltas are downstream noise (results being held alive by this dict).\n\n2. **`time.time()` in the key defeats dedup.** `(job_id, attempt, time.time())` means every `put` for the same job+attempt creates a *distinct* key. So retries of attempt 1 pile up as separate entries, and `get` has to linear-scan them all and take `hits[-1]` to get the latest. Two symptoms from one line: the leak, and `get` degrading from O(1) to O(n) as `_d` grows.\n\n**Before I touch it, the fork that changes the fix** \u2014 the comment says *\"keep every attempt for debugging.\"* There's no stated reason for that, and it's the thing driving both facts above. Two roads:\n\n- **It's a cache** (the name and `get` say so): results only need the latest per `job_id`. Then the fix is a bounded store \u2014 key on `job_id` alone (or `job_id` \u2192 latest attempt), which kills both the unbounded growth *and* the O(n) scan in one move.\n- **It's a debug log of every attempt**: then it shouldn't live in a dict keyed by wall-clock time inside the process. It should be a file/log sink or an external store, so it doesn't ride in RSS at all. Which store is a real decision \u2014 I won't guess it.\n\nWhich is it \u2014 cache or retained history? And is there already a results store elsewhere in `worker/` this should be using instead of an in-process dict? (Rung 2 of the ladder: if the codebase already has one, that's the fix, not a new one.) Once you tell me, I'll write the least change that matches and nothing more.",
+  "id": "gen-1794385548-d5AAw6FRgBW8eYkYakJb",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3771,
+   "completion_tokens": 1137,
+   "total_tokens": 4908,
+   "cost": 0.000587798,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000587798,
+    "upstream_inference_prompt_cost": 1.9298e-05,
+    "upstream_inference_completions_cost": 0.0005685
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 641,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "Root cause, two compounding facts: 1. Unbounded growth. `self._d` is a plain dict with no eviction."
+   ],
+   "id": "gen-1794385562-5vzbGau58nbE4cFrwjSx"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "Line 88 is the `put` store \u2014 that's your leak."
+   ],
+   "id": "gen-1794385564-DESOppPQ1E95njRXuH1D"
+  }
+ }
+}

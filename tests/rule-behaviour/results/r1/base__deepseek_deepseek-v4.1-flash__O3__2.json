@@ -1,0 +1,70 @@
+{
+ "arm": "base",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "**It means: Git won't join two branches that share no common ancestor commit.**\n\nA merge is defined as \"take two lines of history and combine them at their fork point.\" Git finds that fork point by walking both branches' commit parents back until they meet. If they never meet \u2014 the two histories were created independently, so there's no commit they both descend from \u2014 Git has no place to put the merge base. Rather than guess, it stops.\n\nThe refusal is a **safety default** (added in Git 2.9, 2016): merging unrelated histories is almost always an accident, and the merge it would produce is enormous and messy because *every* file looks like it was added on both sides.\n\n**Usual causes**\n\n- `git init` inside a directory that already had files, then `git pull` from a real remote \u2014 your local \"initial commit\" has nothing to do with the remote's history.\n- Two repos (or a repo and a fork with rewritten history) that were started separately, now being pulled into one another.\n- Fetching the wrong remote after `git init`.\n\n**What to do \u2014 depends on which you meant:**\n\n- You genuinely want to concatenate the two histories (e.g. joining two separate project repos):\n  `git merge --allow-unrelated-histories <branch>`\n  Expect conflicts, and a one-commit merge bridging the two roots.\n\n- You *didn't* mean that \u2014 the more common case. You wanted the **remote's** history, and your local commits are junk. Don't merge; replace:\n  ```\n  git remote add origin <url>      # if not already set\n  git fetch origin\n  git reset --hard origin/main     # discards the stray local commit\n  ```\n  (Or just `git clone` into a fresh directory and move your uncommitted work over.)\n\nThe error is Git asking you to state which of those you meant, because the two are not interchangeable and picking wrong is expensive to undo.",
+  "id": "gen-1794385745-qiJzNUu3MV7bsVfsVfYj",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3425,
+   "completion_tokens": 740,
+   "total_tokens": 4165,
+   "cost": 0.000387478,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000387478,
+    "upstream_inference_prompt_cost": 1.7478e-05,
+    "upstream_inference_completions_cost": 0.00037
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 368,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385754-aI2g3nuuY7NWCOMwy8fF"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385755-3M1nQVvlNbjPA8AspdGT"
+  }
+ }
+}

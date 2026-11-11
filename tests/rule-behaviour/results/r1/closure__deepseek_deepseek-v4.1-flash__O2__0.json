@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```\n^(?:[01]\\d|2[0-3]):[0-5]\\d$\n```\n\nWhy these choices:\n\n- `[01]\\d|2[0-3]` for the hour \u2014 accepts `00`\u2013`23`, rejects `24`\u2013`29`. `24:00` is not a valid 24-hour clock reading, so it's excluded; if your source uses `24:00` for midnight-end, add `|24:00` explicitly rather than loosening the class.\n- `[0-5]\\d` for the minutes \u2014 rejects `07:60`.\n- Leading zero is **required**, since both your examples have one (`07:45`, not `7:45`). If you need to accept both, change the hour group to `(?:[01]?\\d|2[0-3])`.\n- `^\u2026$` enforces \"nothing else on the line\".\n\nOne caveat on the anchoring, because that's the part that bites: in Python (and some other engines) `$` also matches just before a trailing newline, so `\"23:59\\n\"` would pass. If \"nothing else on the line\" must be exact, use `\\A(?:[01]\\d|2[0-3]):[0-5]\\d\\Z` in Python (or `re.fullmatch` with the body unanchored), or `^(?:[01]\\d|2[0-3]):[0-5]\\d$` in JavaScript without the `m` flag, where `$` means true end of input.",
+  "id": "gen-1794385871-FBrD9LDoMmfPuUkrzFDT",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4295,
+   "completion_tokens": 884,
+   "total_tokens": 5179,
+   "cost": 0.00044809,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00044809,
+    "upstream_inference_prompt_cost": 9.449e-05,
+    "upstream_inference_completions_cost": 0.0003536
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 543,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385890-R0jCFDEgv7oONaluGqYy"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385893-TQsGZC7HBtWq1EidGdQY"
+  }
+ }
+}

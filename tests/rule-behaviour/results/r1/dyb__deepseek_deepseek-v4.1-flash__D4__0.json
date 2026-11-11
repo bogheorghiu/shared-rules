@@ -1,0 +1,65 @@
+{
+ "arm": "dyb",
+ "case": "D4",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "yes",
+  "no"
+ ],
+ "reply": {
+  "text": "The 20-minute wait in the runbook only says \"wait\" \u2014 it doesn't say *what for*. Before deleting it I want to know what it was absorbing: the export's own runtime, a background/async write, or some other consumer of `/tmp/out.csv` that lands later. If `export.sh` blocks and the file is complete on exit, the wait is pure dead time and your change is right; if it's absorbing something else, \"2 minutes these days\" could be measuring the wrong thing and deleting the wait would start copying a partial file.\n\nCheapest test first: read the script.\n\nTOOL: cat export.sh\nTOOL: git log --oneline -20 -- export.sh docs/runbook.md\nTOOL: grep -rn \"out.csv\\|export.sh\" . --include=*.sh --include=*.md --include=*.py -l",
+  "id": "gen-1794386081-pNyEIhGF4UyMUIo0dAFM",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3866,
+   "completion_tokens": 1056,
+   "total_tokens": 4922,
+   "cost": 0.000547612,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3584,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000547612,
+    "upstream_inference_prompt_cost": 1.9612e-05,
+    "upstream_inference_completions_cost": 0.000528
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 927,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "The 20-minute wait in the runbook only says \"wait\" \u2014 it doesn't say *what for*.",
+    "none"
+   ],
+   "id": "gen-1794386092-bOTQGM03nPtRnst22ggP"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "it doesn't say what for",
+    "Before deleting it I want to know what it was absorbing"
+   ],
+   "id": "gen-1794386094-QYJZG6zPHLcP6N8Li4ea"
+  }
+ }
+}

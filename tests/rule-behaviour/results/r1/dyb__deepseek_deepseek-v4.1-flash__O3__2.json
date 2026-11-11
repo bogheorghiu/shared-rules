@@ -1,0 +1,70 @@
+{
+ "arm": "dyb",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "That's Git refusing a `merge` (or `pull`) because the two branches have **no common ancestor commit** \u2014 their histories are completely disjoint, so Git can't find a base to merge from.\n\n## Why it happens\n\nGit merges by finding the common ancestor of the two tips and replaying the changes since then. If there's no shared commit at all, there's no \"since then\" \u2014 the two histories are literally unrelated trees. Common causes:\n\n- You `git init`'d a repo locally and are now pulling from a remote that already had commits (e.g. a README/LICENSE created on GitHub).\n- Two repos were combined, or a repo was re-created from scratch.\n- You're merging a branch that was imported from a different project.\n\n## What to do\n\n**If you want to combine them and keep both histories** (the usual fix):\n\n```bash\ngit pull --allow-unrelated-histories origin main\n# or, for a local merge:\ngit merge --allow-unrelated-histories <branch>\n```\n\nThis tells Git \"yes, I know they're unrelated \u2014 just merge them anyway.\" You'll likely get conflicts to resolve, then commit.\n\n**If the remote is the real history and your local work is just a fresh start**, you may instead want to rebase your local commits on top of the remote:\n\n```bash\ngit pull --rebase origin main\n```\n\n**If you actually want to discard one side**, reset to the one you want to keep rather than merging.\n\n## The thing to check first\n\nBefore forcing the merge, confirm *which* history you actually want to preserve \u2014 `--allow-unrelated-histories` will happily glue together two projects that were never meant to be one repo. Look at both sides:\n\n```bash\ngit log --oneline --graph --all -20\n```\n\nIf the two sides are genuinely the same project that got re-initialized, the flag is right. If they're different projects, you probably want to stop and decide which repo this should be, rather than merging.",
+  "id": "gen-1794386166-Bzr6vgiYfTqgiJS0LMKy",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3790,
+   "completion_tokens": 441,
+   "total_tokens": 4231,
+   "cost": 0.000204484,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000204484,
+    "upstream_inference_prompt_cost": 2.8084e-05,
+    "upstream_inference_completions_cost": 0.0001764
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 19,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386176-LnUiudx00lbiEUneo11i"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386181-ewXM02yr59YOhqrXxuaR"
+  }
+ }
+}

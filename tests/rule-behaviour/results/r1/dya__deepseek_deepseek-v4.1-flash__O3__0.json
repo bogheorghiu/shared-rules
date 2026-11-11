@@ -1,0 +1,70 @@
+{
+ "arm": "dya",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "That's Git telling you it won't merge two branches that have **no common ancestor commit**.\n\n## What Git is checking\n\nBefore merging, Git looks for the commit that both histories share \u2014 the common ancestor it would use as the merge base. It does this by comparing the commit graphs. If the two branches share *no* commit at all, there's no base to diff against, so Git can't compute a three-way merge and refuses rather than guess.\n\nIt's not an error about the files. It's an error about the graphs.\n\n## How you get here\n\nThe usual cases:\n\n- `git init` in a directory, commit some work, then `git remote add` a GitHub repo that already has commits (with its own README, license, etc.). Two independent histories.\n- `git pull` on a repo whose history was rewritten, or a fork whose root commits were re-created.\n- Merging a repo that was imported from another VCS, or a repo where the initial commit was re-made instead of cloned.\n\n## What to do\n\nPick based on **whose history you meant to keep** \u2014 that's the real decision; the command is downstream of it.\n\n**The remote is the truth and your local work is a fresh add-on:**\n```bash\ngit pull origin main --allow-unrelated-histories\n```\nThis is exactly what the flag is for: merge two independent graph roots, keeping both histories. You resolve conflicts as normal.\n\n**You want the remote's history, and your local commits were a mistake:**\n```bash\ngit fetch origin\ngit reset --hard origin/main\n```\nDestroys local commits \u2014 check `git log` first.\n\n**You're pushing and this is a fresh repo you intend to replace the remote's history:**\n```bash\ngit push origin main --force\n```\nAlso destructive to whatever was on the remote, and to anyone who pulled it.\n\n## One caution\n\n`--allow-unrelated-histories` is safe and non-destructive \u2014 it just permits the merge. The thing to be careful with is the ambiguity *before* it: if you're seeing this because you cloned a repo and then re-initialized over it, running the flag can silently create a doubled history where every file exists in two lineages. Run `git log --oneline --all --graph` first and confirm you're looking at two roots you actually want joined.",
+  "id": "gen-1794386019-jdAg3NbTO2wiXl2DeWd1",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3798,
+   "completion_tokens": 548,
+   "total_tokens": 4346,
+   "cost": 0.00029346,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00029346,
+    "upstream_inference_prompt_cost": 1.946e-05,
+    "upstream_inference_completions_cost": 0.000274
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 61,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386026-Sw2mVgvKTbFV9JdpFWg9"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386050-Yy7eIohwzSy3bJjB6VsL"
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "arm": "dyb",
+ "case": "D2",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "```python\ndef dedupe_by_id(records):\n    \"\"\"Dedupe dicts by 'id': keep the last occurrence, ordered by first appearance.\"\"\"\n    return list({r[\"id\"]: r for r in records}.values())\n```\n\nThe one non-obvious thing this leans on, so you don't assume it's a bug: **re-assigning an existing key in a dict updates the value without moving the key.** So `{r[\"id\"]: r ...}` inserts each id at its *first* appearance position, then each later occurrence overwrites the *value* in place. `.values()` therefore yields last-occurrence values in first-appearance order \u2014 exactly the two requirements, with no separate order bookkeeping.\n\nWorked check:\n\n```python\nrecords = [{\"id\": 1, \"v\": \"a\"},\n           {\"id\": 2, \"v\": \"b\"},\n           {\"id\": 1, \"v\": \"c\"}]\ndedupe_by_id(records)\n# -> [{'id': 1, 'v': 'c'}, {'id': 2, 'v': 'b'}]\n#    id 1 keeps 'c' (last), id 2 keeps its place; order is 1, 2 (first appearances)\n```\n\nTwo things I deliberately did **not** add, because the request doesn't ask for them \u2014 say the word if you want either:\n\n- No `key=` parameter or missing-`id` guard: it indexes `r[\"id\"]` directly, so a record without `\"id\"` raises `KeyError`.\n- No input copy: it builds a new list, but the dict *objects* are shared with the input (fine if you don't mutate them afterward; otherwise it's the last-occurrence objects you get by reference).",
+  "id": "gen-1794386053-PG023eEAgY47woQxkfZf",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3812,
+   "completion_tokens": 1087,
+   "total_tokens": 4899,
+   "cost": 0.000563044,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000563044,
+    "upstream_inference_prompt_cost": 1.9544e-05,
+    "upstream_inference_completions_cost": 0.0005435
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 749,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386064-GGVX2TMLrJedxStBTbhK"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

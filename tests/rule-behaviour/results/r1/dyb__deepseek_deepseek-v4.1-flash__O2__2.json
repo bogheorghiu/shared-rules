@@ -1,0 +1,70 @@
+{
+ "arm": "dyb",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```\n^(?:[01][0-9]|2[0-3]):[0-5][0-9]$\n```\n\n**Why each piece:**\n\n- `^(?: ... )$` anchors the whole line \u2014 that's the \"nothing else on the line\" requirement. The group is non-capturing since you didn't ask to extract anything.\n- `[01][0-9]` covers `00`\u2013`19`; `2[0-3]` covers `20`\u2013`23`. The alternation exists to avoid the tempting `[0-2][0-9]`, which wrongly admits `24`\u2013`29`.\n- `[0-5][0-9]` bounds minutes to `00`\u2013`59`.\n- Scope is midnight-to-`23:59`: I read your `23:59` example as the ceiling, so `24:00` is excluded. If your source data uses `24:00` for end-of-day, say so and I'll add it.\n\n**One flavor caveat, because it changes whether the regex actually matches your intent:** in Python, `$` also matches immediately before a trailing newline, so `\"07:45\\n\"` would match even though it has an extra character. If you need the string to be *exactly* the time:\n\n- Python: `\\A(?:[01][0-9]|2[0-3]):[0-5][0-9]\\Z`, or just use `re.fullmatch(...)` and drop the anchors.\n- PCRE: `\\A...\\z`.\n- JavaScript: `^...$` is already strict (JS `$` doesn't allow a trailing newline unless the `m` flag is set).\n\n`^`/`$` also require the `m` flag (or per-line iteration) if you're scanning a multi-line blob rather than testing one string.",
+  "id": "gen-1794386161-1phHa73nB0xu5YFZ5w7k",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3805,
+   "completion_tokens": 1106,
+   "total_tokens": 4911,
+   "cost": 0.000572502,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000572502,
+    "upstream_inference_prompt_cost": 1.9502e-05,
+    "upstream_inference_completions_cost": 0.000553
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 596,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386171-CkQQQQDLQrfQk34YxxW0"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386192-IIZ3N1H01iVfLM0yjMos"
+  }
+ }
+}

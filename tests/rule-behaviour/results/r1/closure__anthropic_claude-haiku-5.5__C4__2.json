@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. Each call adds a new key, `(job_id, attempt, time.time())`, and nothing ever removes entries. The `time.time()` component makes every key unique, so even a retry of the same job and attempt adds a new entry instead of replacing one. That matches the snapshot: about 408k new entries in ten minutes, with the bytes held by the dict growing with them.\n\nThere's a design question before fixing it. The comment says \"keep every attempt for debugging,\" so that retention was deliberate. Some options:\n\n1. **Bounded per-job history.** Keep the last N attempts per `job_id` and drop the rest. This keeps recent debugging data and caps memory at roughly N \u00d7 active jobs.\n2. **Time-based eviction.** Drop entries older than some TTL, such as one hour. Memory stays bounded by throughput times TTL.\n3. **Drop the debug retention.** Keep only the latest result per `job_id`. This is the smallest change, but you lose the attempt history.\n4. **Move debug history out of process.** Write attempts to a log or external store and keep only the latest result in memory.\n\nAlso, `get()` scans the whole dict on every call, so it gets slower as the cache grows. Any fix should index by `job_id` so lookups stay cheap.\n\nWhich retention policy do you want? If the attempt history isn't needed in memory, option 3 or 4 is the simplest. If it is, option 1 is the usual compromise. Once you pick, I'll make the change and write down the acceptance criterion before running anything. The criterion would be: with the same workload and the same 20-minute tracemalloc window, `worker/cache.py:88` stops growing and RSS slope drops to roughly flat, measured from the snapdiff output and RSS samples, not from a summary.",
+  "id": "gen-1794385283-E84MU4lYNpltS2Y06L1b",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6563,
+   "completion_tokens": 1101,
+   "total_tokens": 7664,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012068,
+    "upstream_inference_prompt_cost": 0.0006563,
+    "upstream_inference_completions_cost": 0.0005505
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 513,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call adds a new key, `(job_id, attempt, time.time())`, and nothing ever removes entries."
+   ],
+   "id": "gen-1794385289-AoNXYFnIcYo4dNG9o6ZF"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`... Some options:"
+   ],
+   "id": "gen-1794385308-vvsD8uIfUQCQKWEYSlEC"
+  }
+ }
+}

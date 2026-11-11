@@ -1,0 +1,70 @@
+{
+ "arm": "dyb",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "## What the error means\n\nGit merges by finding the **merge base** \u2014 the most recent commit both branches share. With that common ancestor, it can see what changed on each side and combine them.\n\n\"Unrelated histories\" means git found **no common ancestor at all**. The two histories are disjoint trees \u2014 as far as git can tell, they're two different projects. This happens when:\n\n- You `git init` a new repo and add a remote that already has commits, then try to merge/pull.\n- `git checkout --orphan` was used, or someone squashed and re-created the history.\n- The remote's history was replaced (force-push onto a rebuilt root), so your local branch no longer descends from anything there.\n\n## Why git refuses instead of just merging\n\nBecause with no shared ancestor, everything on both sides looks \"added,\" and the merge result would be an arbitrary union of two filesets \u2014 including two parallel `README`s, two `src/` trees, duplicate lockfiles. Historically that silent union was almost always an accident, so git made it an explicit opt-in. The refusal is a guard against merging two unrelated projects by mistake, not a technical impossibility.\n\n## What to do\n\n**First, decide which case you're in** \u2014 the answer differs:\n\n1. **Intended: they really are one project** (e.g., you're joining a local repo to a remote that was seeded separately, or merging two repos on purpose).\n   ```bash\n   git pull --allow-unrelated-histories origin main\n   ```\n   Expect conflicts; resolve them looking at *content*, since there's no base to diff against.\n\n2. **Unintended: your local repo is a fresh throwaway.** Don't merge \u2014 throw your history away and start from the remote:\n   ```bash\n   git fetch origin\n   git reset --hard origin/main     # or: git checkout -b main origin/main\n   ```\n   (`git reset --hard` discards uncommitted work \u2014 stash or commit first.)\n\n3. **You're pushing, not pulling, and see this on the remote side** \u2014 the remote has commits you don't. Fetch and inspect before choosing 1 or 2; don't reflexively reach for the flag.\n\nThe flag is also worth pausing on for a second reason: it's a common way people accidentally produce a repo whose history has two roots, which is annoying for everyone downstream. If case 1 is real, it's correct; if it's drift (case 2), merging it hides the actual problem.\n\nIf you tell me the actual commands you ran (or let me look at `git log --oneline --graph --all` and `git remote -v`), I can say which case you're in rather than laying out all three.",
+  "id": "gen-1794386149-uQLKPWBpfRQitY9AmKHN",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3790,
+   "completion_tokens": 817,
+   "total_tokens": 4607,
+   "cost": 0.000427912,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000427912,
+    "upstream_inference_prompt_cost": 1.9412e-05,
+    "upstream_inference_completions_cost": 0.0004085
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 286,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you tell me the actual commands you ran (or let me look at `git log --oneline --graph --all` and `git remote -v`), I can say which case you're in",
+    "none"
+   ],
+   "id": "gen-1794386159-Tz73JSNyy45KP8AxTWOX"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386182-LgJU3GnUAMrs5nRKR6RH"
+  }
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "arm": "dya",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```\n^(?:[01]\\d|2[0-3]):[0-5]\\d$\n```\n\n**Why each part** (the why is what lets you adjust it):\n\n- `[01]\\d | 2[0-3]` \u2014 hours 00\u201319 and 20\u201323. Can't use `\\d\\d`; that would accept `25:00`. Can't use `[0-2]\\d`; that would accept `29:00`.\n- `:[0-5]\\d` \u2014 minutes 00\u201359, rejects `07:60`.\n- `^...$` \u2014 the \"nothing else on the line\" requirement. Without these it happily matches inside `meeting at 07:45 in room 3`, and a matcher that scans for substrings would return `07` from `0700`.\n\n**Two flavors of anchoring, if it matters to you:**\n\n- `$` in Python matches before a trailing newline, so `\"07:45\\n\"` passes. Use `\\Z` (Python/PCRE) if you need the newline rejected too: `^(?:[01]\\d|2[0-3]):[0-5]\\d\\Z`.\n- In Python use `re.fullmatch` (or `\\Z`) rather than `re.match`, which anchors only the start.\n\n**If you also want to accept `7:45`** (single-digit hour), swap the hour group for `(?:[01]?\\d|2[0-3])`. I left it out because both your examples carry the leading zero \u2014 say the word if the single-digit form is legal input, since that's the one place this regex is a guess.",
+  "id": "gen-1794386005-ro5s8oqdgbPAkhScqg6l",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3813,
+   "completion_tokens": 925,
+   "total_tokens": 4738,
+   "cost": 0.000482306,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000482306,
+    "upstream_inference_prompt_cost": 1.9806e-05,
+    "upstream_inference_completions_cost": 0.0004625
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 474,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "say the word if the single-digit form is legal input",
+    "none"
+   ],
+   "id": "gen-1794386015-Oy05YlMG1wnbxYl7GU6a"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386017-JpelYdBEukj7No1eXoc4"
+  }
+ }
+}

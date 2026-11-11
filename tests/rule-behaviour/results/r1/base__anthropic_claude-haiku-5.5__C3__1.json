@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "The two commands do similar things, a single commit that contains a branch's changes, but they operate on different histories.\n\n**`git merge --squash <branch>`** brings another branch's changes into your current branch.\n\n- It stages all of that branch's changes as one set in your index and does **not** commit. You run `git commit` yourself to create the single commit.\n- The result has no link to the source branch's commits. Git doesn't record a merge parent, so it doesn't know those commits were integrated.\n- Your current branch's history is untouched; you only add one new commit on top.\n- This is the usual way to fold a feature branch into `main` as one commit when you don't want a merge commit.\n\n**Interactive rebase with squash** (`git rebase -i`) rewrites commits on your own branch.\n\n- You mark commits as `squash` or `fixup` in the editor, and Git replaces those commits with combined ones. You can also reword, reorder, or drop commits.\n- It changes the commit history of the branch you're on, so the old commit hashes disappear.\n- If you've already pushed the branch, you'll need `git push --force-with-lease` afterward, and anyone else working on it has to coordinate with you.\n- It's for cleaning up your work before it's shared, such as folding \"fix typo\" and \"oops\" commits into the commits they belong to.\n\n**Practical differences**\n\n| | `merge --squash` | `rebase -i` squash |\n|---|---|---|\n| Operates on | Another branch's changes, brought into yours | Commits on your current branch |\n| Rewrites existing history | No | Yes |\n| Creates the commit | You do, manually, after staging | Git does, during the rebase |\n| Records that the branch was integrated | No | N/A |\n| Typical use | Land a feature branch as one commit | Tidy your branch before review or merge |\n\n**A gotcha with `merge --squash`:** because Git doesn't record the merge, if you later merge that same feature branch again (for example, to pick up new work on it), Git may try to re-apply commits that were already squashed in and produce conflicts or duplicate changes. Delete the feature branch after the squash, or merge only the new commits, to avoid this.",
+  "id": "gen-1794385125-DPGW8wnKoMwEF3Yyj0DE",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4895,
+   "completion_tokens": 1116,
+   "total_tokens": 6011,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010475,
+    "upstream_inference_prompt_cost": 0.0004895,
+    "upstream_inference_completions_cost": 0.000558
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 416,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385131-1oEIDaWQu2T60FOCM5Hu"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385132-Rc9iRFm0lYxbNvqVfE5i"
+  }
+ }
+}

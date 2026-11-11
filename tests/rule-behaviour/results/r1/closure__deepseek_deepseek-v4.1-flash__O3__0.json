@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "Git is refusing to run a `merge` (usually triggered by `git pull`) because the two histories it's being asked to combine have **no common ancestor commit** \u2014 no shared starting point to merge from.\n\n## Why it's an error at all\n\nA merge needs a *merge base*: the last commit both sides descend from. Git walks both histories, finds no meeting point, and stops rather than guessing.\n\n```\ngit merge-base HEAD origin/main   # prints nothing = unrelated histories\n```\n\nWait \u2014 actually, `--allow-unrelated-histories` isn't a git flag. Let me not assert from memory: it is a flag on `git merge` (and `git pull`/`git rebase` pass it through), added in Git 2.9. I'm confident of that, but the point is to check `git merge --help | grep allow-unrelated-history` if it's rejected.\n\n## What usually caused it\n\n- You ran `git init` in a project that already existed (or copied files into a fresh repo) and are now trying to pull/merge the real upstream.\n- You're merging two genuinely separate repositories.\n- An orphan branch (`git checkout --orphan`), e.g. a docs-only branch.\n- A shallow or grafted clone, where the connecting history wasn't fetched.\n\n## What to do\n\n**If the histories really are unrelated and you want both:**\n\n```\ngit pull origin main --allow-unrelated-histories\n```\n\nExpect conflicts, often \"both added\" on every file that exists in both trees.\n\n**If you actually just want the remote's history** \u2014 which is the common case for the `git init` mistake \u2014 don't merge. Point the branch at the remote and reset:\n\n```\ngit fetch origin\ngit reset --hard origin/main\n```\n\nThat discards your local commits, so check them first (`git log --oneline`, and stash anything worth keeping).\n\n**If you're sitting in the wrong repo entirely**, re-clone.\n\nWhich of those fits? The fix is opposite depending on whether your local commits are real work or just an accidental `git init`, and I'd rather not pick for you.",
+  "id": "gen-1794385879-i4MNTf4MZsy9qtpr7qPh",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4280,
+   "completion_tokens": 904,
+   "total_tokens": 5184,
+   "cost": 0.00047384,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00047384,
+    "upstream_inference_prompt_cost": 2.184e-05,
+    "upstream_inference_completions_cost": 0.000452
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 496,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "Which of those fits? The fix is opposite depending on whether your local commits are real work or just an accidental `git init`, and I'd rather not pick for you.",
+    "none"
+   ],
+   "id": "gen-1794385888-EqfPHFPpH0FiF1WFB2vT"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "Which of those fits?",
+    "none"
+   ],
+   "id": "gen-1794385892-sqk7Y8AOMSMM1G2kSteW"
+  }
+ }
+}

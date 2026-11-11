@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "## What it means\n\nGit merges by walking both commit chains back to their **common ancestor**. That ancestor is what makes a merge a merge \u2014 Git uses it to decide which side changed what.\n\n`refusing to merge unrelated histories` means Git found **no common ancestor at all**. The two histories are disjoint: neither side is a descendant of the other, and they don't share any commit. Git treats that as a mistake worth stopping on, because the usual causes are ones where a merge is not what you want.\n\n## The usual causes\n\n- You ran `git init` locally, made commits, then tried to `git pull` a remote that already has its own commits. Two independent root commits exist.\n- A repo was re-created/re-initialized (fresh `git init`, new first commit) while the old clone or remote still has the original history.\n- You're genuinely merging two separate projects that were never related (e.g. `git merge other-project`).\n\nBefore this got a flag (Git 2.9), the merge just happened silently and people got confused repos. The error is Git asking \"are you sure?\".\n\n## The fixes, by intent\n\n**You meant to join them** (e.g. adding a remote's history to your fresh local repo):\n\n```\ngit pull origin main --allow-unrelated-histories\n```\n\nor for a local merge:\n\n```\ngit merge --allow-unrelated-histories <branch>\n```\n\nThis creates a merge commit whose history has **two roots**. It works, but every future merge and `git log` now carries two parallel histories \u2014 take it only when you really are combining two things.\n\n**You didn't mean to have two histories** (the common case \u2014 e.g. you `git init`ed a directory that should have been a clone):\n\n```\ngit remote add origin <url>      # if not set\ngit fetch origin\ngit reset --hard origin/main     # discard local commits \u2014 they're gone\n```\n\nIf you have local commits worth keeping, put them aside first (`git branch mine` or stash), reset to the remote, then `git cherry-pick` or re-apply them onto the real history. That keeps a single, linear ancestry instead of a two-root merge.\n\nWhich case you're in depends on whether your local commits are ones you want \u2014 the error itself doesn't tell you, so check `git log --oneline --graph --all` (and `git log --oneline origin/main`) to see what each side actually holds before picking.",
+  "id": "gen-1794385739-1gioV9LqpepCKvDIYL48",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3425,
+   "completion_tokens": 719,
+   "total_tokens": 4144,
+   "cost": 0.000376978,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000376978,
+    "upstream_inference_prompt_cost": 1.7478e-05,
+    "upstream_inference_completions_cost": 0.0003595
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 218,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385748-9Jgwg9xRhu7L1ZTlR2Sl"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

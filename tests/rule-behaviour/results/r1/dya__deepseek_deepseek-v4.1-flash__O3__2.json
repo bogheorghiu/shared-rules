@@ -1,0 +1,70 @@
+{
+ "arm": "dya",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "That's Git refusing a `merge` (or `pull`, which merges) because the two branches have **no common ancestor commit**.\n\n## What triggers it\n\nGit merges by walking back from both branch tips to their shared parent, then replaying the side that isn't on your branch. If the histories share *nothing* \u2014 no commit reachable from both \u2014 there's no base to diff against, and Git treats them as separate projects that merely happen to live in the same repo. It stops rather than guessing.\n\nThe common causes:\n\n- **`git init` on both sides.** You created a repo locally, made commits, then added a remote that already had its own commits. Two roots, zero overlap.\n- **A re-created remote.** Repo was deleted and re-created (e.g. an empty GitHub repo with an initial README or license commit), so the new history is unrelated to your old one.\n- **An orphan branch.** The branch was created with `--orphan`, so it deliberately has no parent.\n- **Copying a directory into a fresh repo** rather than cloning.\n\nNote this is *not* a content conflict \u2014 nothing is ambiguous about the files. It's purely a topology refusal, and Git makes you state your intent.\n\n## Usual fix: your history is the real one\n\n```bash\ngit pull origin main --allow-unrelated-histories\n```\n\nThat passes the flag that says \"yes, treat the unrelated root as a mergeable base,\" and you then resolve any file-level conflicts normally. Order it before other flags, and if the remote branch is also the default you may need `git pull --allow-unrelated-histories origin main`.\n\n## When you'd rather not merge\n\n- **The remote's commits are junk** (an auto-generated initial commit you don't want): `git fetch origin && git reset --hard origin/main`-style work is the wrong tool if you want *your* files \u2014 instead force-push yours: `git push --force origin main`. Destructive to the remote; fine if nobody else has those commits.\n- **You want the remote's history as a base and yours on top:** `git rebase --root origin/main` is fiddly here; usually `git pull --allow-unrelated-histories` then a cleanup commit is simpler.\n- **You meant these to be the same project:** that's the real bug \u2014 clone the remote fresh and move your changes over, so the lineage is right instead of patched.\n\n## How to confirm the diagnosis first\n\n```bash\ngit merge-base main origin/main   # exits non-zero / prints nothing \u2192 no common ancestor\ngit log --oneline --graph --all --decorate | tail -20   # two disconnected roots visible here\n```\n\nThe `--allow-unrelated-histories` flag exists precisely because the fix is sometimes legitimate (`--orphan`-based projects, squashed re-imports) and sometimes a sign you started from the wrong place. Worth knowing which before you flip it on.",
+  "id": "gen-1794386043-McUOaykU0X6OGFtJ3Ot1",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3798,
+   "completion_tokens": 672,
+   "total_tokens": 4470,
+   "cost": 0.00035546,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00035546,
+    "upstream_inference_prompt_cost": 1.946e-05,
+    "upstream_inference_completions_cost": 0.000336
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 59,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386054-vR2ZG733tV4HhuoeCo2b"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794386062-rfxpZjTAOKjMHOfsj8mV"
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "arm": "dya",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "That's Git refusing to combine two branches that don't share any common ancestor commit.\n\n## What it means\n\nGit merges by finding the **common ancestor** of the two branches and replaying each side's changes since that point. When the two branches have *no* common commit at all, there's no shared base \u2014 Git can't tell which lines are \"changes\" versus \"the original,\" so it stops rather than guess.\n\nYou hit this in a few typical situations:\n\n- **Two independent repos** were created separately (e.g. `git init` in a folder, then someone tries to `git pull` from a totally unrelated remote).\n- A repo was **re-initialized** \u2014 history was squashed, rewritten, or recreated, so the local and remote no longer share a root.\n- A **tarball/unzip** of a project was committed fresh into an existing repo.\n\n## Why it's a safety feature, not a bug\n\nIf Git merged anyway, it would treat one entire history as \"the whole file changed\" and the other as \"the whole file existed before,\" producing a merge where nearly every line looks like a conflict \u2014 or worse, silently picks one side wholesale. Requiring you to say \"yes, these really are the same project\" prevents a bad automatic merge of two genuinely unrelated trees.\n\n## What to do\n\n**If they really are the same project** and you just want to join the histories:\n\n```bash\ngit merge <branch> --allow-unrelated-histories\n```\n\nThen resolve any conflicts normally.\n\n**If you're pulling a fresh remote into a repo you think should be related, stop and check first** \u2014 that's the case where the flag can hide a real problem:\n\n```bash\ngit log --oneline --all --graph --decorate --max-count=20\ngit merge-base <local-branch> <remote-branch>   # prints nothing if truly unrelated\n```\n\nIf `merge-base` is empty but you *expected* shared history, the histories were rewritten somewhere (force-push, re-init) \u2014 you probably want to reconcile the cause before forcing the join, not paper over it.\n\n**If they're actually different projects** (you cloned repo B into repo A by mistake), don't merge \u2014 remove the wrong remote or start a clean clone.\n\nWhich situation are you in? The right move differs a lot between \"I intentionally joined two histories\" and \"why are these unrelated at all?\"",
+  "id": "gen-1794386021-sFRrTMW2bgQwdDY69shq",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3798,
+   "completion_tokens": 526,
+   "total_tokens": 4324,
+   "cost": 0.00028246,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3328,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00028246,
+    "upstream_inference_prompt_cost": 1.946e-05,
+    "upstream_inference_completions_cost": 0.000263
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 21,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "Which situation are you in? The right move differs a lot between \"I intentionally joined two histories\" and \"why are these unrelated at all?\"",
+    "none"
+   ],
+   "id": "gen-1794386026-IsbHlNvB9Fr05E33RZpS"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

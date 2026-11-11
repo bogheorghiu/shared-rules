@@ -1,0 +1,57 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "That's a confirmed leak: the key includes `time.time()`, so every `put` is a new entry \u2014 a job retried N times leaves N entries, and nothing ever removes them. The 408k-entry delta matches the 31 MiB growth (~79 B/entry).\n\nBefore I propose a fix, two things I need from the repo \u2014 the right fix depends on your intended retention semantics, and I don't want to invent a bounded-cache helper if one already exists:\n\n```\ngrep -rn \"ResultCache\\|result_cache\\|\\.put(\\|\\.get(\" worker/ | head -50\ngrep -rn \"lru_cache\\|maxsize\\|OrderedDict\\|TTL\\|evict\" worker/ lib/ | head -30\n```\n\nTwo forks I can already see, and I'd rather ask than guess:\n\n1. **`attempt` + timestamp in the key.** The comment says \"keep every attempt for debugging.\" If that's a real requirement, the fix is a bound (LRU or per-job attempt cap), not keying by `job_id` alone. If attempts *don't* need to be retained, the key collapses to `job_id` (or `(job_id, attempt)`), every `put` overwrites, and the dict stops growing without any eviction policy at all.\n\n2. **`get` is O(n).** `[v for k, v in self._d.items() if k[0] == job_id]` scans the whole dict on every lookup. That's a CPU problem, not the memory leak, so it's out of scope unless it's also biting you \u2014 flagging it rather than folding it in.",
+  "id": "gen-1794385795-aQXPv3kD6zIXhp7d5Tf3",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4626,
+   "completion_tokens": 1215,
+   "total_tokens": 5841,
+   "cost": 0.000631416,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000631416,
+    "upstream_inference_prompt_cost": 2.3916e-05,
+    "upstream_inference_completions_cost": 0.0006075
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 931,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "That's a confirmed leak: the key includes `time.time()`, so every `put` is a new entry \u2014 a job retried N times leaves N entries, and nothing ever removes them."
+   ],
+   "id": "gen-1794385813-V9EaE1NIPKwPEYs77WXE"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

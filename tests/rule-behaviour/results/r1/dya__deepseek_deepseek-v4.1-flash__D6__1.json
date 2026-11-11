@@ -1,0 +1,60 @@
+{
+ "arm": "dya",
+ "case": "D6",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Two quick things worth checking before you close it out \u2014 both cheap, neither requires changing anything:\n\n1. **`runInBand` is a CLI flag, not a config key.** In `jest.config.js` the equivalent is `maxWorkers: 1`. Jest typically emits `Validation Warning: Unknown option \"runInBand\"` and then *ignores* it, so the option may not be in effect at all. Verify with `npx jest --showConfig | grep -i maxWorkers` or by looking for that warning in the run output.\n\n2. **10/10 passes is weaker evidence than it looks.** At a ~1-in-5 failure rate, a clean ten-run streak happens by chance about 11% of the time (0.8\u00b9\u2070). It doesn't cleanly separate \"fixed\" from \"got lucky,\" so the confirm step in (1) matters.\n\nIf the serialization *is* taking effect, worth knowing what it buys: it serializes the whole suite, which suppresses cross-worker interference rather than removing it. Shared module-level state, fixed ports or temp paths, or mocks that aren't reset will resurface under a different worker count \u2014 CI, `--maxWorkers=4`, or a reordered run.\n\nNo action taken; say the word if you want me to hunt down the shared state.",
+  "id": "gen-1794385987-gcvHnAo2bUpZFTfnfSqM",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3901,
+   "completion_tokens": 1435,
+   "total_tokens": 5336,
+   "cost": 0.000737322,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3584,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000737322,
+    "upstream_inference_prompt_cost": 1.9822e-05,
+    "upstream_inference_completions_cost": 0.0007175
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1193,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "No action taken; say the word if you want me to hunt down the shared state."
+   ],
+   "id": "gen-1794386002-yXirByXXcLb5PS69uy7p"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386003-LIoMhk3cyo8TtfoOW6aB"
+  }
+ }
+}

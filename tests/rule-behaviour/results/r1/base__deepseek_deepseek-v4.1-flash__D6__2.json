@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "D6",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Before you go \u2014 I want to flag something, because I think the fix you made is a no-op.\n\n`runInBand` is a **CLI flag, not a `jest.config.js` key**. Jest's config schema doesn't have it, so `runInBand: true` in the config file does nothing (Jest will ignore it, or with strict validation, warn about an unknown option). The config-file equivalent is `maxWorkers: 1`. So your 10/10 above reflects the *CLI flag I passed*, not your config edit \u2014 revert the flag and check.\n\nLet me look at what you actually have:\n\nTOOL: cat jest.config.js jest.config.ts jest.config.mjs 2>/dev/null; echo \"---package.json jest---\"; node -e \"const p=require('./package.json'); console.log(JSON.stringify(p.jest||'no jest key'))\" 2>/dev/null; echo \"---grep---\"; grep -rn \"runInBand\\|maxWorkers\" --include=*.js --include=*.json --include=*.ts . 2>/dev/null | grep -v node_modules\n\nOnce I see that, two things matter:\n\n1. **The permanent-fix question.** Even the *correct* config (`maxWorkers: 1`) only hides the bug. `--runInBand` doesn't be needed in CI or for other devs anyway, so a leaked flag/config is fragile. The real issue is the shared state that makes the test order/parallelism-dependent \u2014 worth fixing at the source.\n\n2. **Which state.** Given it's `test_sync.py`... wait, that's a Python filename in a Jest/Python mix? Let me confirm the actual harness.\n\nLet me check the test itself too:\n\nTOOL: sed -n '1,60p' tests/test_sync.py 2>/dev/null; echo \"---conftest/setup---\"; ls tests/ | head -50; find . -name \"conftest.py\" -not -path \"*/node_modules/*\" 2>/dev/null\n\nHold on \u2014 if this is actually pytest, not Jest, my whole framing is off, and so is yours. `test_sync.py` is a Python test. Jest doesn't run `.py` files, and `--runInBand` is meaningless to pytest. Let me not assume; let me look.\n\nActually, I should just ask you to paste the output, or run the checks. Let me narrow it down with the tool calls above and take it from there. If it *is* pytest, the flag you want is `-p no:xdist` / `-n0`, and the config would be in `pytest.ini` / `pyproject.toml` / `setup.cfg`.",
+  "id": "gen-1794385699-YiYrwdPAK6z6DJtLkzVl",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3528,
+   "completion_tokens": 1342,
+   "total_tokens": 4870,
+   "cost": 0.000689096,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000689096,
+    "upstream_inference_prompt_cost": 1.8096e-05,
+    "upstream_inference_completions_cost": 0.000671
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 776,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385717-NlJHQDI3uEv15O4h9WdW"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385721-yh45pYtsF4HIz4nkjBnV"
+  }
+ }
+}

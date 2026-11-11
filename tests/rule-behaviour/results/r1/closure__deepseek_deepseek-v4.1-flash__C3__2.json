@@ -1,0 +1,60 @@
+{
+ "arm": "closure",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "They can produce a similar-looking commit, but they do different things to history and carry different consequences.\n\n**The core difference:** `merge --squash` *adds* a commit; `rebase -i` with squash *replaces* commits.\n\n`git merge --squash other` computes the merge result (diff between `other` and the merge base, merged with your branch) and stages it \u2014 then stops. It writes nothing until you `git commit`. The commit you make has **one parent**: your branch tip. Git records no merge, so it does not know `other` was ever integrated.\n\n`git rebase -i main` with `squash`/`fixup` takes your existing commits, replays them, and folds them into one \u2014 the original commits are discarded and new ones with new hashes take their place on the same branch.\n\n| | `merge --squash` | rebase -i squash |\n|---|---|---|\n| Operates on | two divergent branches | one branch's own commits |\n| Result | new commit, **1 parent** | new commit, rewritten ancestry |\n| Leaves you | changes staged, you commit | commit created by the rebase |\n| Rewrites hashes | no | yes |\n| Needs force-push if pushed | no | yes |\n| Other branch seen as merged | **no** | n/a (same branch) |\n| Conflict resolution | once, via merge machinery | per-commit, or at the squash step |\n| Authorship/message | you write it fresh | first commit's author; you edit combined message |\n\n**Why the \"seen as merged\" row matters most.** After `merge --squash`, `git branch --merged` won't list the source branch, and git has no merge base recorded. A later real `git merge other` will try to merge *all* of `other` again \u2014 the squashed content is already there, so you get conflicts or duplicated changes. That's why the workflow pairs `--squash` with deleting the source branch. A real merge (`git merge --no-ff`, or GitHub's \"Squash and merge\" which deletes the branch for you) records the parentage and avoids this.\n\n**When each is the right tool:**\n\n- Squashing *someone else's* branch / a PR into your line, where you can't or shouldn't rewrite their commits \u2192 `merge --squash`.\n- Cleaning up *your own* local commits before sharing them \u2192 rebase. Rewriting is safe exactly when nobody else has the old hashes; a force-push to a shared branch is the failure case to avoid.\n\n**Minor practical notes:** `--squash` uses the merge strategy (rename detection, merge drivers), so it can handle divergence better than patch replay. In rebase, `fixup` silently drops the later commit messages, `squash` opens an editor to combine them; the resulting commit keeps the *first* commit's author and timestamp.",
+  "id": "gen-1794385806-baA2fIQln0Fp69ALuvx8",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4291,
+   "completion_tokens": 1319,
+   "total_tokens": 5610,
+   "cost": 0.000681406,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000681406,
+    "upstream_inference_prompt_cost": 2.1906e-05,
+    "upstream_inference_completions_cost": 0.0006595
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 785,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385823-MuwvUbq4qoCEP89pCvAX"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385831-AaSKBcNm3PMUymQ4hsta"
+  }
+ }
+}

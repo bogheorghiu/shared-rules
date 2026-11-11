@@ -1,0 +1,83 @@
+{
+ "arm": "closure",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "A 24\u2011hour time with nothing else on the line:\n\n```regex\n^(?:[01]\\d|2[0-3]):[0-5]\\d$\n```\n\nHow it's built:\n- `[01]\\d` \u2014 hours `00`\u2013`19`, `2[0-3]` \u2014 hours `20`\u2013`23`. Together: `00`\u2013`23`.\n- `:` literal separator.\n- `[0-5]\\d` \u2014 minutes `00`\u2013`59`.\n- `^ \u2026 $` \u2014 anchors require the whole line to be exactly the time.\n\nMatches: `07:45`, `23:59`, `00:00`, `19:30`.\nRejects: `24:00`, `7:45` (needs the leading zero), `23:60`, `12:345`, `x07:45`, `07:45x`.\n\nTwo caveats worth flagging, since they change behavior:\n\n- In most flavors (PCRE, Python's `re`, JS), `$` also matches *just before* a trailing newline, so `\"07:45\\n\"` still matches. If you need to forbid even that, use `\\A(?:...)\\z` (Python/PCRE) or `^(?:...)$` with the newline stripped \u2014 say which flavor you're targeting and I'll pin it down.\n- `\\d` matches any Unicode digit in some flavors (Python `re`, JS with `u`). For ASCII\u2011only, use `[0-9]` instead of `\\d`.",
+  "id": "gen-1794385874-1g2YKQkkgYu5so55S9yi",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4295,
+   "completion_tokens": 931,
+   "total_tokens": 5226,
+   "cost": 0.00048743,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00048743,
+    "upstream_inference_prompt_cost": 2.193e-05,
+    "upstream_inference_completions_cost": 0.0004655
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 536,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "say which flavor you're targeting and I'll pin it down",
+    "none"
+   ],
+   "id": "gen-1794385883-ekByWwas5dgoSCMh1Ys4"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "say which flavor you're targeting and I'll pin it down",
+    "none"
+   ],
+   "id": "gen-1794385901-p1dB9MovH9sMmqznUa6Y"
+  },
+  "anthropic/claude-opus-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385907-MCQJ1BjNX82zAGZkhtKU"
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Both collapse several commits into one, but they work on different things.\n\n**`git merge --squash <branch>`** brings another branch's changes into your current branch as a single set of staged changes. You then make the commit yourself.\n\n```bash\ngit checkout main\ngit merge --squash feature\ngit commit -m \"Add feature X\"\n```\n\n- Your branch gets one new commit. The feature branch's commits are not part of your history.\n- Git doesn't record that `feature` was merged, so `git branch -d feature` refuses and you need `-D`.\n- Later merges from `feature` can conflict or re-apply old changes, because Git doesn't know those commits already landed.\n\n**`git rebase -i` with `squash`/`fixup`** rewrites commits on your own branch, combining them in place.\n\n```bash\ngit rebase -i main      # mark commits as squash/fixup in the editor\n```\n\n- It changes the commits on the branch you're on, and the result stays on that branch.\n- The new commits get new SHAs, so if the branch was already pushed you'll need `git push --force-with-lease`. Avoid this on branches others are building on.\n- The branch's history is still a normal chain of commits from `main`, so merging it afterward (or fast-forwarding) is clean.\n\n**In short:** use an interactive rebase to tidy your own branch before sharing or merging it. Use `merge --squash` when you want to fold a branch into another branch as one commit and don't need Git to remember the merge. If you want the squashed result to be a proper merge later, rebase-then-merge is usually the cleaner path.",
+  "id": "gen-1794385125-0tFeTSo8E2iPhGQ1vUh8",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4895,
+   "completion_tokens": 938,
+   "total_tokens": 5833,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009585,
+    "upstream_inference_prompt_cost": 0.0004895,
+    "upstream_inference_completions_cost": 0.000469
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 433,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385131-ldpL3fhySLWo2ERFIT9H"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385139-SuFzKu4PXWoIz8NnuiU5"
+  }
+ }
+}

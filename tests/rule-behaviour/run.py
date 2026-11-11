@@ -9,8 +9,8 @@ the reply; a run passes when every grader's every answer matches the case.
 
 Spends real tokens through an OpenAI-compatible chat API; not run in CI.
 
-    python3 -I tests/rule-behaviour/run.py --out results/r1 \
-        --arm base --arm closure=candidates/closure-r1.md [--reader MODEL] [--n 3]
+    python3 -I tests/rule-behaviour/run.py --out results/r2 --cases cases-r2.json \
+        --arm base --arm closure=candidates/closure-r2.md [--reader MODEL] [--n 3]
     python3 -I tests/rule-behaviour/run.py --out results/r1 --report
 """
 import argparse, concurrent.futures as cf, glob, json, os, ssl, sys, time, urllib.request
@@ -23,6 +23,7 @@ KEY = os.environ.get("RULE_TEST_KEY", "proxy-injected")
 READER = "anthropic/claude-haiku-5.5"
 GRADERS = ["anthropic/claude-sonnet-5.5", "openai/gpt-6.1-terra"]
 TIEBREAK = "anthropic/claude-opus-5.5"
+CASES = "cases.json"
 
 FRAME = (
     "You are a coding assistant working with a user in a terminal session on their repository. "
@@ -63,7 +64,7 @@ def chat(model, messages, max_tokens, tries=3):
 
 
 def load_cases():
-    d = json.load(open(os.path.join(HERE, "cases.json")))
+    d = json.load(open(os.path.join(HERE, CASES)))
     frag = d["fragments"]
     for c in d["cases"]:
         c["messages"] = [{"role": r, "content": frag[t[1:]] if t.startswith("@") else t}
@@ -85,7 +86,7 @@ def grade(model, case, reply):
         'Answer with JSON only: {"answers": ["yes" or "no", ...], "evidence": ["short quote from '
         'the reply or \'none\'", ...]} with one entry per question, in order.')
     for _ in range(2):
-        r = chat(model, [{"role": "user", "content": prompt}], 1200)
+        r = chat(model, [{"role": "user", "content": prompt}], 4000)
         if "void" in r:
             continue
         t = r["text"]
@@ -106,7 +107,7 @@ def one(job):
         return
     rec = {"arm": arm, "case": case["id"], "rule": case["rule"], "kind": case["kind"], "k": k,
            "reader": reader, "expect": [c["expect"] for c in case["checks"]]}
-    r = chat(reader, [{"role": "system", "content": system}] + case["messages"], 1500)
+    r = chat(reader, [{"role": "system", "content": system}] + case["messages"], 3000)
     rec["reply"] = r
     if "void" not in r:
         rec["grades"] = {g: grade(g, case, r["text"]) for g in GRADERS}
@@ -157,8 +158,11 @@ def main():
     ap.add_argument("--n", type=int, default=3)
     ap.add_argument("--only", help="comma-separated rule names: closure,dy,overhead")
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--cases", default=CASES, help="case file in this folder")
     ap.add_argument("--report", action="store_true")
     a = ap.parse_args()
+    global CASES
+    CASES = a.cases
     out = os.path.join(HERE, a.out)
     os.makedirs(out, exist_ok=True)
     if not a.report:
