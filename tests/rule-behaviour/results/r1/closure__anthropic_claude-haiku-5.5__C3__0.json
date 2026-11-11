@@ -1,0 +1,60 @@
+{
+ "arm": "closure",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Both can end with one commit on your main branch containing the same changes. They differ in **where the history gets rewritten** and **what git knows about the branch afterward**.\n\n**`git merge --squash`** happens on the target branch and doesn't rewrite anything:\n\n```sh\ngit switch main\ngit merge --squash feature\ngit commit            # you write the one new commit\n```\n\n- It stages the combined diff of `feature` relative to the merge base, then stops. You make the commit yourself.\n- `feature` is untouched, and the new commit has no link to it. Git records no merge relationship.\n- Because git doesn't know `feature` was integrated, a later `git merge feature` can conflict or re-apply changes you already squashed.\n\n**Interactive rebase squash** happens on the feature branch, before integration:\n\n```sh\ngit switch feature\ngit rebase -i main    # mark commits as \"squash\" or \"fixup\"\ngit switch main\ngit merge feature     # usually a fast-forward\n```\n\n- It rewrites the feature branch's own commits, giving them new SHAs, and folds several into one.\n- You can then integrate normally. The result is a linear history with one commit, and the branch still has a real ancestry relationship with main.\n- If the feature branch was already pushed, you need a force-push, which affects anyone else using that branch.\n\n**Practical differences:**\n\n| | `merge --squash` | `rebase -i` + squash |\n|---|---|---|\n| Rewrites history? | No | Yes, on the feature branch |\n| Requires force-push? | No | Yes, if already pushed |\n| Commit message | Written at integration | Can be edited during the rebase |\n| Feature branch afterward | Unchanged, but no longer linked | Rewritten, still linked |\n| Later merges of the branch | Can conflict | Clean |\n\n**Rule of thumb:** use `merge --squash` when you want to integrate once and discard the branch. Use interactive rebase when you want to tidy a branch's commits while keeping it alive and mergeable, or when you want to review the final commit before it lands.",
+  "id": "gen-1794385271-2iCz0BySk6OgPWXVvic3",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6083,
+   "completion_tokens": 1203,
+   "total_tokens": 7286,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012098,
+    "upstream_inference_prompt_cost": 0.0006083,
+    "upstream_inference_completions_cost": 0.0006015
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 539,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385278-nHgmkHSmoCFvFFeaCYp3"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385279-AY9UsmQeuYlHCASxgAe0"
+  }
+ }
+}

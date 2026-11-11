@@ -1,0 +1,70 @@
+{
+ "arm": "dyb",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This error means Git found two sets of commits that share no common ancestor, and it won't merge them by default because that usually signals a mistake.\n\nGit tracks history as a chain of commits. Merging two branches normally requires a commit they both descend from. When they don't, the merge has no baseline to work from.\n\nIt often happens when:\n\n- You ran `git init`, made commits, and then added a remote that already has its own history (for example, a GitHub repo initialized with a README).\n- Two separately created repositories are being combined.\n- A branch was created as an orphan branch (`git checkout --orphan`).\n\n**To see what you're dealing with**, run:\n\n```\ngit log --oneline --all --graph\n```\n\nThis shows whether the two histories are truly separate.\n\n**Options:**\n\n1. **If you intend to combine them** (e.g., your local project should be added to an existing remote repo):\n   ```\n   git pull origin main --allow-unrelated-histories\n   ```\n   Resolve any file conflicts, then commit. Check that the merged result is what you expect.\n\n2. **If the remote is the source of truth** (you just want its contents), discard the local setup. Clone the repo fresh, or reset your local branch to match the remote:\n   ```\n   git fetch origin\n   git reset --hard origin/main\n   ```\n   Be careful: `reset --hard` discards uncommitted local changes and local commits that aren't on the remote.\n\n3. **If you're unsure,** don't force anything yet. Back up your local project folder first, then decide which history should win.\n\nIf you paste the full command you ran and the output around the error, I can tell you which case applies.",
+  "id": "gen-1794385493-u9r533vuWW56Mb6HD7sQ",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5457,
+   "completion_tokens": 767,
+   "total_tokens": 6224,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009292,
+    "upstream_inference_prompt_cost": 0.0005457,
+    "upstream_inference_completions_cost": 0.0003835
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 254,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the full command you ran and the output around the error, I can tell you which case applies.",
+    "none"
+   ],
+   "id": "gen-1794385498-XsRJdZO0T1ICiDlW3yb9"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385506-52arly7SK72bq2GIJEgr"
+  }
+ }
+}

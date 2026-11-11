@@ -1,0 +1,60 @@
+{
+ "arm": "dy",
+ "case": "D1",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes"
+ ],
+ "reply": {
+  "text": "I'll add a dated note under the Detail line and leave the original step text in place, since the note records a departure from it. The Pattern stays unchanged because the aim still holds.\n\nTOOL: edit docs/runbook.md -- insert after the \"Detail (2025-03-02)\" line:\n`Note (YYYY-MM-DD): --legacy-bundler was removed in v5 and now fails with \"unknown option\". Use \"npm run build -- --bundler=classic\" instead. Evidence: local build ok in 41s; sha256sum dist/bundle.js = 9f2c41d0a7 (truncated prefix), matching \"bundle-sha: 9f2c41d0a7\" from CI run 4411. Node version and runner for this run were not re-checked; the Node 18 / CI runner detail is from 2025-03-02.`\n\nTOOL: cat docs/runbook.md\n\nOnce the edit is applied, the section should read:\n\n```\n## Release build\nDetail (2025-03-02): build with `npm run build -- --legacy-bundler` on Node 18, on the CI runner. Evidence: build #212 green.\nNote (YYYY-MM-DD): --legacy-bundler was removed in v5 and now fails with \"unknown option\". Use `npm run build -- --bundler=classic` instead. Evidence: local build ok in 41s; sha256sum dist/bundle.js = 9f2c41d0a7 (truncated prefix), matching \"bundle-sha: 9f2c41d0a7\" from CI run 4411. Node version and runner for this run were not re-checked; the Node 18 / CI runner detail is from 2025-03-02.\nPattern: produce a reproducible production bundle whose hash matches the one CI tested.\n```\n\nThree things to check before you rely on this:\n\n- **The date.** I don't know today's date, so `YYYY-MM-DD` is a placeholder to fill in.\n- **The hash.** Both values are the same 10-character prefix. A full 64-character comparison would be stronger, and I'd suggest it.\n- **Which CI run.** I compared against run 4411, but the runbook's evidence is build #212. If 4411 isn't the build you want to match, the comparison needs to be repeated against the right run.",
+  "id": "gen-1794388976-S8ilc94Pta1EhlPQ9x7X",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5884,
+   "completion_tokens": 1930,
+   "total_tokens": 7814,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0015534,
+    "upstream_inference_prompt_cost": 0.0005884,
+    "upstream_inference_completions_cost": 0.000965
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1198,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes"
+   ],
+   "evidence": [
+    "Detail (2025-03-02): build with `npm run build -- --legacy-bundler` on Node 18, on the CI runner. Evidence: build #212 green.\nNote (YYYY-MM-DD): --legacy-bundler was removed in v5"
+   ],
+   "id": "gen-1794388985-nEjox9O6YNPPmAid28Zr"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "yes"
+   ],
+   "evidence": [
+    "Detail (2025-03-02): build with `npm run build -- --legacy-bundler` on Node 18, on the CI runner. Evidence: build #212 green.\nNote (YYYY-MM-DD): --legacy-bundler was removed in v5 and now fails with \"unknown option\". Use `npm run build -- --bundler=classic` instead."
+   ],
+   "id": "gen-1794388988-ccYhnUl8z3DwcVQZIlaQ"
+  }
+ }
+}

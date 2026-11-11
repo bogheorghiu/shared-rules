@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is `ResultCache._d`. Nothing ever removes from it, so every `put()` adds an entry that lives for the life of the process.\n\nThe key makes it worse. `time.time()` is part of the key, so no two `put()` calls ever collide, even for the same job and attempt. The comment says \"keep every attempt,\" but the timestamp means nothing is ever replaced either.\n\nThe growth rate also doesn't quite match your numbers. The snapshots show +30.9 MiB in 10 minutes, about 185 MB/hour, while you measured roughly 40 MB/hour in production. Either traffic was heavier during the sampling window or the production figure is off. Either way, this is the only large grower in the snapshots.\n\nBefore changing anything, I'd check two things:\n\n1. **What calls `put()`, and when a job finishes.** If callers only need results until the job completes, the cache can drop a job's entries at that point.\n2. **Whether anything reads old attempts.** If nothing calls `get()` for anything but the latest result, storing every attempt is just debugging residue.\n\nPossible fixes, depending on the answer:\n\n- **Keep only the latest result per job.** Key by `job_id` alone and overwrite. This is O(1) for `get()` as well, since the current version scans the whole dict on every call.\n- **Keep history, but bound it.** Store attempts in a `deque(maxlen=N)` per job, or evict whole jobs once they're complete or older than a TTL.\n\n```python\ndef put(self, job_id, attempt, result):\n    self._d[job_id] = (attempt, result)   # latest wins\n\ndef get(self, job_id):\n    hit = self._d.get(job_id)\n    return hit[1] if hit else None\n```\n\nThe `get()` change assumes the caller only needs the most recent attempt, which matches the current `hits[-1]` behavior, but I haven't verified that against callers.\n\nAlso note that tracemalloc attributes each retained object to the line that allocated it. The `result` objects were created elsewhere, so the cache's own line 88 may understate the true retained memory. It's worth checking how big a `result` is and whether it holds references to larger objects.\n\nWhich retention do you need: latest only, or per-job history? Once I know that, I can make the change and add a test that checks memory stays flat across many puts.",
+  "id": "gen-1794388709-xRr3hREGOTUOgiS15pIk",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1698,
+   "total_tokens": 7073,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013865,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.000849
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 949,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is `ResultCache._d`. Nothing ever removes from it, so every `put()` adds an entry that lives for the life of the process."
+   ],
+   "id": "gen-1794388720-BkVzYG2QpcAAMvQo89MT"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is `ResultCache._d`. Nothing ever removes from it, so every `put()` adds an entry that lives for the life of the process."
+   ],
+   "id": "gen-1794388721-CA76At4maWcS55UBbT0Q"
+  }
+ }
+}

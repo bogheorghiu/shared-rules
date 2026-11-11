@@ -1,0 +1,57 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "openai/gpt-6-luna",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The unbounded growth is in `put`: every call inserts a new entry because the key includes both `attempt` and the current timestamp. Nothing removes those entries, so the cache retains every result indefinitely. That matches the ~31 MiB growth in `worker/cache.py`.\n\n`get` also builds a temporary list of matching results, but that list is discarded after the call; it is not the persistent leak shown by the snapshot.\n\nThe comment says keeping every attempt is intentional, so the fix depends on the intended debugging retention: keep only the latest attempt per job, or retain history with a bounded size/TTL. Which behavior do you want?",
+  "id": "gen-1794386206-ImAezwyPKRB9fBMKfIVb",
+  "served": "openai/gpt-6-luna",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3721,
+   "completion_tokens": 353,
+   "total_tokens": 4074,
+   "cost": 0.000255495,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3357,
+    "cache_write_tokens": 361,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000255495,
+    "upstream_inference_prompt_cost": 7.8995e-05,
+    "upstream_inference_completions_cost": 0.0001765
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 217,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The unbounded growth is in `put`: every call inserts a new entry because the key includes both `attempt` and the current timestamp."
+   ],
+   "id": "gen-1794386212-MEXautWqnnjMZSD8dGmC"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

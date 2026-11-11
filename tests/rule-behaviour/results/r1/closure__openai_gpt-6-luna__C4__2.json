@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "openai/gpt-6-luna",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is `ResultCache._d`: every `put()` uses a fresh timestamp in the key, so retries for the same job never replace earlier entries. Since nothing evicts them, every result stays strongly referenced for the life of the process. The snapshot\u2019s ~31 MiB growth at that line matches this.\n\n`get()` also builds a temporary list of matching results, but that\u2019s not the persistent growth shown in the snapshot. The fix depends on the intended debugging history: retain only the latest result, or keep a bounded number/time window of attempts. Which behavior should the cache preserve?",
+  "id": "gen-1794386380-wIgfbtXHtDH8ZUn6T4G6",
+  "served": "openai/gpt-6-luna",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4585,
+   "completion_tokens": 395,
+   "total_tokens": 4980,
+   "cost": 0.00024362,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 4582,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00024362,
+    "upstream_inference_prompt_cost": 4.612e-05,
+    "upstream_inference_completions_cost": 0.0001975
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 269,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is `ResultCache._d`: every `put()` uses a fresh timestamp in the key, so retries for the same job never replace earlier entries."
+   ],
+   "id": "gen-1794386386-5wg0L8Hjuaml24nGExHY"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is `ResultCache._d`... Since nothing evicts them, every result stays strongly referenced"
+   ],
+   "id": "gen-1794386408-RJE012iWJSwOCNuge74E"
+  }
+ }
+}

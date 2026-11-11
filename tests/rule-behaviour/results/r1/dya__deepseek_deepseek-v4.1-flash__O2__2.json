@@ -1,0 +1,70 @@
+{
+ "arm": "dya",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```\n^([01][0-9]|2[0-3]):[0-5][0-9]$\n```\n\n**Why these pieces, so you can adjust them:**\n\n- `^ \u2026 $` is what enforces \"nothing else on the line.\" Without them the regex happily matches the `07:45` inside `foo 07:45 bar` or `107:45`. (Note: in most flavors `$` also matches just before a trailing newline, which is usually what you want. Use `\\A \u2026 \\z` if you need to reject a trailing newline.)\n- `([01][0-9]|2[0-3])` is what restricts the hour to `00`\u2013`23`. A lazy `\\d{2}` would wrongly accept `24:00` through `29:00`.\n- `[0-5][0-9]` restricts minutes to `00`\u2013`59`.\n\nQuick check: `07:45` \u2713, `23:59` \u2713, `00:00` \u2713, `24:00` \u2717, `07:60` \u2717, `7:45` \u2717.\n\nThe one fork worth flagging: **this requires a leading zero**, so `9:45` does not match. That's implied by your `07:45` example \u2014 but if you also want to accept single-digit hours, say `9:45`, replace the hour part with `([01]?[0-9]|2[0-3])`. Tell me which you need and I'll settle it.",
+  "id": "gen-1794386018-oVSIwiPUPq6uoUVXVAs1",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3813,
+   "completion_tokens": 1150,
+   "total_tokens": 4963,
+   "cost": 0.000594806,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000594806,
+    "upstream_inference_prompt_cost": 1.9806e-05,
+    "upstream_inference_completions_cost": 0.000575
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 695,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "Tell me which you need and I'll settle it.",
+    "none"
+   ],
+   "id": "gen-1794386027-FKZB4LkzBVNrQFHNU9YG"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "Tell me which you need and I'll settle it.",
+    "none"
+   ],
+   "id": "gen-1794386030-sAQJB1BTT6wtF0Ve7Nnn"
+  }
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before this goes in the runbook, one correction. My earlier suggestion assumed a Jest setup, but `tests/test_sync.py` is a Python file, so the `npx jest` run may not have exercised it. The 10/10 result also shows only that serial execution passed in that sample, not what caused the failures. The entry below records that.\n\n```markdown\n## Flaky test: tests/test_sync.py fails intermittently in the full suite\n\n**Symptom:** `tests/test_sync.py` passes when run alone but fails about 1 run in 5\nin the full suite.\n\n**Status:** Not root-caused. Serial execution is a workaround candidate, not a fix.\n\n**Observed:** 10/10 passing runs with serial execution (`--runInBand`). This is\nevidence of correlation with execution mode only. Ten runs is a small sample: a\n1-in-5 flake passes all ten about 11% of the time, so this doesn't prove the\nflake is gone.\n\n**Hypothesis (unverified):** shared state between test files running in parallel\nworkers. The specific shared resource is not identified.\n\n**Check before reusing the command:** the serial run above was `npx jest\n--runInBand`, but `tests/test_sync.py` is Python. Confirm which runner executes it.\nIf it is pytest, the parallel layer is likely pytest-xdist (`-n`), and the serial\nequivalent is running without `-n`. Verify against the repo's CI config.\n\n**Reproduce:** run the full suite N times (N \u2265 20) in parallel mode and count\nfailures; run the same N times in serial mode and compare.\n\n**Next steps:**\n1. Identify the shared resource the test depends on: database file, fixture scope,\n   environment variable, port, or module-level state.\n2. Isolate it per worker (per-worker temp directory, narrower fixture scope, unique\n   port) so the test can run in parallel.\n3. Remove the serial workaround once isolation is confirmed over a 20+ run sample,\n   since serial mode slows the suite.\n```\n\nIf you confirm the runner and the parallel flag, I can tighten the Check and Reproduce sections with the exact commands.",
+  "id": "gen-1794388766-rzm94tk7MxLAUbO6YhSW",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5021,
+   "completion_tokens": 1745,
+   "total_tokens": 6766,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013746,
+    "upstream_inference_prompt_cost": 0.0005021,
+    "upstream_inference_completions_cost": 0.0008725
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1042,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "```markdown\n## Flaky test: tests/test_sync.py fails intermittently in the full suite",
+    "Isolate it per worker (per-worker temp directory, narrower fixture scope, unique port) so the test can run in parallel."
+   ],
+   "id": "gen-1794388775-ItaxMBOWFbRBJyTEzQEl"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "## Flaky test: tests/test_sync.py fails intermittently in the full suite",
+    "so the test can run in parallel."
+   ],
+   "id": "gen-1794388776-PzinxnqcE65qSlISlqdh"
+  }
+ }
+}

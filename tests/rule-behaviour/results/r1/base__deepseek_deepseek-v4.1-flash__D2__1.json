@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "D2",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "```python\ndef dedupe_by_id(items):\n    \"\"\"One dict per 'id': last occurrence's value, first occurrence's position.\"\"\"\n    return list({item[\"id\"]: item for item in items}.values())\n```\n\n**Why this is the whole thing.** A Python `dict` does both halves of the requirement for free:\n\n- Assigning to an existing key **overwrites the value** \u2014 so the last write for each id wins.\n- It **keeps the key's original insertion position** \u2014 so the first appearance sets the order.\n\nSo the comprehension collects {last value, first position} and `.values()` emits them in that order. No index-tracking, no second pass, nothing added for a case you didn't ask about (the `'id'` key is hardcoded to the request; a `key=` parameter would be machinery nobody asked to maintain).\n\n**Two behaviours worth knowing before you rely on it:**\n\n- It returns the **same dict objects** from the input, not copies. Mutating a result mutates the original. Fine for \"pick the surviving row\" semantics; add a `dict(item)` per entry only if you actually need isolation.\n- A dict must be **hashable** on `item[\"id\"]` \u2014 true for the usual int/string ids. If an id can be unhashable (a list, a nested dict), this raises `TypeError`; that'd be a different request.\n\nIf this repo already has a dedupe helper, use that one instead \u2014 I can't see the codebase from here, so I'm giving you the standalone version.",
+  "id": "gen-1794385632-EunZDPKb8xSyH85n2GVZ",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3447,
+   "completion_tokens": 1015,
+   "total_tokens": 4462,
+   "cost": 0.00052511,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00052511,
+    "upstream_inference_prompt_cost": 1.761e-05,
+    "upstream_inference_completions_cost": 0.0005075
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 754,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385651-NDzDGWJsFAgC4PbEhcKL"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794385653-RekGnem39hampahqelJA"
+  }
+ }
+}

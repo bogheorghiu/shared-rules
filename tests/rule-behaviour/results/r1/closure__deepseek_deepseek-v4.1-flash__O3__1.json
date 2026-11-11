@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "It's Git refusing a `merge` (or `pull`) because the two branches it's asked to combine have **no common ancestor commit** \u2014 no shared history for it to compute a three-way merge from.\n\n## Why Git does this\n\nA merge works by walking back from both branch tips to find their common base commit, then diffing each side against that base. If the histories never touch, there is no base. Git could pick one arbitrarily, but that silently produces a tree that looks like a real merge while actually discarding one side's commits in the eyes of anyone reading `git blame`/`git log`. Rather than guess, it errors out and makes you say what you meant.\n\nThis almost always happens when one repository was **initialized separately** and then added as a remote \u2014 the classic case:\n\n```\ngit init                  # new local repo, own root commit\ngit remote add origin \u2026\ngit pull origin main      # remote has its own independent root commit\n# fatal: refusing to merge unrelated histories\n```\n\nAlso seen: `git init` inside a directory that already had content committed locally, then pulling a remote whose history has nothing to do with it.\n\n## What to do\n\n**If you want to combine them anyway** \u2014 the usual intent when grafting a local project onto a remote:\n\n```\ngit pull origin main --allow-unrelated-histories\n```\n\nThen resolve any conflicts and commit. This tells Git \"yes, treat these as one history with an empty base\"; the first commit of one side becomes a root with no parent on the other side.\n\n**If that's not what you meant**, it's usually a signal your local repo shouldn't exist:\n- You cloned wrong / re-inited \u2014 delete `.git` and re-clone.\n- You're on the wrong remote/branch \u2014 check `git remote -v` and `git log --oneline` on each side.\n- For a `git merge` between two local branches: inspect with `git merge-base <a> <b>`; empty output means genuinely disjoint histories, and `--allow-unrelated-histories` is again the explicit fix.\n\nThe flag is deliberately opt-in because the error is often correct: two unrelated histories merging is something you should mean, not something Git should do for you.",
+  "id": "gen-1794385879-EP594Kg0CO7G2HD7gMH0",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4280,
+   "completion_tokens": 512,
+   "total_tokens": 4792,
+   "cost": 0.00027784,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3840,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00027784,
+    "upstream_inference_prompt_cost": 2.184e-05,
+    "upstream_inference_completions_cost": 0.000256
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 56,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385885-yAvwfASEqAMDkMiPdtqq"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385886-djiDP5Bs9F7vU0HF9Lgw"
+  }
+ }
+}

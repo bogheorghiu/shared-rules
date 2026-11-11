@@ -1,0 +1,60 @@
+{
+ "arm": "both",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Both collapse a branch's commits into one, but they work on different branches and leave different histories.\n\n**`git merge --squash feature`** is a merge. Run it on the target branch (say `main`):\n\n```sh\ngit checkout main\ngit merge --squash feature\ngit commit -m \"Add feature X\"\n```\n\n- Git stages the combined diff of `feature` onto `main`, and you write a single new commit.\n- The `feature` branch is untouched, and `main` gets no link to it. Git doesn't record `feature` as merged, so later merges or syncs can be confused.\n- It's the same as \"Squash and merge\" on GitHub.\n\n**Interactive rebase squash** rewrites the feature branch itself, before anything is merged:\n\n```sh\ngit checkout feature\ngit rebase -i main     # mark commits as \"squash\" or \"fixup\"\n```\n\n- Git replays your branch's commits onto `main`, combining the ones you marked into one. Commit hashes change.\n- The result is a clean, linear branch. You can then merge it normally, with a fast-forward or a merge commit, and Git still knows the branch was merged.\n- Because it rewrites history, don't do this on a branch others have pulled from. You'd need `git push --force-with-lease` to update a remote copy.\n\n**In short:**\n\n| | `merge --squash` | `rebase -i` squash |\n|---|---|---|\n| Runs on | target branch (`main`) | feature branch |\n| Rewrites history | no | yes, the feature branch |\n| Result on `main` | one commit, no link to the feature branch | linear history, merged normally |\n| Typical use | squash-merging a PR without caring about the branch's history | tidying your own commits before opening or merging a PR |\n\nA common combination is to rebase-squash locally to tidy your commits, then merge normally. Use `merge --squash` when you want the target's history to show one commit per feature and don't need Git to track the branch afterward.",
+  "id": "gen-1794388787-z9abaAKyqV7yP674KxLy",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6395,
+   "completion_tokens": 1235,
+   "total_tokens": 7630,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001257,
+    "upstream_inference_prompt_cost": 0.0006395,
+    "upstream_inference_completions_cost": 0.0006175
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 612,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388794-Q6b4bfbo6UQoRBkpGgEU"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388795-e9y9Z2sHqURh85M8Zjng"
+  }
+ }
+}

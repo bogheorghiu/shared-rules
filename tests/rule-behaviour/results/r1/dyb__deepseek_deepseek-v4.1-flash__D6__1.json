@@ -1,0 +1,54 @@
+{
+ "arm": "dyb",
+ "case": "D6",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Good \u2014 that confirms it's cross-process contention rather than in-process leakage.\n\nOne caution worth flagging, not to redo the work: `--runInBand` makes the suite deterministic by removing the parallelism, not by removing whatever the workers were fighting over \u2014 and the 10/10 result also tells you where the shared thing lives. If the leak were in-process (a module-level singleton, a global), serial execution in one process would still have tripped it; it didn't, so the contested resource is outside the process \u2014 most likely a fixed temp path/filename, a fixed port, or an external service (local DB/redis).\n\nThat matters because those can still collide with something *other* than a jest worker: a second jest invocation from your editor, a parallel CI job, or another process on the box. If flakiness ever returns despite the config, that's where to look first. If you'd rather also kill the root cause, the usual helpers are per-worker temp dirs (`os.tmpdir()` + pid/worker id), port `0` to let the OS assign, and a schema or transaction per run for the DB.\n\nNothing to do now \u2014 just don't let the next reintroduction of workers surprise you.",
+  "id": "gen-1794386096-nU1J2GrVi1OkUf7SsNgs",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3893,
+   "completion_tokens": 972,
+   "total_tokens": 4865,
+   "cost": 0.000505774,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3584,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000505774,
+    "upstream_inference_prompt_cost": 1.9774e-05,
+    "upstream_inference_completions_cost": 0.000486
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 783,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "Nothing to do now \u2014 just don't let the next reintroduction of workers surprise you."
+   ],
+   "id": "gen-1794386107-HXmS7JPQ7AKTKYdhMXW3"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

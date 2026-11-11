@@ -1,0 +1,83 @@
+{
+ "arm": "base",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```regex\n^(?:[01]\\d|2[0-3]):[0-5]\\d$\n```\n\nWhy each piece:\n\n- `^\u2026$` \u2014 this is what enforces \"nothing else on the line.\" Without anchors the regex matches as a substring, so `x07:45y` would pass. Use `\\A\u2026\\z` instead if your engine's `^`/`$` are line- rather than string-anchored and you want the latter (`$` in Perl/Python also matches just before a trailing newline \u2014 usually fine, sometimes not).\n- `(?:[01]\\d|2[0-3])` rather than `\\d{2}` \u2014 the hour is not any two digits; it's `00`\u2013`19` or `20`\u2013`23`. This is the only place needing an alternation, because hours are the non-uniform field.\n- `[0-5]\\d` for minutes \u2014 `00`\u2013`59`, uniform enough for a character class.\n\nTwo choices you may want to reverse, depending on your input:\n\n- **Leading zero required.** `7:45` fails. If you need to accept it, use `^(?:[01]?\\d|2[0-3]):[0-5]\\d$`.\n- **`24:00` rejected.** Standard 24-hour clocks stop at `23:59`; ISO 8601 permits `24:00` as end-of-day. If your source emits it, add `|24:00` inside the hour alternation.\n\nIf you're validating in a real language, a date/time parser is the more reliable choice \u2014 regexes like this accept things the surrounding format may not, and miss leap-second style edge cases. Reach for this when you genuinely need a pattern (log filtering, grep), not as a validator.",
+  "id": "gen-1794385748-EMRvECe4Fb0ibwzQDotQ",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3440,
+   "completion_tokens": 670,
+   "total_tokens": 4110,
+   "cost": 0.000352568,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000352568,
+    "upstream_inference_prompt_cost": 1.7568e-05,
+    "upstream_inference_completions_cost": 0.000335
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 271,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385756-eSm2XyBwD1utuhidZNUG"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "when you genuinely need a pattern",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385761-DIrzdvPcuePGfj7NgTRK"
+  },
+  "anthropic/claude-opus-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794385764-S7z47u8kLFjtIz12XP1o"
+  }
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "Git found two branches (or repositories) with **no common ancestor commit**, so it won't merge them. Every commit has a parent chain back to a first commit. Git merges work by finding where two histories diverged, and it refuses when they never share a starting point.\n\nThis usually happens when:\n\n- You ran `git init` in a folder that already had commits elsewhere, then tried to `git pull` or `git merge` a remote that has its own history. A common case is a GitHub repo created with a README or `.gitignore`, while your local project was started separately.\n- Two separately created repos are being combined.\n\n**To see what you're dealing with:**\n\n```bash\ngit log --oneline --all --graph\ngit log --oneline origin/main    # or whichever remote branch you're merging\ngit log --oneline main           # your local branch\n```\n\nIf the two histories are unrelated, you'll see two separate root commits.\n\n**Ways to proceed:**\n\n1. **Merge them anyway**, if you want to keep both histories:\n   ```bash\n   git pull origin main --allow-unrelated-histories\n   ```\n   Expect conflicts where both sides added the same files (like `README.md` or `.gitignore`). Resolve them, then commit.\n\n2. **Keep only the remote's history**, if the local repo was just a fresh init and has no work you need:\n   ```bash\n   git fetch origin\n   git reset --hard origin/main\n   ```\n   This discards local commits on `main`, so check the log first.\n\n3. **Start over from the remote**, usually the cleanest option if local work is small: move your files aside, clone the repo, then copy your changes in.\n\nOption 1 is the one the error message points to, but it's only the right choice if you actually want the two histories combined. If you tell me what the two sides contain, I can suggest which one fits.",
+  "id": "gen-1794389107-LEvMbqqt8Ng0Apzis8WG",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5776,
+   "completion_tokens": 910,
+   "total_tokens": 6686,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010326,
+    "upstream_inference_prompt_cost": 0.0005776,
+    "upstream_inference_completions_cost": 0.000455
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 339,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you tell me what the two sides contain, I can suggest which one fits.",
+    "none"
+   ],
+   "id": "gen-1794389113-brESm2EPmZeCTex9HChZ"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389114-IPf39koZN3gVdP4qz6kW"
+  }
+ }
+}

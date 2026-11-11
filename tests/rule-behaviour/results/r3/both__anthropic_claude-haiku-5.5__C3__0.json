@@ -1,0 +1,60 @@
+{
+ "arm": "both",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "They both end with several commits' worth of changes collapsed into one commit, but they work on different branches and leave different histories behind.\n\n**`git merge --squash <branch>`** works on the branch you're currently on, which is usually the integration branch (e.g. `main`):\n\n- It stages all of `<branch>`'s changes relative to the merge base as one set, without committing.\n- You then run `git commit` yourself. The result has one parent, your current branch's tip, and the message is prefilled with the squashed commit messages.\n- `<branch>` is not recorded as merged. `git branch -d feature` refuses (you need `-D`), and a later `git merge feature` may replay already-squashed changes and conflict.\n- Nothing is rewritten. The feature branch keeps its original commits.\n\n**Interactive rebase with squash** (`git rebase -i`) works on your feature branch:\n\n- It rewrites the branch's commits, combining the ones you pick into one. Each commit gets a new SHA, and you can edit the message.\n- You can squash any consecutive subset, and also reorder, reword, or `fixup` commits, so it's a general cleanup tool.\n- If the branch was already pushed, you'll need `git push --force-with-lease`. Anyone else who based work on the old commits will have to rebase too.\n- It doesn't by itself put anything on `main`. You still merge or open a PR afterward, and that merge can be a fast-forward or a normal merge.\n\n**Common combinations:**\n\n- **Tidy, then merge:** `rebase -i` the feature branch so it's clean, then fast-forward or merge it into `main`. The history is linear and the feature branch is properly merged.\n- **Squash-merge a PR:** Many hosts do this for you. The whole branch becomes one commit on `main`, and the feature branch stays as it was. This is simple, but the branch isn't marked merged, so delete it with `-D` or accept that it looks unmerged.\n\nIf you're asking because you're deciding how to land a branch, the main question is whether you want the feature's individual commits preserved on `main`. If you do, use a rebase and merge. If you don't, use a squash.",
+  "id": "gen-1794388783-T8Xt3J0YXXUQScW4fF1q",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6395,
+   "completion_tokens": 1254,
+   "total_tokens": 7649,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012665,
+    "upstream_inference_prompt_cost": 0.0006395,
+    "upstream_inference_completions_cost": 0.000627
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 557,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388791-F4RFRiAKZBUNMWlISgph"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388792-FvAw5XSIVIuDUWjmD505"
+  }
+ }
+}

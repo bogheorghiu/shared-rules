@@ -1,0 +1,60 @@
+{
+ "arm": "closure",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "The two get you to a similar place, one clean commit, but they work on different things.\n\n**`git merge --squash <branch>`** works on the target branch, usually `main`:\n\n- It stages the combined diff of `<branch>` onto your current branch.\n- It does not commit. You run `git commit` yourself, and that creates one new commit on `main`.\n- The feature branch's commits are not parents of the new commit, so Git doesn't record that the branch was merged. `git branch -d` will refuse to delete it, and a later `git merge` of the same branch can try to reapply changes. You need `-D` to delete it, and you should be aware of the repeat-merge problem.\n\nUse it to land a finished feature as one commit on `main` while keeping the feature's full history out of `main`.\n\n**Interactive rebase with squash** (`git rebase -i HEAD~N` or `git rebase -i main`) works on your feature branch:\n\n- It rewrites the commits on that branch, combining some or all of them into one. You can also reorder, reword, or drop commits.\n- You get to edit the combined commit message. `fixup` discards the message of the squashed commit, and `squash` keeps both.\n- The branch's history is rewritten, so if you've already pushed it you'll need `git push --force-with-lease`.\n- It doesn't touch `main`. You still need to merge afterward, which can be a fast-forward or a merge commit.\n\n**In practice:**\n\n- Use interactive rebase to tidy your own branch before review, such as fixing \"wip\" and \"typo\" commits.\n- Use `merge --squash` to bring a branch into `main` as a single commit without its history.\n- Many teams do both: rebase to clean up, then squash-merge or fast-forward.",
+  "id": "gen-1794388899-HiCJUklPeIcGncchaoU0",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5783,
+   "completion_tokens": 1038,
+   "total_tokens": 6821,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010973,
+    "upstream_inference_prompt_cost": 0.0005783,
+    "upstream_inference_completions_cost": 0.000519
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 481,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388905-OCgHKUrfPK31SIhEqV7W"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388906-ox7FYVbF5fua4Ps8DQOg"
+  }
+ }
+}

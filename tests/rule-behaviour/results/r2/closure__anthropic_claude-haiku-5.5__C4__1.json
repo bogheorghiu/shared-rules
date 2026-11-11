@@ -1,0 +1,68 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`. The timestamp makes every key unique, so nothing ever overwrites an entry, and with no eviction the dict grows without bound. The 412k entries in the snapshot match that: each attempt adds one entry and nothing removes it.\n\nBefore I change anything, I need to know whether the per-attempt history is still needed. The comment says \"keep every attempt for debugging,\" so that looks deliberate. The fix depends on who reads it:\n\n1. **Only the latest result per job matters.** Key the dict by `job_id` alone and keep the highest attempt. Memory becomes bounded by the number of live jobs, and `get` becomes a dict lookup instead of a scan over every entry.\n2. **Some history is needed.** Keep a bounded per-job history (e.g. `deque(maxlen=N)`) and drop a job's entries once it completes.\n3. **Full history is needed for debugging.** Write attempts to a log or disk instead of holding them in memory.\n\nI'll check the callers to see what `get` actually relies on:\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|cache\\.get(\" worker/\n\nOnce I have the results, tell me which option you want. If you're not sure whether anything reads old attempts, the grep output should answer that. After the fix, I'd rerun the same two snapshots to confirm `worker/cache.py:88` stops growing. The `handlers.py:142` growth is much smaller, so I'd look at it separately after this.",
+  "id": "gen-1794386978-tZfWzMdKwkNNJjoTIcu3",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6282,
+   "completion_tokens": 1338,
+   "total_tokens": 7620,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012972,
+    "upstream_inference_prompt_cost": 0.0006282,
+    "upstream_inference_completions_cost": 0.000669
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 818,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`."
+   ],
+   "id": "gen-1794386986-4ymYf4RQO6kvDbIq2YWI"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`."
+   ],
+   "id": "gen-1794387716-NqOdCNhyGoWHi6gq98FG"
+  }
+ }
+}

@@ -1,0 +1,83 @@
+{
+ "arm": "dy",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This error means Git found two branches or repositories with **no common ancestor commit**, and it won't merge them by default.\n\nGit normally merges by finding the most recent commit both histories share and combining the changes since then. If the histories share no commits at all, there's no base to merge from. This usually happens when:\n\n- **You initialized a local repo and added a remote that already has its own history.** For example, you ran `git init`, made commits, then ran `git pull origin main`. Your local commits and the remote's commits were created independently.\n- **You're combining two separately created repos**, such as a project and a template, or two copies started from scratch.\n- **The history was rewritten** (rebased, re-initialized, or a repo was recreated on the host), so the old commits no longer connect.\n\nGit blocks the merge on purpose. Merging unrelated histories usually pulls in two copies of every file, which is rarely what you want. The block is a safety check, not a bug.\n\n**Options:**\n\n1. **Confirm you're pointing at the right remote.** If you cloned the wrong repo or mistyped the URL, fix that first (`git remote -v` shows the remotes).\n2. **If your local repo is new and you just want the remote's history,** discard the local commits and reset to the remote:\n   ```\n   git fetch origin\n   git reset --hard origin/main\n   ```\n   This deletes uncommitted and local-only commits, so check `git log` first.\n3. **If you really do want to combine both histories,** force the merge:\n   ```\n   git pull origin main --allow-unrelated-histories\n   ```\n   Expect possible conflicts, and check the result for duplicated files before pushing.\n\nIf you tell me which command you ran and what you're trying to end up with, I can suggest the right option. I can also inspect the repo state (`git status`, `git log --oneline --all`, `git remote -v`) if you want me to check it first.",
+  "id": "gen-1794389176-1CQJlTZNY79dUDlZMyay",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5500,
+   "completion_tokens": 779,
+   "total_tokens": 6279,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009395,
+    "upstream_inference_prompt_cost": 0.00055,
+    "upstream_inference_completions_cost": 0.0003895
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 176,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you tell me which command you ran and what you're trying to end up with, I can suggest the right option.",
+    "none"
+   ],
+   "id": "gen-1794389181-280ZvGofF7HY2C8WLgo4"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389183-fE9GUtPBcmCHvCE7q3pa"
+  },
+  "anthropic/claude-opus-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389191-FngGrT3RnRLCdOrx6Lnx"
+  }
+ }
+}

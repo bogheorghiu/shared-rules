@@ -1,0 +1,65 @@
+{
+ "arm": "dy",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before this goes into the runbook, two corrections to my earlier reply:\n\n- I suggested `npx jest` without knowing your runner. The file is named `test_sync.py`, which looks like pytest. Please confirm the command, and I'll correct the entry.\n- Ten passes don't prove the cause. At a one-in-five failure rate, ten clean runs happen about 11% of the time by chance. The entry should call `--runInBand` a workaround that matched the evidence so far, not a confirmed root cause.\n\nHere's the entry, with the command marked for you to confirm:\n\n```markdown\n## tests/test_sync.py fails intermittently in the full suite\n\n**Symptom.** `tests/test_sync.py` passes when run alone but fails about 1 run in 5\nwhen the full suite runs in parallel.\n\n**Likely cause (unconfirmed).** Shared state between test files running in parallel\nworkers. The `test_sync.py` failures appear to depend on which other tests share a\nworker.\n\n**Workaround.** Run the suite serially:\n\n    npx jest --runInBand      # confirm: the project's actual test command\n\n**Evidence.** 10 of 10 serial runs passed. The parallel failure rate was roughly 1 in\n5. Ten passes alone are weak evidence, so re-run the serial suite more times before\ntreating this as settled.\n\n**Open.** The root cause is not identified. Check what `test_sync.py` shares with\nother test files (module-level state, fixtures, temp paths, a shared database or\nport). Remove the sharing rather than keeping `--runInBand`, which slows the suite\ndown.\n\n**Recorded:** <date>, <your name>\n```\n\nShould I append this to `docs/runbook.md`? I haven't checked whether that file exists, so I'd need to look first. I can also list what `test_sync.py` shares with other tests if you want to start on the open item.",
+  "id": "gen-1794387149-wurmXVIsvFdtjzLnc78o",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5588,
+   "completion_tokens": 1309,
+   "total_tokens": 6897,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012133,
+    "upstream_inference_prompt_cost": 0.0005588,
+    "upstream_inference_completions_cost": 0.0006545
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 699,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "## tests/test_sync.py fails intermittently in the full suite ... **Workaround.** Run the suite serially: npx jest --runInBand",
+    "**Likely cause (unconfirmed).** Shared state between test files running in parallel workers."
+   ],
+   "id": "gen-1794387157-MeK864YVekoDvaYe2Rm2"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here's the entry, with the command marked for you to confirm:",
+    "**Workaround.** Run the suite serially"
+   ],
+   "id": "gen-1794387182-XxpQ8ijua1I1NBgHDfIx"
+  }
+ }
+}

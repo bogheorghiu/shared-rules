@@ -1,0 +1,60 @@
+{
+ "arm": "dyb",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "## What the message says\n\nGit won't merge two histories that share no common ancestor commit. A merge is a three-way operation: git needs a **merge base** \u2014 the last commit the two sides both descend from \u2014 to figure out what each side changed. If it can't find one, it stops and tells you so.\n\n## Why git refuses instead of just doing it\n\nWithout a common ancestor, there's no \"what changed\" \u2014 the only diff git can compute is *every file in A is new, every file in B is new*. Merging that produces a pile of add/add conflicts and can silently resurrect files one side deliberately deleted. Since that's almost never what you meant, git makes you assert that the two histories really are one project before it does the damage.\n\n## How you usually get here\n\n- The remote was **re-created** \u2014 repo deleted and re-pushed, history rewritten, or a force-push reset \u2014 and you're pulling into your old local history.\n- You ran `git init` locally, then added a remote that already had commits.\n- A shallow/partial clone where the shared ancestor isn't present.\n- You're merging an orphan branch (e.g. a `gh-pages` branch created with `--orphan`).\n\n## What to do, by case\n\n**Both sides are the same project** (remote was re-created): say so explicitly.\n```\ngit merge --allow-unrelated-histories origin/main\ngit pull --allow-unrelated-histories origin main\n```\nThe result is a merge commit with two root commits. Optionally one clean start: `git rebase --allow-unrelated-histories` \u2014 actually rebase has no such flag; `--allow-unrelated-histories` exists only on merge/pull/rebase for newer git (`git rebase --allow-unrelated-histories` does exist in recent versions, but merge is the safer choice here).\n\n**Local history is junk / a mistake** (you `init`ed by accident): throw it away, keep the remote.\n```\ngit fetch origin\ngit reset --hard origin/main\n```\n\n**You want linear history**: replay your commits on top of the other side rather than merging.\n```\ngit rebase origin/main   # after the histories are reconciled once\n```\n\n## Check before you use the flag\n\nDecide which history is canonical \u2014 the merge will not throw either away for you, so old files you thought were deleted can come back:\n\n```\ngit log --oneline --all --graph | head -30\ngit merge-base HEAD origin/main    # exits non-zero if there's no ancestor\ngit log --oneline origin/main | head\n```\n\nIf those don't show a plausible shared origin, the `--allow-unrelated-histories` merge will \"work\" but produce a tree that's a union of both histories \u2014 worth diffing (`git diff HEAD origin/main --stat`) before you commit to it.\n\nIf you paste your `git log --oneline --all --graph | head -30` here, I can tell you which of these cases you're in.",
+  "id": "gen-1794386144-e72gKVxepzTPKVMGhRDH",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3790,
+   "completion_tokens": 1431,
+   "total_tokens": 5221,
+   "cost": 0.000735168,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000735168,
+    "upstream_inference_prompt_cost": 1.9668e-05,
+    "upstream_inference_completions_cost": 0.0007155
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 918,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste your `git log --oneline --all --graph | head -30` here, I can tell you which of these cases you're in.",
+    "none"
+   ],
+   "id": "gen-1794386163-mft72FgGfNoRxqftKzQQ"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  }
+ }
+}

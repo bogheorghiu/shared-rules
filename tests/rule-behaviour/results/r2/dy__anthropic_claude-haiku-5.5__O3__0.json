@@ -1,0 +1,70 @@
+{
+ "arm": "dy",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This error means Git found two branches with **no common ancestor commit**, so it can't tell how they relate, and it refuses to merge them by default.\n\nEvery Git commit points to its parent commits, forming a history graph. A normal merge needs a shared commit to use as the base for comparing changes. When the two histories don't share any commit, Git has no base to work from.\n\n**Common causes:**\n\n- **You ran `git init`, made commits, then added a remote that already has its own history.** Your local repo and the remote started from different root commits.\n- **You're combining two separate projects** that were never cloned from one another.\n- **The remote was recreated** (for example, a new repo on GitHub with a README) after you had already cloned or initialized locally.\n\n**Ways to fix it:**\n\n1. **If the remote is the source of truth and your local commits don't matter**, you can reset your local branch to match it:\n   ```\n   git fetch origin\n   git reset --hard origin/main\n   ```\n   This discards local commits on that branch, so check first with `git log --oneline` that you don't need them.\n\n2. **If you want to keep both histories**, allow the merge explicitly:\n   ```\n   git pull origin main --allow-unrelated-histories\n   ```\n   Files that exist in both repos may conflict, so review the result carefully before pushing.\n\n3. **If you want to keep your local commits on top of the remote**, rebase instead, which will also fail without a shared base unless you do one of the above first.\n\nThe error is a safety check, not a bug. Git is asking you to confirm that combining these histories is intentional. If you paste the output of `git log --oneline --all` and `git remote -v` I can help you work out which of these fits your situation.",
+  "id": "gen-1794387175-E9kYMmIhCsN0ncPeIe4t",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5455,
+   "completion_tokens": 816,
+   "total_tokens": 6271,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009535,
+    "upstream_inference_prompt_cost": 0.0005455,
+    "upstream_inference_completions_cost": 0.000408
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 275,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the output of `git log --oneline --all` and `git remote -v` I can help you work out which of these fits your situation.",
+    "none"
+   ],
+   "id": "gen-1794387180-cIVxxlR8VlKNaVlnRy40"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794387182-hV3WWb0GE5mct6JBLb15"
+  }
+ }
+}

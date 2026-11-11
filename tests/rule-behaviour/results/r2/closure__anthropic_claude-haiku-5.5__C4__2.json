@@ -1,0 +1,68 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache` (`worker/cache.py`, lines 70-80). `put()` adds a new entry on every call, keyed by `(job_id, attempt, time.time())`, and nothing removes entries. Each attempt of each job stays in `self._d` for the life of the process. The snapshot matches: 412k entries at about 80 bytes of dict overhead each, growing with job throughput. Your 40 MB/hour is roughly the rate at which attempts arrive.\n\nTwo other problems in the same class:\n\n- **`get()` scans the whole dict** on every call, so lookup cost grows with the leak as well as memory.\n- **`time.time()` in the key can collide.** On a coarse clock, two attempts for the same job can produce the same key and silently overwrite each other. Since `get()` returns the last match, that is not what you want.\n\nBefore choosing a fix, I need to know which callers depend on the history. `get()` only returns the latest attempt, so the full history is used only for debugging. Let me check the callers:\n\nTOOL: grep -rn \"ResultCache\\|\\.get(job\\|cache\\.put\\|cache\\.get\" worker/ --include=*.py\n\nOnce I see the callers, I can suggest a fix. The options differ in what they keep:\n\n1. **Evict on job completion.** Drop a job's entries when it finishes. Memory is bounded by in-flight jobs. The downside is that attempt history disappears once a job ends.\n2. **Cap attempts per job** (for example, the last 5). Keeps recent history for debugging and bounds memory per job, but the total still grows with the number of distinct jobs unless you also apply option 1.\n3. **Move the debug history to logs.** The cache keeps only the latest result per job, and every attempt is logged where log rotation handles retention.\n\nWhich do you need: attempt history that survives job completion, or only enough history to debug a job while it runs? The answer decides between these options. Once you tell me, I'll propose a diff, and I'll leave the `get()` scan alone unless you want it fixed too.",
+  "id": "gen-1794386988-tdeXdJMjTTCONpXSpwB1",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6282,
+   "completion_tokens": 1298,
+   "total_tokens": 7580,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012772,
+    "upstream_inference_prompt_cost": 0.0006282,
+    "upstream_inference_completions_cost": 0.000649
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 628,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache` (`worker/cache.py`, lines 70-80). `put()` adds a new entry on every call"
+   ],
+   "id": "gen-1794386996-FpMq8DtugItNglqMSB0n"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache` (`worker/cache.py`, lines 70-80). `put()` adds a new entry on every call"
+   ],
+   "id": "gen-1794387566-3RECcw78JIuUvxRXbWj4"
+  }
+ }
+}

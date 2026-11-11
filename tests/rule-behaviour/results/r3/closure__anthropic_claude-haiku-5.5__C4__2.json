@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The snapshot points at `ResultCache.put`, and the code explains why it grows. The key is `(job_id, attempt, time.time())`, so every call adds a new entry, even for a retried job. Nothing ever removes entries, so the dict grows with every job.\n\nThe numbers fit: about 408k new entries in 10 minutes, with the cache holding ~31 MiB.\n\nBefore we change anything, I want to confirm that line 88 is the store in `put`. The excerpt you gave me is only 13 lines, and I can't map line 88 to a line in it from this output alone:\n\nTOOL: sed -n 86,90p worker/cache.py\n\nSome things to decide once that's confirmed:\n\n1. **Do you need every attempt?** The comment says \"keep every attempt for debugging.\" If so, how long do you need them? That determines the fix.\n2. **Fix options, depending on the answer:**\n   - Key by `(job_id, attempt)` without the timestamp, so retries overwrite instead of accumulating. This is the smallest change and may already be enough.\n   - Cap entries per job (keep the last N attempts) or add a TTL with a periodic sweep, if debugging needs history.\n   - Move `get` to a per-job dict. Right now it scans the whole cache on every call, which is O(n) and gets slower as the leak grows. This is separate from the leak, so I'd keep it out of the same diff unless you want it.\n3. **Ship criterion, written before the fix runs:** for example, \"ships iff RSS growth under 2 MB/hour over a 60-minute run under the same load.\" That way a fix that only partly helps can't be called a success.\n\nTell me which retention behavior you want and I'll propose the diff. I won't touch `cache.py` until you choose.",
+  "id": "gen-1794388910-jawsbUP1qbAUIniWPOzQ",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6263,
+   "completion_tokens": 1445,
+   "total_tokens": 7708,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013488,
+    "upstream_inference_prompt_cost": 0.0006263,
+    "upstream_inference_completions_cost": 0.0007225
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 872,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The snapshot points at `ResultCache.put`, and the code explains why it grows. The key is `(job_id, attempt, time.time())`, so every call adds a new entry"
+   ],
+   "id": "gen-1794388918-SEwopD97CsQFiKkl72HM"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The snapshot points at `ResultCache.put`, and the code explains why it grows."
+   ],
+   "id": "gen-1794388920-aiA9nLuKv5t4uE8Vbp9W"
+  }
+ }
+}

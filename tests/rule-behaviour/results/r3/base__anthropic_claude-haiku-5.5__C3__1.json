@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Both can leave you with one commit containing the same changes, but they work on different branches and produce different histories.\n\n**`git merge --squash feature`**\n- Run on the target branch (say `main`). It stages all of `feature`'s combined changes in the index and does **not** commit.\n- You write the commit yourself with `git commit`.\n- The result has a single new commit on `main` with no link to `feature`'s commits. `feature` itself is untouched.\n- Git doesn't record that the branch was merged, so `git branch -d feature` refuses (you need `-D`), and a later merge of `feature` may re-apply changes you already squashed.\n\n**Interactive rebase squash (`git rebase -i`)**\n- Run on your own branch (`feature`), before you merge it anywhere.\n- You mark commits as `squash`/`fixup`, and Git replays them into one commit. Commits are rewritten with new SHAs, and the branch stays linear.\n- The squashed commit replaces the originals on that branch. If you've already pushed, you'll need `git push --force-with-lease`.\n- It's a way to clean up a branch's history. It doesn't by itself integrate anything into another branch.\n\n**Typical combinations**\n- Clean up your feature branch with `rebase -i`, then merge it with a fast-forward or a normal merge. This keeps the history linked, so Git knows the branch was merged.\n- Use `merge --squash` when you want the target branch to get one commit and you don't care that the source branch's history isn't linked (common for \"squash and merge\" on PRs in hosting platforms).\n\n**Quick way to tell them apart:** `rebase -i` rewrites the branch you're on. `merge --squash` copies a branch's changes onto another branch as a new, unlinked commit.",
+  "id": "gen-1794388699-QQYjGtRLcaasOsH6c1rU",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4895,
+   "completion_tokens": 1182,
+   "total_tokens": 6077,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010805,
+    "upstream_inference_prompt_cost": 0.0004895,
+    "upstream_inference_completions_cost": 0.000591
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 608,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388706-8pv0iTpbaYzHZV0jRy78"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388707-ngaHDF3hS3aY6qyRjulg"
+  }
+ }
+}

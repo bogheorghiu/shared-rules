@@ -1,0 +1,68 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`. The `time.time()` component makes every key unique, so retries and repeat puts never overwrite anything. Nothing removes entries, so the dict grows with every job attempt. That matches the snapshot: +408k objects in `cache.py:88` over ten minutes, which is the number of puts.\n\n`get()` also scans the whole dict on every call, so lookups slow down as the cache grows. That's a second problem, and it will show up as latency once the memory is fixed.\n\nBefore changing anything, I want to confirm nothing else holds or deletes entries from this dict:\n\nTOOL: grep -rn \"ResultCache\\|\\._d\\b\\|\\.put(\" worker/ lib/ --include=*.py\n\nOnce I see the callers, I can suggest a fix. The fix depends on a decision only you can make: \"keep every attempt for debugging\" is an intentional choice, and it conflicts with bounded memory. The options are:\n\n1. **Keep only the latest result per job.** Key by `job_id` alone. This is the smallest change and bounds memory to the number of live jobs, but you lose per-attempt history.\n2. **Keep all attempts, but bounded.** Use a `collections.OrderedDict` or deque with a max size (e.g. last N entries) or a TTL. You keep recent debugging history and memory stops growing.\n3. **Keep all attempts, drop them when the job finishes.** Evict on job completion. This only works if the worker has a clear \"job done\" signal.\n\nWhich one fits how you debug? If you need attempt history after a job completes, option 2 is probably right. If you only look at attempts while a job is running, option 3 is cleaner. Let me know and I'll write the change, plus a test that the cache stays under its bound.",
+  "id": "gen-1794386786-Qpt7U4ML6JfReqZJCqCj",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1124,
+   "total_tokens": 6499,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010995,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.000562
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 519,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`."
+   ],
+   "id": "gen-1794386793-Ur7jQKHIi9vQBxLPbMyY"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call adds a new dict entry keyed by `(job_id, attempt, time.time())`."
+   ],
+   "id": "gen-1794387296-vOISucee9CccGBQpcX0N"
+  }
+ }
+}

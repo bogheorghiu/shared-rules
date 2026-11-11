@@ -1,0 +1,60 @@
+{
+ "arm": "dy",
+ "case": "D2",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "```python\ndef dedupe_by_id(items):\n    \"\"\"Remove duplicate dicts by their 'id' key.\n\n    Each id keeps the last dict that carries it, but its position is where\n    that id first appeared in the list.\n    \"\"\"\n    latest = {}\n    for item in items:\n        latest[item[\"id\"]] = item  # re-assigning an existing key keeps its original position\n    return list(latest.values())\n```\n\nExample:\n\n```python\nrows = [\n    {\"id\": 1, \"v\": \"a\"},\n    {\"id\": 2, \"v\": \"b\"},\n    {\"id\": 1, \"v\": \"c\"},\n    {\"id\": 3, \"v\": \"d\"},\n    {\"id\": 2, \"v\": \"e\"},\n]\n\nprint(dedupe_by_id(rows))\n# [{'id': 1, 'v': 'c'}, {'id': 2, 'v': 'e'}, {'id': 3, 'v': 'd'}]\n```\n\nThe function relies on dicts preserving insertion order (guaranteed since Python 3.7). Assigning to an existing key updates its value without moving it, which gives the required combination: id 1 appears first in the output but holds the value from its last occurrence.\n\nTwo behaviors to be aware of:\n- If you wanted the dict at the last occurrence's position instead, that would be a different ordering. Say so and I'll change it.\n- Items missing `'id'` raise `KeyError`, and unhashable id values (such as lists) raise `TypeError`.",
+  "id": "gen-1794388976-uin367NLh9BDhaphs2lw",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5525,
+   "completion_tokens": 843,
+   "total_tokens": 6368,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000974,
+    "upstream_inference_prompt_cost": 0.0005525,
+    "upstream_inference_completions_cost": 0.0004215
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 372,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388981-RTQ6HPgbEG3PDLANkDTU"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388982-vyOH5DxGHeFcvtsiRTdt"
+  }
+ }
+}

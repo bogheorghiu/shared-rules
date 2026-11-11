@@ -1,0 +1,68 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache` in `worker/cache.py`. `put()` adds a new dict entry on every call, keyed by `(job_id, attempt, time.time())`. Nothing removes entries, so the dict grows for the life of the process. The snapshot agrees: the growth is in the line that allocates these entries, and the count rose by about 408k in the sample window.\n\nTwo things I'd check before fixing:\n\n- **The numbers don't quite reconcile.** The tracemalloc diff shows +30.9 MiB, and RSS grows about 40 MB/hour. If the two snapshots were 10 minutes apart, the traced growth is roughly 4\u00d7 the RSS rate. That could be a burst during the window, or the snapshots may not be 10 minutes apart. Running a longer window would settle it. The cache is clearly unbounded, but I'd confirm it's the whole 40 MB/hour and not just the largest part.\n- **Callers of `put()`.** Confirm how many times per job it's called. If retries call it on every attempt, growth scales with retry volume.\n\nThere's also a second problem: `get()` scans every key in the dict, so lookup cost grows with the same leak. Once the dict is bounded, that cost goes away too.\n\nOn the fix, the code comment says \"keep every attempt for debugging,\" so the retention requirement decides the design. Options:\n\n1. **Keep only the latest result per job_id** (`self._d[job_id] = result`). This matches what `get()` returns, so it's the smallest change. It drops the per-attempt history.\n2. **Keep the last N attempts per job** using a bounded `deque` per job, plus a TTL or max-size on the outer dict so finished jobs get evicted.\n3. **Move attempt history out of memory** into logs or a file, and keep only the latest result in the cache.\n\nDo you still need the per-attempt history in memory, or was it only for debugging? If it's only debugging, option 1 or 3 is probably right. If something reads older attempts, I'd go with option 2. Once you pick, I'll make the change and add a test that `put()` many times doesn't grow the cache past its bound.",
+  "id": "gen-1794386783-jA6t9OgJ5FOuuJByc2SU",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1560,
+   "total_tokens": 6935,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013175,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.00078
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 863,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache` in `worker/cache.py`. `put()` adds a new dict entry on every call... Options: 1. Keep only the latest result per job_id"
+   ],
+   "id": "gen-1794386792-8qFBUuO1bnCZB0i2CoKG"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache` in `worker/cache.py`."
+   ],
+   "id": "gen-1794387286-qQjs5389003jGpAFkazE"
+  }
+ }
+}

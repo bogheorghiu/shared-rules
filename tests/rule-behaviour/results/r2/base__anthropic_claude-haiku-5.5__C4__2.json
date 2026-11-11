@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache`. Each `put` adds a new dict entry, and the key includes `time.time()`, so a retry never overwrites an earlier attempt. Nothing removes entries, so the dict grows for the life of the process. The 408k-entry count growth in the snapshot fits that.\n\nThe `get` method also scans every key on each call. Since the dict grows without bound, lookups get slower over time as well as using more memory.\n\nBefore proposing a fix, I need to know who calls this cache and whether anything depends on keeping old attempts:\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|cache\\.get(\" worker/ --include=*.py\n\nI also want to see whether the results are used after the job completes, and whether the \"keep every attempt for debugging\" behavior is read anywhere. Once I have the callers, I can suggest a fix. Reasonable options include:\n\n- Key by `(job_id, attempt)` so a retry overwrites instead of accumulating.\n- Drop a job's entries when it completes or is acknowledged.\n- Use a bounded structure, such as an `OrderedDict` or a per-job cap on attempts, if debugging history is still needed.\n\nOne thing to check: the snapshot shows about 31 MB gained in 10 minutes, but your RSS growth is about 40 MB per hour. Tracemalloc overhead and the snapshot window could explain some of the gap, but if the RSS rate is much lower than the cache's growth, there may be a second contributor. Confirming that would mean comparing RSS against the cache's size over a longer run.",
+  "id": "gen-1794386786-S6uqkV2w5lyMFTLkqPeZ",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1072,
+   "total_tokens": 6447,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010735,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.000536
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 556,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. Each `put` adds a new dict entry, and the key includes `time.time()`, so a retry never overwrites an earlier attempt."
+   ],
+   "id": "gen-1794386792-iyoZzHPC0YtJLoFIt9W9"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. Each `put` adds a new dict entry"
+   ],
+   "id": "gen-1794386794-kpGg7aCEURit41CeKCuY"
+  }
+ }
+}

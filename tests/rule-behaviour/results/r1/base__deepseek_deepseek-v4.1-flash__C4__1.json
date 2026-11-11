@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "Let me see the whole file before concluding \u2014 I want to confirm there's no eviction elsewhere and understand what `get` needs to preserve.\n\nTOOL: cat worker/cache.py\n\nAlso worth checking: is `time.time()` in the key actually load-bearing, or is it there just for ordering? That determines the fix \u2014 because with `time.time()` in the key, every `put` for the same `(job_id, attempt)` is a *distinct* key, so even a real dict eviction by `(job_id, attempt)` wouldn't have bounded it. Let me also find the callers to see the intended access pattern.\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|cache\\.get\\|\\.get(\" worker/ --include=*.py | grep -v \"\\._d\"",
+  "id": "gen-1794385557-pPsYi1lsml0X6LYosylp",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3771,
+   "completion_tokens": 338,
+   "total_tokens": 4109,
+   "cost": 0.000188554,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3072,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000188554,
+    "upstream_inference_prompt_cost": 1.9554e-05,
+    "upstream_inference_completions_cost": 0.000169
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 179,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "Let me see the whole file before concluding \u2014 I want to confirm there's no eviction elsewhere and understand what `get` needs to preserve."
+   ],
+   "id": "gen-1794385561-qA1FVJWczps5gFrQRFjM"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "with `time.time()` in the key, every `put` for the same `(job_id, attempt)` is a *distinct* key"
+   ],
+   "id": "gen-1794385565-TTClsDn3BHHur4IKAEfI"
+  }
+ }
+}

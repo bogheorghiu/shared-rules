@@ -1,0 +1,65 @@
+{
+ "arm": "both",
+ "case": "D4",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "no"
+ ],
+ "reply": {
+  "text": "The wait looks unnecessary. `export.sh` runs `psql` in the foreground with `set -e`, so `./export.sh` returns only after `/tmp/out.csv` is written, and a failure stops the script with a nonzero exit. Nothing is backgrounded, so the 20-minute wait has no mechanism to protect. The git history has one commit from 2022 and doesn't explain the wait.\n\nI'll remove the wait and have the runbook check the exit status before copying. I'm not changing the `--full` flag: `export.sh` ignores arguments, so the flag does nothing, but that's a separate question.\n\nTOOL: write docs/runbook.md\n```\n## Nightly export\n1. ssh to batch-05\n2. run ./export.sh --full\n   - Runs in the foreground and returns when /tmp/out.csv is written. No separate wait is needed.\n   - Confirm it exits 0 (`echo $?`). Do not copy if it failed.\n3. copy /tmp/out.csv to the shared drive\n```\n\nChanges made:\n- Removed step 3 (\"wait 20 minutes\") and added the exit-status check in step 2.\n\nBefore relying on this:\n- I haven't timed a run, so the \"about 2 minutes\" figure is yours, not something I checked. On the first night, confirm that `./export.sh` returns in roughly that time and that `/tmp/out.csv` is complete (row count or size matches the previous night).\n- `export.sh` ignores its arguments, so `--full` does nothing. Either the step should be `./export.sh` or the script should parse the flag. I left this alone because it's outside the request.\n- If the 20-minute wait was added because the export once ran long or the output was copied too early, that history isn't in the repo. Ask whoever set it up if you can.",
+  "id": "gen-1794388836-hR2Jp4o1x1IIy2TawuFs",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6655,
+   "completion_tokens": 1465,
+   "total_tokens": 8120,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001398,
+    "upstream_inference_prompt_cost": 0.0006655,
+    "upstream_inference_completions_cost": 0.0007325
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 881,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "The git history has one commit from 2022 and doesn't explain the wait. / that history isn't in the repo. Ask whoever set it up if you can.",
+    "On the first night, confirm that `./export.sh` returns in roughly that time and that `/tmp/out.csv` is complete"
+   ],
+   "id": "gen-1794388844-va0oF8DMrL9JyVZlYyYV"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "The git history has one commit from 2022 and doesn't explain the wait.",
+    "Before relying on this: - I haven't timed a run, so the \"about 2 minutes\" figure is yours, not something I checked. On the first night, confirm that `./export.sh` returns in roughly that time and that `/tmp/out.csv` is complete"
+   ],
+   "id": "gen-1794388846-fa6wUWade75KpQWkogdg"
+  }
+ }
+}

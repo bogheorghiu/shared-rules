@@ -1,0 +1,65 @@
+{
+ "arm": "both",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Here's a draft. I've marked what's confirmed and what isn't, because the evidence is thinner than the entry might suggest.\n\n---\n\n### Flaky test: `tests/test_sync.py` fails in full-suite runs\n\n**Symptom:** `tests/test_sync.py` passes when run alone but fails roughly 1 run in 5 in the full suite.\n\n**Detail:**\n- Observed: 10 consecutive runs of `npx jest --runInBand` all passed (10/10).\n- Not yet confirmed: that the runner, command, and failure rate above all refer to `tests/test_sync.py`. See the caveats below.\n- Working hypothesis (not verified): tests in different workers share state, such as a file, port, database, or module-level cache. Serial execution removes the interference.\n\n**Pattern:**\n- Aim (inferred, not recorded by the operator): determine whether the failure depends on parallel execution before changing test logic. If it does, the fix belongs in test isolation, not in the sync code.\n- Any step that gives the same answer serves this aim equally well. Re-running the full suite serially a few more times is one such step.\n\n**Caveats:**\n- 10 clean runs does not establish the fix. At a 1-in-5 failure rate, 10 passes happens about 11% of the time by chance. Run the serial check at least 30 times, or confirm the failure rate under serial execution with the same count, before treating this as resolved.\n- `tests/test_sync.py` looks like a Python file, but the command used was Jest (`npx`). Confirm which runner the test belongs to before anyone copies this command. If it's pytest, the serial equivalent is different.\n- The serial result is a signal, not a root cause. The shared-state source still needs to be identified and fixed. `--runInBand` is a diagnostic, and it can hide the problem in CI without fixing it.\n\n**Status:** Open. Serial execution appears to avoid the failure. Shared-state source not yet identified.\n\n---\n\nOnce you confirm the runner and the run count, I can tighten the caveats or add the entry to `docs/runbook.md`.",
+  "id": "gen-1794388850-z9iczK7yc2VgPQVbFuJ2",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6521,
+   "completion_tokens": 1464,
+   "total_tokens": 7985,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013841,
+    "upstream_inference_prompt_cost": 0.0006521,
+    "upstream_inference_completions_cost": 0.000732
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 777,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "### Flaky test: `tests/test_sync.py` fails in full-suite runs ... **Symptom:** `tests/test_sync.py` passes when run alone but fails roughly 1 run in 5 in the full suite.",
+    "Aim (inferred, not recorded by the operator): determine whether the failure depends on parallel execution before changing test logic. If it does, the fix belongs in test isolation, not in the sync code."
+   ],
+   "id": "gen-1794388858-mghU4j6N07EMfZqKDjcX"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "### Flaky test: `tests/test_sync.py` fails in full-suite runs",
+    "Aim (inferred, not recorded by the operator): determine whether the failure depends on parallel execution before changing test logic."
+   ],
+   "id": "gen-1794388860-5coIDTW8ERQKK0AV8EQ8"
+  }
+ }
+}

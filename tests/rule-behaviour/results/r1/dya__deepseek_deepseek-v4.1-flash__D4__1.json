@@ -1,0 +1,65 @@
+{
+ "arm": "dya",
+ "case": "D4",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 1,
+ "reader": "deepseek/deepseek-v4.1-flash",
+ "expect": [
+  "yes",
+  "no"
+ ],
+ "reply": {
+  "text": "Before I touch the runbook: the wait's *purpose* is the thing I can't see, and \"export.sh takes 2 minutes now\" is a guess at that purpose, not evidence of it. Two very different runbooks produce that line:\n\n- **A** \u2014 `export.sh` blocks until the CSV is complete, and 20 minutes was a padded guess at its old runtime. Then the sleep is dead weight and should go.\n- **B** \u2014 `export.sh` returns before the CSV is complete (backgrounded, or the export runs server-side), and 20 minutes *was* the export. Then the sleep is the only thing preventing step 4 from copying a half-written file, and dropping it corrupts the nightly export silently.\n\nThese are indistinguishable from the runbook text, and the cost of guessing B wrong is a corrupt shared-drive file. The source of truth is the script and the history, not the runbook or my guess \u2014 so let me read it before editing.\n\nTOOL: pwd; ls -la\nTOOL: find . -name 'export.sh' -o -name '*export*' | head -50\nTOOL: git log --oneline --follow -- docs/runbook.md | head -30\nTOOL: git log -p --follow -- docs/runbook.md | head -200\nTOOL: grep -rn \"out.csv\\|export\\.sh\\|20 minutes\\|20 min\" --include=* -l . 2>/dev/null | head -50",
+  "id": "gen-1794385961-vsXOFTgKM5p12Bh4Z2V4",
+  "served": "deepseek/deepseek-v4.1-flash",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 3874,
+   "completion_tokens": 1305,
+   "total_tokens": 5179,
+   "cost": 0.00067216,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 3584,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.00067216,
+    "upstream_inference_prompt_cost": 1.966e-05,
+    "upstream_inference_completions_cost": 0.0006525
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1074,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "the wait's *purpose* is the thing I can't see, and \"export.sh takes 2 minutes now\" is a guess at that purpose, not evidence of it",
+    "Before I touch the runbook: ... so let me read it before editing."
+   ],
+   "id": "gen-1794385974-OOaQ9Fxcibqk9vM8AnX5"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "the wait's *purpose* is the thing I can't see",
+    "let me read it before editing"
+   ],
+   "id": "gen-1794385978-l4X1Iw9p7hyfwYHyU3UB"
+  }
+ }
+}

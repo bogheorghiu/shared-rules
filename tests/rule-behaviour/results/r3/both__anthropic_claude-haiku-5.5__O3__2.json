@@ -1,0 +1,70 @@
+{
+ "arm": "both",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This means Git found two histories with no common ancestor commit, so it won't merge them by default. Every Git repository is a chain of commits, and merging works by finding where two chains diverged. If they never shared a commit, Git has no base to merge from.\n\nThis usually happens when:\n\n- **You ran `git init` locally, made commits, then added a remote that already has its own history.** A common case is a GitHub repo created with an auto-generated README or `.gitignore`, which gives it a first commit unrelated to yours.\n- **You cloned or pulled from a different repo** than you meant to, or the remote was recreated or force-pushed with a fresh history.\n- **You're combining two separately started projects** into one repo.\n\nBefore forcing anything, check what each side contains:\n\n```\ngit log --oneline --all --graph\ngit remote -v\ngit log --oneline origin/main    # or whichever remote branch you're merging\n```\n\nThen choose based on what you find:\n\n- **The remote is an empty or throwaway initial commit** (like an auto-generated README): `git pull --allow-unrelated-histories` is usually safe. Review the result before pushing.\n- **The remote is the wrong repo:** fix the remote URL with `git remote set-url origin <correct-url>` instead of merging.\n- **Both sides contain real work:** the merge will likely conflict heavily. Decide which history should be the base, or rebase or cherry-pick your commits onto the remote branch.\n\nIf you paste the output of those commands, I can tell you which case applies.",
+  "id": "gen-1794389228-lID67G4BXaABWWzHnVe0",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6388,
+   "completion_tokens": 717,
+   "total_tokens": 7105,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009973,
+    "upstream_inference_prompt_cost": 0.0006388,
+    "upstream_inference_completions_cost": 0.0003585
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 233,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the output of those commands, I can tell you which case applies.",
+    "none"
+   ],
+   "id": "gen-1794389233-DxPocKMxDxlCJSqsVzRy"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389234-vr2NRZf3GE7xl6uk6tEz"
+  }
+ }
+}

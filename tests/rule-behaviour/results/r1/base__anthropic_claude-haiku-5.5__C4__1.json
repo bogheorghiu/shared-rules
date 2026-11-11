@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. The key is `(job_id, attempt, time.time())`, so every call adds a new entry, even for a retry of the same job and attempt. Nothing removes entries, so the dict grows for the life of the process. The snapshot matches: `cache.py:88` gained about 408k entries in the window.\n\n`get()` also scans every key on each call (`self._d.items()`), so lookups get slower as the cache grows. That's a CPU problem on top of the memory one.\n\nBefore I write a fix, I need to know one thing: **do you need attempts to stay retrievable after a job finishes?** The answer decides the fix:\n\n- **If no, only the latest result matters:** store `self._d[job_id] = result` and drop the attempt history. This is the smallest change, and memory stays proportional to the number of live jobs. You'd also need to clear entries when jobs complete.\n- **If you need a bounded debug trail:** keep a `dict[job_id] -> deque(maxlen=N)` of attempts. Memory is capped, lookup is O(1), and the debugging history survives.\n\nAlso, the numbers don't quite line up yet. +31 MiB in about ten minutes is roughly 185 MiB/h, but RSS grows about 40 MB/h. tracemalloc overhead could explain part of that, and so could the interval between snapshots. Before calling this fixed, I'd confirm that the cache accounts for the RSS rate. After the fix, rerun the same two-snapshot diff and check that `cache.py:88` stays flat and RSS stops climbing over an hour or so.",
+  "id": "gen-1794385133-zKbt1hjzmtMZVQsp5QCf",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1253,
+   "total_tokens": 6628,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001164,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.0006265
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 729,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. The key is `(job_id, attempt, time.time())`, so every call adds a new entry"
+   ],
+   "id": "gen-1794385140-wow8V4C99Cti0mCwxXlL"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put` ... store `self._d[job_id] = result`"
+   ],
+   "id": "gen-1794385149-qqU3B5xmLhSvpu4XeKh9"
+  }
+ }
+}

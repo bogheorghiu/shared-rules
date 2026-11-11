@@ -1,0 +1,63 @@
+{
+ "arm": "base",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "They do similar things but at different points in the workflow.\n\n**`git merge --squash <branch>`** is run on the *target* branch (say, `main`). It takes all the changes on `<branch>` since it diverged and stages them as one set of changes in your index. It does not create a commit, so you run `git commit` yourself. The result is a single new commit on `main`, and `<branch>` is left untouched. Git also doesn't record that `<branch>` was merged, so:\n\n- Later `git merge <branch>` can conflict or re-apply changes that are already in `main` in squashed form, because Git doesn't know those commits were integrated.\n- `<branch>`'s history isn't linked to `main`, so tools that check \"is this branch merged?\" will report it as unmerged.\n\n**`git rebase -i` with `squash`/`fixup`** is run on your *own* feature branch. It rewrites that branch's commits, combining several into one. You choose the grouping and the message, and the new commits get new hashes. Nothing happens to `main` until you merge.\n\n```\ngit checkout feature\ngit rebase -i main      # squash the WIP commits into one\ngit checkout main\ngit merge --ff-only feature   # or a normal merge\n```\n\nThe usual difference is the goal:\n\n- **Interactive rebase** cleans up your branch's history before it's integrated. Because it rewrites history, you'd need `--force-with-lease` if the branch was already pushed.\n- **`merge --squash`** integrates a branch as a single commit, with no link back to the branch's history.\n\nIf you want a linear history with one commit per feature and a clear record of the merge, squash on the branch with `rebase -i`, then fast-forward or merge into `main`. If you want the target branch to contain exactly one commit per feature and don't care about linking the branch afterward, `merge --squash` is enough, but delete the source branch once you're done with it.",
+  "id": "gen-1794386772-CPYlx5ejrLgpZ5lMoBS6",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4895,
+   "completion_tokens": 1176,
+   "total_tokens": 6071,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010775,
+    "upstream_inference_prompt_cost": 0.0004895,
+    "upstream_inference_completions_cost": 0.000588
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 570,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386779-ZD19nYgtbIqwIeqnwp3D"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794387272-tuw6wConFIUZHR12cCfs"
+  }
+ }
+}
