@@ -117,6 +117,29 @@ def one(job):
     json.dump(rec, open(path, "w"), indent=1)
 
 
+def regrade(out, model):
+    """Fill missing second grades on stored replies with `model`; replies are not touched."""
+    cases = {c["id"]: c for c in load_cases()}
+
+    def fix(path):
+        rec = json.load(open(path))
+        if "void" in rec["reply"]:
+            return
+        g = rec["grades"]
+        good = [k for k, v in g.items() if "answers" in v and k != TIEBREAK]
+        if len(good) >= 2:
+            return
+        case, text = cases[rec["case"]], rec["reply"]["text"]
+        g[model] = grade(model, case, text)
+        got = [v["answers"] for k, v in g.items() if "answers" in v and k != TIEBREAK]
+        if len(got) == 2 and got[0] != got[1] and "answers" not in g.get(TIEBREAK, {}):
+            g[TIEBREAK] = grade(TIEBREAK, case, text)
+        json.dump(rec, open(path, "w"), indent=1)
+
+    with cf.ThreadPoolExecutor(4) as ex:
+        list(ex.map(fix, sorted(glob.glob(os.path.join(out, "*.json")))))
+
+
 def verdict(rec):
     """pass / fail / void for one run: majority of graders, each all-checks-match."""
     if "void" in rec["reply"]:
@@ -161,11 +184,14 @@ def main():
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--cases", default=CASES, help="case file in this folder")
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--regrade", metavar="MODEL", help="grade stored replies that lack a second grade")
     a = ap.parse_args()
     CASES = a.cases
     out = os.path.join(HERE, a.out)
     os.makedirs(out, exist_ok=True)
-    if not a.report:
+    if a.regrade:
+        regrade(out, a.regrade)
+    elif not a.report:
         cases = [c for c in load_cases() if not a.only or c["rule"] in a.only.split(",")]
         jobs = []
         for spec in a.arm:
