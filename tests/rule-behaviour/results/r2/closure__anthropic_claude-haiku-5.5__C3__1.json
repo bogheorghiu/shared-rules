@@ -1,0 +1,63 @@
+{
+ "arm": "closure",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "They solve different problems. One combines commits from a branch into a single commit on another branch. The other rewrites the commits on the branch itself.\n\n**`git merge --squash <branch>`**\n- Run on the target branch (e.g., `main`).\n- Applies the net diff of `<branch>` onto your working tree and index, but creates **no commit**.\n- You then run `git commit` yourself, and that makes one commit with a single parent: the previous tip of `main`.\n- `<branch>`'s commits are not part of `main`'s history. Git doesn't record that they were merged.\n- `<branch>` is untouched, so you can keep working on it.\n- Caveat: because Git doesn't know the branch was merged, a later `git merge <branch>` can re-apply changes you've already squashed and produce conflicts.\n\n**Interactive rebase with squash (`git rebase -i`)**\n- Run on the branch you're working on (e.g., `feature`).\n- You pick commits to combine (`squash`/`fixup`), and can also reorder, reword, or drop them.\n- It **rewrites** your branch: the commits get new hashes and the old ones are discarded.\n- It doesn't merge anything. It only changes the shape of one branch's history.\n- If you've already pushed the branch, you'll need `git push --force-with-lease`, and anyone else working on it will have to deal with the rewritten history.\n\n**Typical use of each**\n- Clean up your own WIP commits before sharing: `rebase -i`.\n- Land a branch on `main` as one commit without tidying its history: `merge --squash`.\n- Often both: rebase-squash the feature branch, then fast-forward `main` to it with `git merge --ff-only`. This gives `main` a linear history with one commit per feature, and no squash-merge caveat, since the feature's commits are actually in `main`'s ancestry.",
+  "id": "gen-1794386968-l30aXVHWwuOi8cNJqIEn",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5802,
+   "completion_tokens": 1115,
+   "total_tokens": 6917,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0011377,
+    "upstream_inference_prompt_cost": 0.0005802,
+    "upstream_inference_completions_cost": 0.0005575
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 510,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386975-FravEziQ2GeyZ3VwxEg9"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794387404-AU6mc6FScpjBZ2w9HbHR"
+  }
+ }
+}

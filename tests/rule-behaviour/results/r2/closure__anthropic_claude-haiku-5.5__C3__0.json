@@ -1,0 +1,63 @@
+{
+ "arm": "closure",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "The main difference is **where the squashing happens and whether the branch's history survives**.\n\n**`git merge --squash <branch>`** combines the branch's changes into one commit on your *current* branch (usually `main`):\n\n```sh\ngit switch main\ngit merge --squash feature\ngit commit -m \"Add feature\"\n```\n\n- It stages the net diff of `feature` but creates no merge commit, so you commit manually.\n- The new commit has a single parent. Git records no link to `feature`'s commits, so `feature` is never an ancestor of `main`.\n- `git branch -d feature` will refuse, because Git doesn't think it's merged. You need `-D`.\n- If you later merge `feature` again, Git doesn't know its commits were already applied, which can cause duplicate changes or conflicts.\n\n**Interactive rebase squash** (`git rebase -i`) rewrites commits on your *feature* branch itself, folding several into one:\n\n```sh\ngit switch feature\ngit rebase -i main     # mark commits as \"squash\" or \"fixup\"\n```\n\n- It creates new commits with new SHAs. The branch history stays linear, and you can still merge it afterward normally, including as a fast-forward.\n- It's a tool for tidying your own work before it's shared or merged.\n- If the branch was already pushed, you'll need `git push --force-with-lease`, and anyone else working on that branch will have to reconcile with the rewritten history.\n\n**In short:**\n- Use `merge --squash` when you want to land a branch on a shared branch as one commit and don't care about linking its history. Its main cost is the later \"is this merged?\" confusion.\n- Use interactive rebase when you want a clean series of commits on your own branch, and the merge method is a separate decision.\n\nMany teams do both: rebase-squash to tidy the branch, then a normal merge or fast-forward. Others use squash-merge in a pull request and accept the disconnected history.",
+  "id": "gen-1794386968-uurbtNkTGxPa7GSOCwyq",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5802,
+   "completion_tokens": 1140,
+   "total_tokens": 6942,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0011502,
+    "upstream_inference_prompt_cost": 0.0005802,
+    "upstream_inference_completions_cost": 0.00057
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 522,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794386975-TkWWbA5en8Rfk5SdT3RO"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794387566-480tg8KBjcR6Qfi8l71P"
+  }
+ }
+}

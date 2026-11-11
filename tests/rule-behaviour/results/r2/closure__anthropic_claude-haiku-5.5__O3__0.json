@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This means Git found two sets of commits that share no common ancestor, so it won't merge them by default. Every Git commit points back to its parent commits, and a merge needs a point where the two histories meet. Here there isn't one.\n\nThis usually happens when:\n\n- You ran `git init` in a folder that already had files, made your own commits, and then tried to `git pull` or `git merge` from a remote repo that has its own history.\n- You're combining two separate repositories that were created independently.\n- A remote was recreated or re-initialized, so its history no longer connects to your local clone.\n\n**Check before forcing anything.** Compare the two histories:\n\n```\ngit log --oneline --all --graph -n 20\ngit log --oneline origin/main -n 5    # or whatever branch you're merging\n```\n\nIf you're merging a remote into a local repo you started from scratch, the usual right answer is to clone the remote instead, or to reset your local branch to the remote's history.\n\n**If you really do want to combine them**, tell Git the unrelated histories are intentional:\n\n```\ngit pull --allow-unrelated-histories\n# or\ngit merge --allow-unrelated-histories <branch>\n```\n\nExpect conflicts if both sides contain files with the same names, and check the result carefully: you may end up with duplicated files or two copies of the project's structure.\n\nIf you paste the command you ran and the context (is this a new local repo, a clone, a remote you recreated?), I can tell you which of these fits.",
+  "id": "gen-1794387061-cTlvn79RTCdKAuXozhnA",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5795,
+   "completion_tokens": 737,
+   "total_tokens": 6532,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.000948,
+    "upstream_inference_prompt_cost": 0.0005795,
+    "upstream_inference_completions_cost": 0.0003685
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 274,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the command you ran and the context (is this a new local repo, a clone, a remote you recreated?), I can tell you which of these fits.",
+    "none"
+   ],
+   "id": "gen-1794387066-z22tFlASWl0L4T2RH8Qw"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "is this a new local repo, a clone, a remote you recreated?",
+    "none"
+   ],
+   "id": "gen-1794387088-rdsqdMV3YylH42ZAhdOS"
+  }
+ }
+}

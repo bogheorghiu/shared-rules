@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before this goes into the runbook, two corrections to my earlier reply:\n\n- **The cause is unconfirmed.** I presented \"shared state across parallel workers\" as the likely explanation, but I was guessing from the symptom. Serial runs passing is consistent with that, but it doesn't identify the shared state.\n- **The command may be wrong.** `test_sync.py` is a Python file, so `npx jest` is probably the wrong runner. I assumed jest without checking the repo. The serial-run result is still useful, but the exact command needs confirming.\n\nHere's an entry that records what's known and marks what isn't:\n\n```markdown\n## Flaky: tests/test_sync.py fails in the full suite, passes alone\n\n**Symptom:** `tests/test_sync.py` passes when run by itself but fails roughly 1 run\nin 5 when the full suite runs.\n\n**Status:** Workaround observed. Root cause not identified.\n\n**Workaround:** Run the suite serially, with no parallel workers. Ten serial runs\nall passed. Ten passes is weak evidence, since a 1-in-5 flake passes ten times in\nabout 11% of cases by chance. Re-run before relying on it.\n\n**Suspected cause (unverified):** Shared state between test files that only matters\nwhen they run concurrently, such as a shared temp file, database, environment\nvariable, or module-level global.\n\n**To investigate:**\n1. Confirm the runner and its serial flag (for pytest, disable xdist with `-p no:xdist`\n   or omit `-n`).\n2. Run the full suite in parallel until it fails, and capture the failing assertion.\n3. Look for state that `test_sync.py` reads or writes outside its own fixtures.\n\n**Remove this entry** once the root cause is fixed and the parallel suite passes\nrepeatedly.\n```\n\nIf you tell me the actual runner command and the failing assertion, I can make the entry specific.",
+  "id": "gen-1794386898-I0Vw09sdInEo8A9ZQtO7",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5021,
+   "completion_tokens": 1456,
+   "total_tokens": 6477,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012301,
+    "upstream_inference_prompt_cost": 0.0005021,
+    "upstream_inference_completions_cost": 0.000728
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 832,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "```markdown\n## Flaky: tests/test_sync.py fails in the full suite, passes alone",
+    "**Workaround:** Run the suite serially, with no parallel workers. ... **Suspected cause (unverified):** Shared state between test files that only matters when they run concurrently"
+   ],
+   "id": "gen-1794386906-ESVSHCL3LdNkKBXT1s1S"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here's an entry that records what's known and marks what isn't:",
+    "**Workaround:** Run the suite serially, with no parallel workers. Ten serial runs all passed."
+   ],
+   "id": "gen-1794386910-229WgGHJ9vaYJR7evA90"
+  }
+ }
+}

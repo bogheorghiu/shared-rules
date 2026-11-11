@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. Each call stores under the key `(job_id, attempt, time.time())`, so every put creates a new entry, even for a retry of the same job and attempt. Nothing removes entries, so the dict grows with every job. That matches the snapshot: `cache.py:88` gained about 408k entries in ten minutes.\n\nTwo things to check before fixing:\n\n- **The numbers don't quite line up.** tracemalloc shows +30.9 MiB in ten minutes, roughly 185 MB/hour, while you measured about 40 MB/hour of RSS growth. Python's allocator may hold freed memory differently than RSS suggests, or the tracemalloc run may differ from production. I'd confirm by comparing RSS over time without tracemalloc, but this is very likely the main leak.\n- **`get()` is also O(n).** It scans every entry on each call, so the cache slows down as it grows, even apart from the memory growth.\n\nI'll confirm there are no other writers or readers that depend on the stored shape:\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|\\.get(\" worker/\n\nOnce I see the callers, I can propose a fix. The main decision is whether you need every attempt kept. The comment says \"for debugging,\" but if the only consumer is `get()`, which returns the latest result, a bounded structure would work: keep the last result per `job_id`, or use an LRU with a size or TTL limit. If you do need the attempt history for debugging, keep it in a bounded deque or in logs instead of this dict. Which of those matches how you use it?",
+  "id": "gen-1794386977-pOq7UAWZYD41IDV3sFnR",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6282,
+   "completion_tokens": 1174,
+   "total_tokens": 7456,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012152,
+    "upstream_inference_prompt_cost": 0.0006282,
+    "upstream_inference_completions_cost": 0.000587
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 653,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call stores under the key `(job_id, attempt, time.time())`, so every put creates a new entry"
+   ],
+   "id": "gen-1794386984-etqDEOmszR46x7JphHB0"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put` ... a bounded structure would work"
+   ],
+   "id": "gen-1794387002-tbjb1CzTMQbq3bSTe7YG"
+  }
+ }
+}

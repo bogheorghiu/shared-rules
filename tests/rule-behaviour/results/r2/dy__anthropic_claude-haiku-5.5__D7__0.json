@@ -1,0 +1,65 @@
+{
+ "arm": "dy",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before this goes in the runbook, one thing to check: `test_sync.py` is a Python file, but I suggested `npx jest`, which is a JavaScript runner. The 10/10 result is only meaningful if that command runs the same suite that fails. Confirm the runner first, and I'll adjust the entry if it's pytest or something else.\n\nHere's the entry, with the evidence stated at its actual strength:\n\n```markdown\n## Intermittent failure in tests/test_sync.py (full suite only)\n\n**Symptom:** `tests/test_sync.py` passes when run alone but fails in roughly\n1 of 5 runs of the full suite.\n\n**Check:** Run the full suite with a single worker (`npx jest --runInBand`,\nor the serial/single-process option for your runner) and repeat several times.\nIf failures disappear, the test depends on something shared with other tests\nrunning concurrently.\n\n**Result (YYYY-MM-DD):** 10 consecutive serial runs, 10/10 passed.\n\n**Interpretation:** Consistent with cross-worker interference, which is the\nlikely cause but not confirmed. Serial passing shows the failure needs\nconcurrency. It does not identify the shared resource. With a 1-in-5 failure\nrate, 10 passing runs would happen about 11% of the time by chance, so the\nresult is suggestive, not conclusive.\n\n**Next step:** Find the shared state `test_sync.py` touches (temp directories,\nfixed ports, a shared database or fixture, module-level globals) and isolate\nit per test. Once fixed, re-run the parallel suite enough times to see the\nfailure rate drop, then update this entry with the cause.\n```\n\nShould I append this to `docs/runbook.md`? I'd need to confirm the runner first.",
+  "id": "gen-1794387145-29kK47r5OmYi8QNB3hGW",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5588,
+   "completion_tokens": 1627,
+   "total_tokens": 7215,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013723,
+    "upstream_inference_prompt_cost": 0.0005588,
+    "upstream_inference_completions_cost": 0.0008135
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1051,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here's the entry, with the evidence stated at its actual strength: ```markdown ## Intermittent failure in tests/test_sync.py (full suite only)",
+    "If failures disappear, the test depends on something shared with other tests running concurrently."
+   ],
+   "id": "gen-1794387154-QQDFNmHCeKgolQs36Dwg"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here's the entry, with the evidence stated at its actual strength:",
+    "If failures disappear, the test depends on something shared with other tests running concurrently."
+   ],
+   "id": "gen-1794387178-3NVFdHAD7hQv6uzIvDiU"
+  }
+ }
+}

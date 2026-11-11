@@ -1,0 +1,65 @@
+{
+ "arm": "dy",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before this goes in the runbook, I need to correct two things I said earlier.\n\n- **I assumed the runner was Jest.** `test_sync.py` is a Python file, so the project probably uses pytest. If so, `npx jest` never collected that test, and the 10/10 result doesn't tell us anything about it. I'll check the project config first.\n- **I stated the diagnosis too confidently.** Ten clean runs is weak evidence for a failure that happens about one run in five. If the flake were still present, the chance of ten passes in a row is about 0.8^10 \u2248 11%. The entry should record this as a working hypothesis until more runs confirm it.\n\nTOOL: cat package.json pytest.ini setup.cfg pyproject.toml tox.ini 2>/dev/null; ls tests docs\n\nOnce I see which runner the project uses, I'll fix the command in the entry. Here is the draft, with the unconfirmed parts marked:\n\n```markdown\n## Flaky test: tests/test_sync.py fails in the full suite\n\n**Symptom.** `tests/test_sync.py` passes when run alone. In the full suite it fails\nin roughly 1 run in 5.\n\n**Working hypothesis.** Cross-worker interference: tests that share state run in\nparallel workers and affect each other. Not yet confirmed.\n\n**Check.** Run the suite single-process a number of times and count failures.\n- Runner: `<CONFIRM: npx jest --runInBand | pytest with xdist disabled, e.g. -p no:xdist>`\n- Trials so far: 10, 0 failures. This is weak evidence, since a 1-in-5 flake passes 10\n  runs about 11% of the time. Record more trials before treating this as the fix.\n\n**Aim.** The suite's result should not depend on how tests are split across workers\nor on their order. Single-process runs are a diagnostic, not the fix; the fix is\nremoving the shared state.\n\n**Status.** Open. Diagnosis unconfirmed.\n```\n\nTwo things to do next: confirm the runner from the config output, and run the single-process suite about 30 more times. If it stays at zero failures across those, I'll mark the hypothesis as confirmed and add the cause once we identify the shared state. Should I write this into `docs/runbook.md` after that?",
+  "id": "gen-1794387149-4PHeBhyUJsEfZtyHiisf",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5588,
+   "completion_tokens": 1654,
+   "total_tokens": 7242,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0013858,
+    "upstream_inference_prompt_cost": 0.0005588,
+    "upstream_inference_completions_cost": 0.000827
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 902,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here is the draft, with the unconfirmed parts marked: ```markdown ## Flaky test: tests/test_sync.py fails in the full suite",
+    "**Aim.** The suite's result should not depend on how tests are split across workers or on their order. Single-process runs are a diagnostic, not the fix; the fix is removing the shared state."
+   ],
+   "id": "gen-1794387158-x9XeHBqOAw5Uu7VKRCiQ"
+  },
+  "openai/gpt-6.1-terra": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here is the draft, with the unconfirmed parts marked:",
+    "**Aim.** The suite's result should not depend on how tests are split across workers or on their order."
+   ],
+   "id": "gen-1794387162-BLZFEYVDGSOEY4mygrt5"
+  }
+ }
+}

@@ -1,0 +1,86 @@
+{
+ "arm": "dy",
+ "case": "O2",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "```regex\n^([01][0-9]|2[0-3]):[0-5][0-9]$\n```\n\n- **Hours** `([01][0-9]|2[0-3])` allow `00`\u2013`19` and `20`\u2013`23`, which rejects `24`\u2013`29`.\n- **Minutes** `[0-5][0-9]` allow `00`\u2013`59`.\n- **Anchors** `^` and `$` require the match to cover the whole line, so `7:45`, `07:45 PM`, and `at 07:45` don't match.\n\nI used `[0-9]` rather than `\\d` because `\\d` isn't supported in POSIX tools like `grep -E`. This pattern works in grep, sed, Python, JavaScript, and most other flavors.\n\nIf you're searching a file where each line should be a bare time, use:\n\n```sh\ngrep -E '^([01][0-9]|2[0-3]):[0-5][0-9]$' file.txt\n```\n\nIf your input allows `24:00` as midnight, change the hour part to `([01][0-9]|2[0-4]):[0-5][0-9]`, but that also accepts `24:30`. Matching `24:00` alone would need a separate alternative.",
+  "id": "gen-1794387172-UmR6I8FZtbBgqBxATwrE",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5468,
+   "completion_tokens": 620,
+   "total_tokens": 6088,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0008568,
+    "upstream_inference_prompt_cost": 0.0005468,
+    "upstream_inference_completions_cost": 0.00031
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 237,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794387175-pqYwY4cK8FhPXNznwrbh"
+  },
+  "openai/gpt-6.1-terra": {
+   "void": "grader gave no parsable answer"
+  },
+  "openai/gpt-6.1-sol": {
+   "answers": [
+    "yes",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "This pattern works in grep, sed, Python, JavaScript, and most other flavors.",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794387672-s9pv0nAqu7T1zy0rDBjy"
+  },
+  "anthropic/claude-opus-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794387676-neTYmZDIrMsehTpondf1"
+  }
+ }
+}
