@@ -1,0 +1,65 @@
+{
+ "arm": "closure",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. The dict has no eviction, and the key includes `time.time()`, so every call adds a new entry:\n\n```python\nself._d[(job_id, attempt, time.time())] = result\n```\n\nTwo puts with the same `job_id` and `attempt` never overwrite each other, so retries and repeated results accumulate forever. The 408k new entries in your snapshot diff fit that pattern.\n\n`get()` also scans the whole dict on every call, so lookups will get slower as the cache grows, on top of the memory growth.\n\nThe comment says \"keep every attempt for debugging,\" so the retention is intentional, but it has no bound. Options:\n\n1. **Keep the last N attempts per job, and drop a job's entries once it completes.** This preserves the debugging value and bounds memory. It needs a way to know when a job is done, which I haven't found in the code yet.\n2. **Keep only the latest result per job** (`dict[job_id] = result`), if the debugging history isn't actually used.\n3. **Cap the whole cache** with an LRU of fixed size, which is simplest but can evict entries that are still needed.\n\nBefore I pick one, I need two things: whether anything reads the older attempts (grep for `.get(` on `ResultCache` and any dump or log of `_d`), and where jobs finish, so we know when entries can be dropped. Should I search for those?",
+  "id": "gen-1794388909-pdjMdRsSsimI3KzBVXs4",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6263,
+   "completion_tokens": 1042,
+   "total_tokens": 7305,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0011473,
+    "upstream_inference_prompt_cost": 0.0006263,
+    "upstream_inference_completions_cost": 0.000521
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 594,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. The dict has no eviction, and the key includes `time.time()`, so every call adds a new entry"
+   ],
+   "id": "gen-1794388915-D1VMEBSloeQB2ec3851w"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. The dict has no eviction, and the key includes `time.time()`, so every call adds a new entry"
+   ],
+   "id": "gen-1794388917-HGbn1SHEvC4UQuIDhO6b"
+  }
+ }
+}

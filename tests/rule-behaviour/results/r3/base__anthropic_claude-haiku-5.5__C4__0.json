@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache.put`. Each call inserts a new key `(job_id, attempt, time.time())`, and nothing ever removes entries. Since `time.time()` is effectively unique per call, every `put` adds a new entry even when `job_id` and `attempt` repeat. That matches the snapshot: about 408k new entries in ten minutes, all attributed to line 88.\n\nA second problem: `get()` scans the whole dict on every call, so lookup cost also grows with the leak.\n\nBefore changing anything, I need to know whether the per-attempt history is actually read anywhere. I'll check the callers and any code that touches `_d`:\n\nTOOL: grep -rn \"ResultCache\\|\\.get(\\|\\._d\\b\" worker/ | grep -v \"dict\\|os.environ\"\n\nOnce I see the callers, I'll suggest one of two fixes:\n\n- **If only the latest result per job is needed:** key by `job_id` alone and overwrite. Memory is then bounded by the number of live jobs. `get()` becomes a plain dict lookup.\n- **If attempt history matters for debugging:** keep the history but bound it, either with a per-job cap (e.g. `collections.deque(maxlen=N)` per job) or a TTL that evicts old entries.\n\nEither way, I'd make the change in `cache.py` only and leave the rest of the file alone, so the diff stays easy to review. I'd also flag the O(n) `get()` as a separate item rather than folding it into this fix, unless the callers show it's on a hot path.\n\nTo verify, I'd rerun the same tracemalloc snapshot diff after the fix and confirm `cache.py:88` stops growing. The stronger check is RSS over a few hours staying flat under production-like load. Tell me which fix you want, or paste the grep output, and I'll write it.",
+  "id": "gen-1794388708-Kty50UGiP5UehYRrq4qV",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1004,
+   "total_tokens": 6379,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010395,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.000502
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 405,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call inserts a new key `(job_id, attempt, time.time())`, and nothing ever removes entries."
+   ],
+   "id": "gen-1794388714-o0JNFbJBmnvGTMWZgETU"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache.put`. Each call inserts a new key `(job_id, attempt, time.time())`, and nothing ever removes entries."
+   ],
+   "id": "gen-1794388716-dZ7WKUEwEqBkZjoSlNuB"
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "arm": "both",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Both can turn several commits into one, but they work on different branches and leave different history behind.\n\n**`git merge --squash <branch>`** combines a branch into your current branch as a single new commit.\n- It stages the net diff of `<branch>` in your index and does not commit. You run `git commit` yourself.\n- The result has one parent (your current HEAD). Git records no merge relationship to `<branch>`, so the branch's individual commits don't become part of your history.\n- `<branch>` is untouched. Its commits still exist as they were.\n- Git doesn't treat `<branch>` as merged, so `git branch --merged` won't list it. If you merge that branch again later, Git may try to re-apply changes that were already squashed, which can cause conflicts.\n\n**Interactive rebase squash** (`git rebase -i`) rewrites the commits on the branch you're working on.\n- You pick commits and mark them `squash` or `fixup` to fold them into an earlier commit, and you can edit the message, reorder, or drop commits.\n- The rewritten commits get new SHAs. If the branch was already pushed, you'll need `git push --force-with-lease`, and anyone else working on it has to be told.\n- It only changes your branch's history. It doesn't combine anything into another branch by itself.\n\n**In practice:**\n- Use `git rebase -i` to tidy your own branch before review, for example folding \"fix typo\" and \"oops\" commits into the commits they belong to.\n- Use `git merge --squash` to land a finished feature on `main` as one commit, with the feature branch kept out of `main`'s history.\n- Many teams get the same result from a host's \"Squash and merge\" button on a pull request, which runs the merge-squash flow for you.",
+  "id": "gen-1794388789-uGACZxNJ7tZAPSfuOmWa",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6395,
+   "completion_tokens": 1115,
+   "total_tokens": 7510,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001197,
+    "upstream_inference_prompt_cost": 0.0006395,
+    "upstream_inference_completions_cost": 0.0005575
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 557,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388795-GdiD1Hv8ozSiuhQBZKmI"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388796-k6IuzVvJhxFxUJzsqT6X"
+  }
+ }
+}

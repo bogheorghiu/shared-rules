@@ -1,0 +1,70 @@
+{
+ "arm": "dy",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 3,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This error means Git found two histories that share no common ancestor commit, so it won't merge them. Every commit in Git points back to its parent commits, and a merge needs a shared commit to act as the base for comparing the two sides. Without one, Git can't tell what either side changed relative to the other.\n\nYou usually see it in these situations:\n\n- **You ran `git init` locally, then added a remote that already has commits**, and then ran `git pull` or `git merge`. Your local commits and the remote's commits were created independently.\n- **You're combining two separately created repositories**, such as copying a project into a new repo that was started with its own initial commit.\n- **History was rewritten or replaced** on one side, so the commits no longer connect.\n\nBefore doing anything, check what you have:\n\n```\ngit remote -v          # where the other history comes from\ngit log --oneline      # your local history\ngit log --all --oneline   # all branches, to see what's there\n```\n\nIf the two histories really are the same project and you want to join them, you can override the check:\n\n```\ngit pull origin main --allow-unrelated-histories\n```\n\nBe careful with this. It doesn't fix a mistake. It combines two trees that were never related, which often produces duplicate files and conflicts, such as two different README files. Use it only when you know why the histories diverged.\n\nIf you're not sure, it's often safer to clone the remote fresh and copy your changes into it, or to rebase your local work onto the remote's branch if they're meant to share history.\n\nIf you paste the output of those commands, I can tell you which case you're in.",
+  "id": "gen-1794389177-FtiHAeqL7oppqVpZ5U8z",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5500,
+   "completion_tokens": 705,
+   "total_tokens": 6205,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009025,
+    "upstream_inference_prompt_cost": 0.00055,
+    "upstream_inference_completions_cost": 0.0003525
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 221,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the output of those commands, I can tell you which case you're in.",
+    "none"
+   ],
+   "id": "gen-1794389181-TwClBAKldKnySSLjLOzc"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389183-3r2ddQjcMPtHYbkXWjgd"
+  }
+ }
+}

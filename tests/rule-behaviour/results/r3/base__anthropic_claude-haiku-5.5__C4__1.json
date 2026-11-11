@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 1,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache`. Every `put` adds a new dict entry, and nothing removes them.\n\n- **The key includes `time.time()`.** Each call creates a new key, even for the same `job_id` and `attempt`, so the dict grows by one entry per `put`. That matches the snapshot: 408k new objects in about 10 minutes, all from `cache.py:88`.\n- **The comment explains the intent.** \"Keep every attempt for debugging\" is an unbounded retention policy, so the growth is by design, but nothing bounds it.\n- **`get` is also O(n).** It scans every entry on every call, so the cache slows down as it grows in addition to using more memory.\n\nBefore choosing a fix, I need to know which callers depend on the history. I'll check who calls `put`, `get`, and `_d`:\n\nTOOL: grep -rn \"ResultCache\\|\\.put(\\|\\.get(job\\|_d\\[\" worker/ | grep -v test\n\nOnce I see the callers, I can propose a fix. The main options are:\n\n1. **Keep only the latest attempt per job** (`self._d[job_id] = (attempt, result)`). This is the smallest change and makes `get` O(1), but it drops the debugging history.\n2. **Bounded history**: keep the last N attempts per job, or use a TTL. This preserves some debugging value with a fixed memory ceiling.\n3. **Move the debugging history out of process**, such as to structured logs, and keep only the latest result in memory.\n\nWhich of these matches what you need? If the attempt history is only for debugging, option 1 or 3 is safest. If something reads older attempts at runtime, option 2 is the one to use. I'd like to know that before editing `cache.py`.",
+  "id": "gen-1794388709-z9xfocR6IE76fjcyxjaZ",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5375,
+   "completion_tokens": 1180,
+   "total_tokens": 6555,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0011275,
+    "upstream_inference_prompt_cost": 0.0005375,
+    "upstream_inference_completions_cost": 0.00059
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 617,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. Every `put` adds a new dict entry, and nothing removes them."
+   ],
+   "id": "gen-1794388716-Uu5cnwFXOCaUzgCJvolx"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. Every `put` adds a new dict entry, and nothing removes them."
+   ],
+   "id": "gen-1794388717-iKWS3Q0hhHTlfs5ZRlck"
+  }
+ }
+}

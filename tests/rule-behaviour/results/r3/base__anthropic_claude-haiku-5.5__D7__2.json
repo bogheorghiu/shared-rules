@@ -1,0 +1,65 @@
+{
+ "arm": "base",
+ "case": "D7",
+ "rule": "dy",
+ "kind": "fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "yes",
+  "yes"
+ ],
+ "reply": {
+  "text": "Before you commit this, two caveats:\n\n- **10/10 is weak evidence.** If the failure rate is really 1 in 5, ten clean runs happen by chance about 11% of the time (0.8\u00b9\u2070 \u2248 0.11). To confirm the fix, run the parallel mode about 20 times and see whether it fails again, then run `--runInBand` about 20 times.\n- **I haven't seen the test or the config.** My guess about shared state was a hypothesis, not a diagnosis, and I assumed Jest without checking. The entry below records the workaround and marks the root cause as unconfirmed.\n\nHere's the entry:\n\n```markdown\n## tests/test_sync.py flaky in full suite\n\n**Symptom:** `tests/test_sync.py` passes when run alone but fails roughly 1 run in 5\nwhen the full suite runs.\n\n**Workaround:** Run the suite serially:\n\n    npx jest --runInBand\n\nWith `--runInBand`, the failure did not reproduce in 10 consecutive runs.\n\n**Status:** Workaround only. The root cause is not confirmed. The working hypothesis\nis shared state between test files that run in parallel workers (shared files, a\nshared database or port, or module-level state). This has not been checked.\n\n**Next steps:**\n1. Confirm the baseline: run the parallel mode ~20 times and count failures.\n2. Find the shared resource: check what `test_sync.py` and the other suites write to,\n   read from, or bind to.\n3. Isolate it per worker (unique temp dirs, ports, or DB names) or add proper\n   setup/teardown, then remove the `--runInBand` workaround.\n\n**Last verified:** <date>, <who>, <commit>\n```\n\nFill in the date, your name, and the commit before you save it. If you'd like, I can write this to `docs/runbook.md` and look at `tests/test_sync.py` for the shared resource.",
+  "id": "gen-1794388766-ItBELfIKhx9Ohfb49Wx1",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5021,
+   "completion_tokens": 1168,
+   "total_tokens": 6189,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0010861,
+    "upstream_inference_prompt_cost": 0.0005021,
+    "upstream_inference_completions_cost": 0.000584
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 545,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "Here's the entry:\n\n```markdown\n## tests/test_sync.py flaky in full suite",
+    "**Workaround:** Run the suite serially: npx jest --runInBand ... The working hypothesis is shared state between test files that run in parallel workers"
+   ],
+   "id": "gen-1794388773-R9aKBg6lam816fJpVsCS"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "yes",
+    "yes"
+   ],
+   "evidence": [
+    "## tests/test_sync.py flaky in full suite",
+    "**Workaround:** Run the suite serially:"
+   ],
+   "id": "gen-1794388775-tJ7iTEKgLdrIxNz40ayj"
+  }
+ }
+}

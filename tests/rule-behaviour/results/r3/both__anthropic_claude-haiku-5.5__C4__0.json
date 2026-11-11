@@ -1,0 +1,65 @@
+{
+ "arm": "both",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache`. `put()` adds a new entry on every call and nothing removes entries, so the dict grows with every job attempt for the life of the process. The snapdiff numbers fit: about 408k new entries in ten minutes, roughly 80 bytes each, which is about what a 3-tuple key, a float, and the retained result cost.\n\nThe sed output I got doesn't show line 88, though. The shown snippet puts `put()`'s assignment around line 76. I want to confirm that line 88 is the same `_d` store before we act on it, and check for any eviction path you might have missed:\n\nTOOL: sed -n 84,92p worker/cache.py && grep -rn \"_d\\b\\|ResultCache\\|\\.put(\" worker/ | head -50\n\nOnce that's confirmed, here's the fix I'd propose, not apply yet:\n\n1. **Bound the cache.** Keep at most N attempts per job, or a total size cap with LRU eviction. A `collections.OrderedDict` or per-job `deque(maxlen=N)` handles this in a few lines.\n2. **Drop the `time.time()` from the key.** `(job_id, attempt)` is already unique per attempt, so the timestamp only adds memory.\n3. **Make `get()` O(1).** It currently scans every entry on each call. Keeping `job_id -> deque of attempts` makes lookup direct and also removes the scan cost.\n\nBefore I write it, I need one decision from you: is \"keep every attempt for debugging\" still required? If yes, how many attempts per job, and for how long? If it's only for debugging, a small cap (say, the last 3 attempts per job, and a total-entry cap) is probably enough. The cap choice changes the code, so I'd rather you set it than guess.",
+  "id": "gen-1794388790-Xt7YJjgR3jwghIHvz3y1",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6875,
+   "completion_tokens": 1492,
+   "total_tokens": 8367,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0014335,
+    "upstream_inference_prompt_cost": 0.0006875,
+    "upstream_inference_completions_cost": 0.000746
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 914,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. `put()` adds a new entry on every call and nothing removes entries"
+   ],
+   "id": "gen-1794388798-0JtcJWvJ0aWMzIdf5xsS"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`."
+   ],
+   "id": "gen-1794388800-vhF99mSX6Pc93KFVK9B5"
+  }
+ }
+}

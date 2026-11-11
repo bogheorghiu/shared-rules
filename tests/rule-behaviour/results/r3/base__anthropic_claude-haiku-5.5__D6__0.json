@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "D6",
+ "rule": "dy",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "Glad it's stable, but I should correct my earlier answer. I guessed at the cause without seeing the code, and I assumed Jest, which I shouldn't have. `test_sync.py` is a Python file, so Jest probably doesn't run it. The 10/10 result may not tell us anything about that test, and the `runInBand` setting in `jest.config.js` may have no effect on it.\n\nIf the flakiness is real, the usual suspects in a Python suite are:\n\n- **Shared state across tests:** module-level globals, a class-level cache, or a singleton that one test mutates and another reads.\n- **Shared files or ports:** a temp path or port that's fixed rather than per-test (`tmp_path` and a port of 0 avoid this).\n- **Test order:** if pytest-randomly or a similar plugin is installed, order changes between runs. `pytest -p no:randomly` or a fixed `--randomly-seed` will show whether that's it.\n- **Parallel workers:** if you use pytest-xdist (`-n auto`), tests sharing resources will collide.\n\nTo narrow it down, run `pytest tests/test_sync.py` alongside the full suite several times, and note the seed on any failure. If you can paste the failure output, I can point to the likely cause.",
+  "id": "gen-1794388759-IHtrHGVpJlpRdBunVlPX",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5021,
+   "completion_tokens": 756,
+   "total_tokens": 5777,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0008801,
+    "upstream_inference_prompt_cost": 0.0005021,
+    "upstream_inference_completions_cost": 0.000378
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 344,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388763-2EtxMUDFisJ318Jme3yv"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388765-qYHKg9NoCCk1LBGGmrA6"
+  }
+ }
+}

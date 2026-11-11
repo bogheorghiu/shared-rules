@@ -1,0 +1,65 @@
+{
+ "arm": "both",
+ "case": "C4",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "yes"
+ ],
+ "reply": {
+  "text": "The leak is in `ResultCache`. `put()` adds a new entry on every call and nothing removes entries:\n\n- **The key includes `time.time()`**, so every `put()` creates a new key, even for the same `job_id` and `attempt`. The 412k entries in the snapshot are consistent with this.\n- **Nothing deletes entries.** The `_d` dict only grows, so memory grows with every job processed.\n- **`get()` scans the whole dict** on each call, so lookup cost also grows with the leak.\n\nOne thing to check: the snapshot shows +30.9 MiB in roughly 10 minutes, about 185 MB/hour. That's higher than the 40 MB/hour you reported. Either the snapshot window was different from what I assumed, or tracemalloc overhead is inflating the numbers. Confirm by sampling RSS over the same window without tracemalloc. The leak is real either way, but the rate matters for how urgent the fix is.\n\nBefore I change anything, I need to know one thing. The comment says \"keep every attempt for debugging.\" Do you still need that history, and if so, for how long? The fix depends on the answer:\n\n1. **No need for history:** keep only the latest result per `job_id` in a plain dict, and delete the entry when the job completes. This is the smallest change and removes the O(n) scan too.\n2. **Need recent history:** keep a bounded per-job list of attempts, capped at N entries, with an optional TTL, and evict finished jobs.\n\nWhich one matches how you debug? Once you tell me, I'll make the change in `worker/cache.py` and check its callers, since anything reading `_d` directly would break.",
+  "id": "gen-1794388791-IYlzvjg5agubz4emcUKF",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 6875,
+   "completion_tokens": 1190,
+   "total_tokens": 8065,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0012825,
+    "upstream_inference_prompt_cost": 0.0006875,
+    "upstream_inference_completions_cost": 0.000595
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 655,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. `put()` adds a new entry on every call and nothing removes entries"
+   ],
+   "id": "gen-1794388798-p0X3VbuYBYBLD17Cm4VX"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "yes"
+   ],
+   "evidence": [
+    "none",
+    "The leak is in `ResultCache`. `put()` adds a new entry on every call and nothing removes entries"
+   ],
+   "id": "gen-1794388800-uTk7LO3aUkbY2rEzhEvz"
+  }
+ }
+}

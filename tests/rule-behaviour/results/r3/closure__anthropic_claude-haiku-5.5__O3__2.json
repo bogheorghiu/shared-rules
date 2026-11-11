@@ -1,0 +1,70 @@
+{
+ "arm": "closure",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 2,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This means Git tried to combine two branches that have **no commit in common**, so it has no base to merge from. Git blocks this by default because it usually signals a mistake.\n\nThe most common cause is a local repo that was started separately from the remote one. For example, you ran `git init`, made some commits, and added a remote on GitHub that already had its own commits (such as an auto-generated README or LICENSE). Each side has a complete history, but the two histories never meet.\n\nTo see what you're dealing with, check both histories:\n\n```\ngit log --oneline              # your local history\ngit log --oneline origin/main  # the remote's history (after git fetch)\ngit remote -v                  # confirm you're pointing at the right remote\n```\n\nThen pick a fix:\n\n- **Both sides are the same project, and you want to keep both histories:**\n  ```\n  git pull origin main --allow-unrelated-histories\n  ```\n  You'll probably get merge conflicts on files that exist on both sides, such as the README. Resolve them, then commit.\n\n- **The remote is empty or junk and your local history should win:** you can force-push your local branch, but this overwrites the remote, so only do it if you're sure nothing there matters.\n\n- **You cloned or pulled the wrong repo:** fix the remote URL with `git remote set-url origin <correct-url>` instead of merging.\n\nIf you paste the output of the commands above, I can tell you which case applies.",
+  "id": "gen-1794389109-Bhj1882M9hPRVlQkqd1X",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5776,
+   "completion_tokens": 752,
+   "total_tokens": 6528,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009536,
+    "upstream_inference_prompt_cost": 0.0005776,
+    "upstream_inference_completions_cost": 0.000376
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 304,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "If you paste the output of the commands above, I can tell you which case applies.",
+    "none"
+   ],
+   "id": "gen-1794389113-Kqp32jJvwDsB1pE0PdfD"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389115-mYE9LsqvgFmylHTufNwg"
+  }
+ }
+}

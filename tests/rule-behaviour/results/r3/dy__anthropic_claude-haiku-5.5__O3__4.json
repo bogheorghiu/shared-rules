@@ -1,0 +1,70 @@
+{
+ "arm": "dy",
+ "case": "O3",
+ "rule": "overhead",
+ "kind": "no-fire",
+ "k": 4,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no",
+  "no",
+  "no"
+ ],
+ "reply": {
+  "text": "This error means Git found two branches or repositories with **no common ancestor commit**, so it won't combine them. Every commit in Git points back to its parents, and a merge needs a shared commit to work from. If the two histories were created independently, there's nothing to anchor the merge.\n\nCommon causes:\n\n- **You ran `git init` in a folder that already has commits on a remote**, then tried to `git pull` or `git merge` from that remote.\n- **Two separate repos were created independently** (for example, you started a project locally and someone else started the same project on GitHub), and you're trying to join them.\n- **You added or changed a remote** that points to a different repository than the one you originally cloned.\n\nBefore forcing anything, check what you're merging:\n\n```\ngit log --oneline --all --graph    # see both histories\ngit remote -v                      # confirm which remote you're pulling from\n```\n\nThen choose a fix:\n\n- **If the two histories really should be combined** (e.g., you initialized locally and want to attach to an existing remote), run:\n  ```\n  git pull origin main --allow-unrelated-histories\n  ```\n  Resolve any conflicts, since both sides may have files with the same names.\n\n- **If you pointed at the wrong remote**, fix the URL with `git remote set-url origin <correct-url>` and try again. Forcing the merge here would just bury the mistake.\n\n- **If you meant to clone**, delete the local folder's `.git` directory (after making sure it has no work you need) and run `git clone <url>` instead.\n\nThe `--allow-unrelated-histories` flag is safe when the merge is intentional, but it's a warning sign when you didn't expect two unrelated histories to exist. Check the remote first.",
+  "id": "gen-1794389178-8fBVZicJwdQPf7TPHpNc",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 5500,
+   "completion_tokens": 755,
+   "total_tokens": 6255,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.0009275,
+    "upstream_inference_prompt_cost": 0.00055,
+    "upstream_inference_completions_cost": 0.0003775
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 211,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389183-o7lXNpJPkJnxi0Dppn1B"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "evidence": [
+    "none",
+    "none",
+    "none"
+   ],
+   "id": "gen-1794389184-vs1yAxm08fLEUTpvdMsF"
+  }
+ }
+}

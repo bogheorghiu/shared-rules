@@ -1,0 +1,60 @@
+{
+ "arm": "base",
+ "case": "C3",
+ "rule": "closure",
+ "kind": "no-fire",
+ "k": 0,
+ "reader": "anthropic/claude-haiku-5.5",
+ "expect": [
+  "no"
+ ],
+ "reply": {
+  "text": "The two produce a similar end result, one commit on your target branch containing the feature's changes, but they work on different things and have different side effects.\n\n**`git merge --squash <branch>`** works on the target branch (say, `main`):\n- It stages the combined diff of `<branch>` into your index and working tree.\n- It does **not** create a commit. You run `git commit` yourself, which makes one commit with a new message.\n- The result has only one parent, so Git doesn't record that `<branch>` was merged. Its commits are not ancestors of `main`.\n- The feature branch is untouched.\n- Running `git merge <branch>` again later can re-apply or conflict with changes you already squashed, because Git doesn't know they're already included.\n\n**Interactive rebase with squash** (`git rebase -i`) works on the feature branch itself:\n- It replays your branch's commits onto a base and lets you mark some as `squash` or `fixup` into the previous one. You can also reword, reorder, or drop commits.\n- It rewrites the branch's history with new commit SHAs. The original commits are no longer on the branch.\n- If you've already pushed the branch, you'll need `git push --force-with-lease`, and anyone else working on it has to sync with you.\n- It's a cleanup tool for your own work before it's shared or merged. It doesn't combine anything into another branch.\n\n**How they fit together:**\n- To clean up history on your branch, use interactive rebase. Then merge it normally (a fast-forward or a regular merge), and `main` keeps the branch's commit history.\n- To land a feature on `main` as one commit and leave the branch's history out of `main`, use `git merge --squash`. Be aware of the re-merge gotcha above.\n- Many teams use a squash-merge option in their hosting platform (GitHub, GitLab), which does the `--squash` flow for you when you merge a pull request.",
+  "id": "gen-1794388699-WifuCYjluxHsfrY8ThlO",
+  "served": "anthropic/claude-haiku-5.5",
+  "finish": "stop",
+  "usage": {
+   "prompt_tokens": 4895,
+   "completion_tokens": 1111,
+   "total_tokens": 6006,
+   "cost": 0,
+   "is_byok": true,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0.001045,
+    "upstream_inference_prompt_cost": 0.0004895,
+    "upstream_inference_completions_cost": 0.0005555
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 503,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ },
+ "grades": {
+  "anthropic/claude-sonnet-5.5": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388705-ts4kL4QxG1yBTMPHcjLB"
+  },
+  "google/gemini-4-argon": {
+   "answers": [
+    "no"
+   ],
+   "evidence": [
+    "none"
+   ],
+   "id": "gen-1794388707-mRxqdwXa1PJAglbBmgYD"
+  }
+ }
+}
