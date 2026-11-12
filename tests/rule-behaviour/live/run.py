@@ -56,7 +56,9 @@ def arm_rules(arm):
 def provenance():
     """Repository commit and the hashes a pre-registered record must match (void condition 4)."""
     tree = hashlib.sha256()
-    for f in sorted(glob.glob(os.path.join(HERE, "fixture", "**", "*"), recursive=True, include_hidden=True)):
+    fixture_files = (glob.glob(os.path.join(HERE, "fixture", "**", "*"), recursive=True, include_hidden=True)
+                     + glob.glob(os.path.join(HERE, "fixture-s2", "**", "*"), recursive=True, include_hidden=True))
+    for f in sorted(fixture_files):
         if os.path.isfile(f) and "__pycache__" not in f:
             tree.update(os.path.relpath(f, HERE).encode() + b"\0" + open(f, "rb").read())
     commit = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
@@ -75,9 +77,14 @@ def make_home(home, arm):
     return loaded
 
 
-def make_work(work):
+def make_work(work, overlay=None):
+    """Fixture, then the scenario's overlay on top (S2 adds modules and tests S1 never sees),
+    then the large files; with an overlay, the CI logs are real runs of this copy's suite."""
     shutil.copytree(os.path.join(HERE, "fixture"), work, ignore=shutil.ignore_patterns("__pycache__"))
-    subprocess.run([sys.executable, "-I", os.path.join(HERE, "make_large_files.py"), work], check=True)
+    if overlay:
+        shutil.copytree(os.path.join(HERE, overlay), work, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__"))
+    subprocess.run([sys.executable, "-I", os.path.join(HERE, "make_large_files.py"), work]
+                   + (["--ci-runs"] if overlay else []), check=True)
     g = lambda *a: subprocess.run(["git", "-C", work, *a], env=dict(os.environ, **GIT_ENV), check=True,
                                   capture_output=True, text=True).stdout.strip()
     g("init", "-q", "-b", "main"); g("add", "-A"); g("commit", "-qm", "Initial import")
@@ -159,13 +166,17 @@ def main():
     home, work, tdir = (os.path.join(root, x) for x in ("home", "work", "transcripts"))
     os.makedirs(tdir)
     loaded = make_home(home, a.arm)
-    base = make_work(work)
+    base = make_work(work, sc.get("overlay"))
     env = clean_env(home, sc["env"])
     sid = str(uuid.uuid4())
     rec = {"scenario": a.scenario, "arm": a.arm, "reader": a.reader, "model_requested": model,
            "effort_requested": effort, "rules_loaded": loaded, "provenance": provenance(), "initial_commit": base, "turns": [],
            "cli_version": subprocess.run(["claude", "--version"], capture_output=True, text=True).stdout.strip(),
-           "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "stopped_early": None}
+           "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "stopped_early": None,
+           "python": sys.version.split()[0],
+           "large_files_sha256": {os.path.relpath(f, work): sha(f) for d in ("data", "logs", "docs")
+                                  for f in sorted(glob.glob(os.path.join(work, d, "**", "*"), recursive=True))
+                                  if os.path.isfile(f)}}
     offers = 0
     prev_offer = False
     for i, turn in enumerate(sc["turns"]):
