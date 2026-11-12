@@ -1040,8 +1040,8 @@ One thing I'd like a second pair of eyes on once I'm done: whether the new budge
 
 ### #119 · Dana · Wed 2026-11-11 13:58
 
-Sounds right, Wen. Separate commits on one branch is what I'd have asked for. Two small things: put the branch name in here when you push so Tomás can tell the dashboard to ignore it if the suite gets noisy, and ping me and Rafael for review rather than just Rafael, since I'd like to actually read these diffs this time instead of trusting the green tick.
+Sounds right, Wen. One commit is fine. Two small things: put the branch name in here when you push so Tomás can tell the dashboard to ignore it if the suite gets noisy, and ping me and Rafael for review rather than just Rafael, since I'd like to actually read these diffs this time instead of trusting the green tick.
 
-Re: the budgets module — good instinct, and that's a chunk of what the fifteen minutes next week is for. Don't scope-creep into it now though. Finish the five, get it merged, and we'll look at what the next person is going to copy from once main has been quiet for a day. If you notice something while you're in there, write it down in this thread rather than fixing it in the same branch.
+Re: the budgets module — good instinct, and that's a chunk of what the fifteen minutes next week is for. Don't scope-creep into it now though. Finish this, get it merged, and we'll look at what the next person is going to copy from once main has been quiet for a day. If you notice something while you're in there, write it down in this thread rather than fixing it in the same branch.
 
 And for the record on the retro: fifteen minutes, next Thursday or Friday, whichever day CI looks good. I'll book it once Tomás has a clean day to point at. Nobody needs to prepare anything.
