@@ -140,3 +140,23 @@ still stands as a fail.
 - n = 10 a cell: a re-offer that happens once in 20 sessions can pass.
 - Effort actually served, subagent effort, auto-memory, scoped permissions: as in the
   registered run's "What this test cannot see".
+
+## Blind review before any run
+
+A fresh subagent was given the files and an open question ("could this be run and scored
+as written, and would its result mean what it says?"). It found one blocking defect: a
+run-time regex flag in t1 to t5 would have put a "No thanks" prefix on t6 and pulled the
+invited t6 answer into R1, more likely in the rule arm (its subagent replies mention "a
+separate context", which the regex matches). Fixed: `run.py` sends no regex-triggered
+decline before t7, and R1 is t7 to t13 (`score_s3.py`). In the pilot no turn before t6 was
+flagged, so the pilot ran the same as it would under the fix. Also fixed from its
+non-blocking list: a stopped batch is "incomplete", never pass or fail; the steps after the
+batch and the explicit `--stop-usd`; `check_records.py` reads the turn count from the
+reference commit, not `HEAD`; stale docstrings and design text; pass worded without a
+causal claim; R1 replies quoted in full, with the grader-noise caveat; "You asked already."
+counts reported. Not fixed, on record: the stop can overrun by one turn per running session.
+
+## Reference commit and cell size
+
+Entered here, dated, before the first registered session: (not yet; the owner's answer on
+the cost card decides the size).
