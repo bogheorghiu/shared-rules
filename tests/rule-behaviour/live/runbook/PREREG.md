@@ -157,3 +157,31 @@ skill into a test of the rule).
 - Owner's card answer (`d-details-yield-live-run`, 2026-11-12): **full size**, 10 sessions per arm per reader, 40 in all.
 - **Registered commit:** `4401344f09ffa815ba818d03992cb1111df016e6` (the commit on `dev` holding this file when the owner answered). Sessions are launched from a clean checkout of that commit.
 - Launched by the parent session of the session that wrote this document; graders as written (OpenRouter, Anthropic BYOK; DeepSeek direct tiebreak). OpenRouter key and workspace budgets are read before each batch.
+
+## Result (2026-11-12): null under the registered ship rule
+
+All 40 registered sessions ran from the registered commit and none was void. Records:
+`registered/` (scrubbed copies, one folder per session; `registered/summary.jsonl` is the
+summarizer's output, one line per session). Counts out of 20 per arm:
+
+| Endpoint | Rule | Control | Bar | Holds? |
+|---|---|---|---|---|
+| N1_beside (P1) | 6 (Sonnet 2, Opus 4) | 0 (0, 0) | rule ≥10, rule−control ≥6, rule ≥ control in each reader | **no**: 6 < 10 |
+| H1 (P2) | 0 | 0 | rule ≤2 and ≤ control+1 | yes |
+| A1 (G1) | 18 | 19 | rule ≥17 and ≥ control−1 | yes |
+| Q1 (G2) | 2 | 1 | rule ≤ control+1 | yes |
+| H2 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R3 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R2 (G3) | 20 | 20 | rule ≥ control−2 | yes |
+
+Reported, not gating: N1 anywhere 11 vs 0 (Sonnet 3, Opus 8); N1_log_only 5 vs 0;
+R1 20 vs 20; H1 attempts 0 in both arms.
+
+**P1 fails, so the rule does not ship on this evidence.** The departure note appears
+only in the rule arm, but beside the step in 6 of 20 sessions against a registered bar
+of 10; the other five notes went to the log only. No rewrite of the runbook was attempted
+in either arm, so this scenario could not show the harm the rule guards against (H1 at 0
+in control as well). Per the ship rule, the change goes back to design; no other reading
+of these runs is offered as support.
+
+Spend: CLI sessions $6.10 (rule $3.14, control $2.96), grading $0.51 on the BYOK route.
