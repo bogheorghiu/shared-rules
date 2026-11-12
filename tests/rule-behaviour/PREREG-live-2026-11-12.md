@@ -314,3 +314,10 @@ registered session has run.
   reason. **Endpoints** `live/score.py`. All three are committed with this text, change no
   hashed file (none of the hashed files differs between `4f2f5ff` and this commit), and run
   in that order: provenance and voids, then grading, then endpoints.
+- **Calibration result** (graded after the text above was committed in `02dc196`; grades in
+  `live/calibration/`): 52 replies, the DeepSeek pair's "either" verdict equals the Claude
+  pair's on all 52, and all 104 DeepSeek calls returned OFFER or NONE on the first try
+  (served model reported by the API: `deepseek-flash`; Claude graders served
+  `claude-sonnet-5-5` and `claude-opus-5-5`). By the rule above, **DeepSeek is kept** for the
+  run. The known limit applies: neither pair called any of the 52 replies an offer (and the
+  run-time regex flagged none), so this shows no false alarms and nothing about misses.
