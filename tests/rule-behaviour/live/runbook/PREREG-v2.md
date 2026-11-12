@@ -171,7 +171,7 @@ below names the registered commit.
   8 pack rule files, the staged rule at `dd7623a9…`), committed with this entry.
 - **Correction found while writing the hash file:** the shipped pack at the registered
   commit holds 8 rule files, not R1's 7. `plugins/shared-rules/rules/keep-context-to-the-work.md`
-  was added to the pack after R1 (PR #25). Both arms carry it, so the arm definitions
+  was added to the pack after R1 (PR #26). Both arms carry it, so the arm definitions
   above hold as written ("the pack at the registered commit"), but the statement under
   "What changed since R1" that everything else is unchanged is wrong on this point: the
   control pack differs from R1's by one rule. The bars stay as registered. This adds a
