@@ -152,4 +152,8 @@ skill into a test of the rule).
 
 ## Deviations
 
-None yet.
+### 2026-11-12: registered commit and size, entered before the first registered session
+
+- Owner's card answer (`d-details-yield-live-run`, 2026-11-12): **full size**, 10 sessions per arm per reader, 40 in all.
+- **Registered commit:** `4401344f09ffa815ba818d03992cb1111df016e6` (the commit on `dev` holding this file when the owner answered). Sessions are launched from a clean checkout of that commit.
+- Launched by the parent session of the session that wrote this document; graders as written (OpenRouter, Anthropic BYOK; DeepSeek direct tiebreak). OpenRouter key and workspace budgets are read before each batch.
