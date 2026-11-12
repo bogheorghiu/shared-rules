@@ -13,7 +13,7 @@ write down the check it must pass (`preregister-ship-decision.md`).
 | file | status |
 |---|---|
 | `propose-session-closure.md` | Tested 2026-11-11, three rounds: **did not pass** its ship rule. Text here is the round-3 text. |
-| `keep-context-to-the-work.md` | Untested draft, 2026-11-12. Successor to `propose-session-closure.md` after a reframing (`tests/rule-behaviour/debate/`); to be tested as `tests/rule-behaviour/DESIGN-live-test.md` describes. |
+| `keep-context-to-the-work.md` | Passed its registered live test 2026-11-12 (`tests/rule-behaviour/live/RESULT-2026-11-12.md`); owner chose to promote it. Moved to `plugins/shared-rules/rules/`; ships at the next release. |
 | `details-yield-patterns-persist.md` | Tested 2026-11-11, three rounds: **did not pass** its ship rule. Text here is the round-3 text. |
 
 The test, its ship rule, every reply and the result are in `tests/rule-behaviour/`

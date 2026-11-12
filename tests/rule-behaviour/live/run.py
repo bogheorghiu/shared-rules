@@ -44,17 +44,21 @@ def sha(p):
     return hashlib.sha256(open(p, "rb").read()).hexdigest()
 
 
-RULE = "keep-context-to-the-work.md"
+RULE_UNDER_TEST = "keep-context-to-the-work.md"
+
+
+def rule_path():
+    """The rule under test: in the plugin once promoted, else in docs/staged-rules/."""
+    shipped = os.path.join(REPO, "plugins", "shared-rules", "rules", RULE_UNDER_TEST)
+    return shipped if os.path.exists(shipped) else os.path.join(REPO, "docs", "staged-rules", RULE_UNDER_TEST)
 
 
 def arm_rules(arm):
-    """Control: the shipped pack without the rule under test (it may be promoted into the pack
-    while this test runs); rule: the same plus the rule, from the pack if it is there, else staged."""
-    pack = sorted(glob.glob(os.path.join(REPO, "plugins", "shared-rules", "rules", "*.md")))
-    files = [f for f in pack if os.path.basename(f) != RULE]
+    """Control: every bundled rule except the one under test. Rule arm: control plus that rule."""
+    files = sorted(f for f in glob.glob(os.path.join(REPO, "plugins", "shared-rules", "rules", "*.md"))
+                   if os.path.basename(f) != RULE_UNDER_TEST)
     if arm == "rule":
-        promoted = [f for f in pack if os.path.basename(f) == RULE]
-        files.append(promoted[0] if promoted else os.path.join(REPO, "docs", "staged-rules", RULE))
+        files.append(rule_path())
     elif arm != "control":
         sys.exit(f"unknown arm {arm}")
     return files

@@ -21,7 +21,6 @@ LIVE = os.path.relpath(HERE, REPO)
 SERVED = {"sonnet-medium": "claude-sonnet-5-5", "opus-low": "claude-opus-5-5"}
 COMMIT_TURNS = {"S1": ["t2", "t3", "t4", "t6", "t8", "t9", "t10", "t12", "t13"], "S2": ["t1", "t2", "t3", "t4", "t5", "t8"],
                 "S3": ["t2", "t3", "t4", "t7", "t9", "t10", "t11", "t12"]}
-RULE = "docs/staged-rules/keep-context-to-the-work.md"
 
 
 def git(*a, binary=False):
@@ -38,11 +37,11 @@ def reference(ref):
         if "__pycache__" not in p:
             tree.update(os.path.relpath(p, LIVE).encode() + b"\0" + show(p))
     want["fixture_tree_sha256"] = tree.hexdigest()
-    pack = {p: sha(show(p)) for p in git("ls-tree", "--name-only", ref, "--", "plugins/shared-rules/rules/").split() if p.endswith(".md")}
-    # as run.py's arm_rules: control leaves the rule out if it was promoted into the pack; rule takes it from there, else staged
-    promoted = {p: h for p, h in pack.items() if os.path.basename(p) == os.path.basename(RULE)}
-    rules = {p: h for p, h in pack.items() if p not in promoted}
-    rule_arm = dict(rules, **(promoted or {RULE: sha(show(RULE))}))
+    name = "keep-context-to-the-work.md"  # run.py RULE_UNDER_TEST: in the plugin once promoted, else staged
+    listed = git("ls-tree", "--name-only", ref, "--", "plugins/shared-rules/rules/").split()
+    rules = {p: sha(show(p)) for p in listed if p.endswith(".md") and os.path.basename(p) != name}
+    under_test = next((p for p in listed if os.path.basename(p) == name), f"docs/staged-rules/{name}")
+    rule_arm = dict(rules, **{under_test: sha(show(under_test))})
     return want, {"control": rules, "rule": rule_arm}
 
 
