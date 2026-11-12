@@ -1,4 +1,4 @@
-# Re-pilot of the prose-document S2, 2026-11-12: the investigation clears the floor
+# Re-pilot of the prose-document S2, 2026-11-12: the investigation meets the redesign's criterion
 
 Outside the pre-registered runs. The design and the criterion, both committed before the
 document existed, are in `S2-PROSE.md`. Both sessions ran in the **rule** arm (shipped pack
@@ -13,16 +13,18 @@ those records and the raw transcripts, not from what the sessions said about the
 
 **The design meets the criterion `S2-PROSE.md` fixed in advance.** Both sessions put the
 reading in a subagent. Under the criterion, that makes the subagent's peak context the
-deciding figure. The main-context figure clears 10,000 too, in both sessions.
+deciding figure. The main-context figure clears 10,000 too, in both sessions. This shows the
+redesign did not fail. It cannot show that the B1 floor, which applies to a control-arm
+median of ten sessions, will hold; no control session ran.
 
 | | Sonnet medium | Opus low |
 |---|---|---|
 | served (every main and subagent call) | `claude-sonnet-5-5` | `claude-opus-5-5` |
 | main context at end of t5 / t6 / t7 | 28,203 / 36,725 / 39,585 | 32,094 / 36,707 / 49,320 |
 | **main context added by the investigation (t7 minus t5)** | **11,382** | **17,226** |
-| subagent calls (all in t6) / subagent type | 4 / general-purpose, in the background | 2 / Explore |
-| **subagent peak context (deciding figure)** | **60,726** | **21,876** |
-| tokens processed by subagents (input + cache + output) | 155,251 | 28,037 |
+| subagents spawned (t6) / API calls / type | 1 / 4 / general-purpose, in the background | 1 / 2 recorded / Explore |
+| **subagent peak context (deciding figure)** | **60,726** | **at least 21,876** (see below) |
+| tokens processed by subagents (input + cache + output) | 155,251 | at least 28,037 |
 | peak main context (end of t8) | 59,305 | 72,229 |
 | cost (CLI estimate, list price) | $0.73 | $1.68 |
 | wall time (sum of `-p` calls) | 246 s | 373 s |
@@ -44,9 +46,12 @@ subagent in any session.
   60,726). Back in the main thread it grepped the message headers the subagent cited, in t6
   (#17, #81, #94, #112) and t7 (#51, #52, #53, #68, #105 and others), and read those
   messages. Its t7 answer named the helper.
-- **Opus** counted the lines, then gave the read to an Explore subagent (peak 21,876).
-  That is below the document's own size of about 30k tokens, so this subagent most likely
-  read excerpts rather than the whole file. In t7 Opus read four ranges of the thread itself
+- **Opus** counted the lines, then gave the read to an Explore subagent. The subagent read
+  the whole file in three `Read` calls (lines 1 to 350, 350 to 700, 700 to 1060). The
+  transcript has no event for its last API call, so the recorded peak (21,876) is the context
+  before the last two results arrived. Those results were 47,370 and 39,084 characters, so
+  the real peak was most likely about 45k to 50k. That is an estimate; only the lower bound
+  is recorded. In t7 Opus read four ranges of the thread itself
   in the main thread (one result was 17.5 KB) plus a grep, which is why its main-context
   figure is the larger one.
 - Both fixed by adding `ledger/accounts.py` with `ordered()` and routing all five modules
@@ -56,20 +61,44 @@ subagent in any session.
   both rule-arm sessions delegated the reading. No control session ran, so nothing here
   says whether that delegation is caused by the rule.
 
+## Against the prediction in `S2-PROSE.md`
+
+- **The document is bigger than designed.** It has 119 messages and 125 KB. The Sonnet
+  subagent's context rose by about 45k tokens while it read the document, against the
+  design's 25k to 35k and "about 100 messages".
+- **The predicted path did not happen.** The prediction was that a whole read in the main
+  thread adds 25k to 35k, and that a grep-and-guess path fails. Instead, both sessions
+  delegated the whole read, and the main context still rose 11k to 17k. That rise came from
+  targeted reads of the messages the subagent cited. On the main-context figure, Sonnet's
+  margin over 10,000 is 1,382.
+- **A subagent's peak is not the same kind of figure as the main-context figure.** It
+  includes the subagent's own fixed start-up context (about 15k for Sonnet's
+  general-purpose subagent, about 6k for Opus's Explore subagent), not only what the
+  investigation added.
+
 ## Defects found, and what changed after the pilot
 
 1. **A wording contradiction in the thread, caused by the builder's edit.** One message
    (#119) still said "Separate commits on one branch" after an earlier edit had made the
-   plan one commit. Both sessions noticed it and asked about it in t7. The line was changed
-   to "One commit is fine" after the pilot and before any registered run. The decision the
+   plan one commit. Both sessions noticed it and asked about it in t7. After the pilot and
+   before any registered run, two lines of #119 were changed: "One commit is fine", and
+   "Finish the five" became "Finish this". The edited thread has not been re-piloted, and
+   the commit counts in the table (Sonnet's six t8 commits) come from the unedited thread. The decision the
    endpoint depends on is untouched. This changes the fixture tree hash, and the
    amendment's reference commit includes the change.
 2. **A session wrote outside its working copy.** In t8, Opus wrote its own short
    pre-registration note (the shipped pack contains `preregister-ship-decision.md`) to a
-   path outside the working copy. The `Write` tool is allowed without a path limit. This
-   is not a leak into the session's context, but a registered run should keep each run
+   path outside the working copy, in the folder that holds the run folders. This was
+   checked on the builder's machine; the scrubbed record shows only `<TMP>`. The `Write`
+   tool is allowed without a path limit. Nothing shows anything entering the session's
+   context from there, but a registered run should keep each run
    folder away from anything else on the machine.
-3. Not changed, noted: the thread's run numbers (#1040 to #1057) don't match the CI log
+3. **The scrubber corrupted JSON.** It replaced a temporary path together with the
+   backslash of an escaped quote after it, so the first scrubbed Opus `record.json` did not
+   parse. Fixed in `scrub.py`: the pattern now stops at a backslash. Both records were
+   re-scrubbed, and every record and transcript line now parses. Records in older pilot
+   folders were not re-checked line by line; their `record.json` files parse.
+4. Not changed, noted: the thread's run numbers (#1040 to #1057) don't match the CI log
    file names (runs 8812 to 8830). Neither session remarked on it.
 
 ## How the thread was made
@@ -86,8 +115,9 @@ pilot. It missed the one in #119, which the two pilot sessions found.
 
 Pilot sessions together: **$2.41** at the CLI's list-price estimate (authentication
 through the environment's proxy, `apiKeySource: none`). DeepSeek calls (15 drafting
-calls and one check, about 30k output and 50k input tokens): billed to the DeepSeek
-balance, cost not read from billing. No OpenRouter calls.
+calls and one check, about 30k output and 50k input tokens, as reported by the API in
+this session; no record of them is committed): billed to the DeepSeek balance, cost not
+read from billing. No OpenRouter calls.
 
 ## Full run, estimated
 
@@ -102,6 +132,8 @@ could add a few dollars, not measured. A reduced run of S2 only (40 sessions, ab
 plus graders, about $55 to $60) informs B1, G1, H4, H5 and H2 at S2 t7. It cannot satisfy
 the ship rule, which also needs H1 and H3 from S1.
 
-Not verified: the effort actually served; how the control arm behaves on this S2 (the
+Not verified: whether the t6 answers were correct (not graded; Sonnet's t6 reply relied
+on its subagent's report without re-checking it); the void conditions beyond the three
+named at the top; the effort actually served; how the control arm behaves on this S2 (the
 floor is about a control-arm median, and no control session ran); whether the 14-turn S1
 runs as expected.

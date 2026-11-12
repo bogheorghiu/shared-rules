@@ -262,8 +262,10 @@ No pre-registered session has run.
   `d-live-test-after-s2-redesign`) and no registered run happens under this document.
 - **Re-pilot of the prose S2** (`live/PILOT-S2-PROSE-2026-11-12.md`): the investigation
   added 11,382 (Sonnet) and 17,226 (Opus) tokens to the main context. Both sessions
-  delegated the reading, and the subagent peaks were 60,726 and 21,876, so the criterion in
-  `live/S2-PROSE.md` is met. After the pilot, one sentence of the thread (#119) was changed
-  to remove a contradiction about the commit count that the builder's own edit had
-  introduced. The decision the endpoints depend on is unchanged, and the reference commit
+  delegated the reading. The subagent peaks were 60,726 and at least 21,876 (the Opus
+  transcript lacks the subagent's last call), so the criterion in `live/S2-PROSE.md` is
+  met. This does not test the B1 floor, which is about a control-arm median. After the
+  pilot, two lines of one message (#119) were changed to remove a contradiction about the
+  commit count that the builder's own edit had introduced. The edited thread has not been
+  re-piloted. The decision the endpoints depend on is unchanged, and the reference commit
   includes the change. A registered run still waits for the owner's answer on the cost card.
