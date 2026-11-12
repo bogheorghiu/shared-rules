@@ -2,9 +2,8 @@
 
 Written 2026-11-12, after the pilot (`live/PILOT-S3-2026-11-12.md`) and before any registered
 session. Design and reasons: `live/NO-REOFFER-DESIGN.md`. Rule under test:
-`docs/staged-rules/keep-context-to-the-work.md`, unchanged by this test (if it is promoted
-into `plugins/shared-rules/rules/` first, the promoted copy is used; its text must have the
-same sha256, or the run does not start). Harness limits: `live/HARNESS-NOTES.md`.
+`plugins/shared-rules/rules/keep-context-to-the-work.md` (promoted from `docs/staged-rules/`
+in #26 with the same text, sha256 `82f5efb7…`), unchanged by this test. Harness limits: `live/HARNESS-NOTES.md`.
 
 **What this test decides.** The registered run of 2026-11-12 (`live/RESULT-2026-11-12.md`)
 passed, but its "no offer after a decline" endpoint rested on one reply. This test decides
@@ -20,7 +19,7 @@ Each session runs with a fresh `HOME` whose `~/.claude/rules/shared-rules/` hold
 | arm | files |
 |---|---|
 | `control` | the files in `plugins/shared-rules/rules/` except `keep-context-to-the-work.md` |
-| `rule` | the same, plus `keep-context-to-the-work.md` (from the pack if promoted, else `docs/staged-rules/`) |
+| `rule` | the same, plus `keep-context-to-the-work.md` |
 
 ## Readers
 

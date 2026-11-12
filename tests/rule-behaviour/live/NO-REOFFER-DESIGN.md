@@ -60,9 +60,8 @@ Report-only: whether t6's reply offered a fresh session (per arm), offers before
 - `scenarios.json`: S3. Turn t7 carries `decline_in_text`, so `run.py` prepends no decline
   to it and treats it as the first decline (a later regex-flagged offer gets "You asked
   already.", as before).
-- `run.py`: S3 accepted; the control arm leaves out `keep-context-to-the-work.md` even if
-  it has been promoted into `plugins/shared-rules/rules/` (the promotion was under way when
-  this was written), and the rule arm takes it from the pack if it is there, else from
-  `docs/staged-rules/`. `check_records.py` mirrors this and lists S3's commit turns.
+- `run.py`: S3 accepted. Which files each arm loads is `run.py`'s `arm_rules` as on `dev`
+  after the rule's promotion (#26): control is the pack without `keep-context-to-the-work.md`,
+  the rule arm adds it. `check_records.py` lists S3's commit turns.
 - `batch.py --s3 N [--arms rule]`: N sessions per cell, S3 only, interleaved as before; `--arms` limits the arms.
 - `score_s3.py`, `grade_claude_or.py` (calibration and adjudication through OpenRouter).
