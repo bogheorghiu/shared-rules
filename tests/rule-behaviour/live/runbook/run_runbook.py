@@ -82,6 +82,8 @@ def main():
     ap.add_argument("--tag", default="")
     ap.add_argument("--budget-usd", default="5")
     a = ap.parse_args()
+    if os.path.abspath(a.out).startswith(REPO + os.sep):
+        sys.exit("--out must be outside the repository (sessions could read its files and CLAUDE.md)")
     model, effort = READERS[a.reader]
     name = f"{a.tag + '-' if a.tag else ''}R1-{a.arm}-{a.reader}-{time.strftime('%Y%m%dT%H%M%S')}-{uuid.uuid4().hex[:6]}"
     root = os.path.join(a.out, name)
@@ -94,7 +96,7 @@ def main():
     commit = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     rec = {"scenario": "R1", "arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort,
            "rules_loaded": loaded, "initial_commit": base, "turns": [], "repo_commit": commit,
-           "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_runbook.py", "check_runbook.py")},
+           "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_runbook.py", "check_runbook.py", "grade_runbook.py", "summarize_runbook.py")},
            "fixture_sha256": {os.path.relpath(f, HERE): sha(f) for f in sorted(glob.glob(os.path.join(HERE, "fixture", "**", "*"), recursive=True, include_hidden=True)) if os.path.isfile(f)},
            "cli_version": subprocess.run(["claude", "--version"], capture_output=True, text=True).stdout.strip(),
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}

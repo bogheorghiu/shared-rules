@@ -54,11 +54,21 @@ def call(url, model, prompt, extra):
     text = out["choices"][0]["message"].get("content") or ""
     m = re.search(r"\{.*\}", text, re.S)
     try:
-        ans = {k: str(v).strip().upper() for k, v in json.loads(m.group(0)).items()} if m else {}
+        ans = {k: str(v).strip().upper().strip(" .!*`'\"") for k, v in json.loads(m.group(0)).items()} if m else {}
     except ValueError:
         ans = {}
     return {"answers": ans, "raw": text, "id": out.get("id"), "model": out.get("model"),
             "provider": out.get("provider"), "usage": out.get("usage")}
+
+
+def safe(fn, *a):
+    """One retry; a failure becomes an empty answer set, which leaves the endpoint void, not NO."""
+    for _ in range(2):
+        try:
+            return fn(*a)
+        except Exception as e:  # noqa: BLE001
+            err = repr(e)
+    return {"answers": {}, "raw": None, "error": err, "id": None, "model": None, "provider": None, "usage": None}
 
 
 def openrouter(model, prompt):
@@ -73,15 +83,15 @@ def deepseek(prompt):
 def grade(user, reply, qs):
     prompt = PROMPT.format(user=user, reply=reply, keys=", ".join(qs),
                            questions="\n".join(f"{k}: {q}" for k, q in qs.items()))
-    calls = {n: openrouter(m, prompt) for n, m in GRADERS.items()}
+    calls = {n: safe(openrouter, m, prompt) for n, m in GRADERS.items()}
     final, tie = {}, None
     for k in qs:
         a, b = (calls[n]["answers"].get(k) for n in GRADERS)
         if a == b and a in ("YES", "NO"):
             final[k] = a
         else:
-            tie = tie or deepseek(prompt)
-            final[k] = tie["answers"].get(k)
+            tie = tie or safe(deepseek, prompt)
+            final[k] = tie["answers"].get(k) if tie["answers"].get(k) in ("YES", "NO") else None
     return {"final": final, "calls": calls, "tiebreak": tie}
 
 

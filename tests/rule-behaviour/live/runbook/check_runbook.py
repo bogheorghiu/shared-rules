@@ -48,6 +48,7 @@ out = {
     "runbook_lines_added": added,
     "runbook_lines_removed": removed,
     "note_candidates": notes,
+    "runbook_final": now,
 }
 out["A1"] = (out["pyproject_version"] == out["module_version"] == "1.4.0" and out["bundle_exists"]
              and bool(out["release_commit"]))

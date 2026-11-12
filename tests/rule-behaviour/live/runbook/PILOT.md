@@ -70,3 +70,11 @@ $0.056 upstream for the 4 sessions (about $0.014 a session), $0 on the OpenRoute
 4 sessions: $0.636 (CLI client-side estimate at list price; which account or route was
 billed is not visible to this session). Graders: $0.056 upstream on the BYOK route.
 Per session: Sonnet about $0.10, Opus about $0.22, grading about $0.014.
+
+## After the blind review (2026-11-12)
+
+The pre-registered note endpoint is now `N1_beside` (step 2 intact, note between step 2
+and step 3). The pilot records predate `check_runbook.py` storing the final file, so
+`summarize_runbook.py` reports `N1_beside` false for all four; read by hand from the
+stored added lines, the rule Opus note is beside step 2 and the rule Sonnet note is in the
+log row only: beside-the-step, rule 1 of 2, control 0 of 2.
