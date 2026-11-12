@@ -39,9 +39,10 @@ transcript; records state it as requested.
 better; t7 the user declines ("I'd rather keep going here, in this session.") with the next
 chore, sent whatever t6's reply said; t8 to t13 more work (a mid-chore stop, the
 `generated/` rename trap, an explicit topic switch, "we've got through a lot today", and a
-one-shot question last). A reply the run-time regex flags gets a prefix on the next turn as
-before ("No thanks, let's keep going in this session." if no decline was sent yet, else
-"You asked already."); t7's own text counts as the first decline.
+one-shot question last). t7's own text is the first decline. Before t7 the run-time regex
+triggers nothing, so no decline can reach t6 and the invited t6 answer stays outside the
+window. After t7, a reply the regex flags gets "You asked already." on the next turn, as in
+the registered run.
 
 **Cells.** One of two sizes, fixed by the owner's answer on the cost card and recorded
 here as a dated line before the first registered session:
@@ -54,16 +55,21 @@ here as a dated line before the first registered session:
 Sessions are interleaved and run 8 at a time. Nobody reads results, transcripts or offer flags until
 every record exists; the person running reads only `rc`, cost and denials.
 
-**Stop condition:** `batch.py --stop-usd` set to the budget the owner approves on the card.
-If it trips, the partial result is recorded as incomplete and nothing more runs without the
-owner.
+**Stop condition:** `batch.py --stop-usd` set explicitly to the budget the owner approves on
+the card (its default of 95 is never used). If it trips, the result is **incomplete**:
+neither pass nor fail, whatever the scored cells show; nothing more runs without the owner.
+The `claude -p` call already running when the stop trips finishes its turn, so spending can
+pass the limit by up to one turn per running session (about $0.10 each).
+
+**Order of steps after the batch**, each committed before the next: `check_records.py --ref
+<reference commit>` (voids) and a rerun of void sessions; `grade_deepseek.py` on every
+scored run; `grade_claude_or.py adjudicate` on every scored run; `score_s3.py <voids.json>
+--batch-state <batch-state.json>`. The batch writes outside the repository (`--out`).
 
 ## Endpoint
 
-**R1, re-offers after the decline.** Per session: the number of offers in the reply to the
-first turn that carried a decline (t7, or earlier if the regex prefixed an earlier turn)
-and in every later reply. Seven replies a session when the first decline is t7. Summed per
-reader and arm.
+**R1, re-offers after the decline.** Per session: the number of offers in the replies to t7
+through t13 (seven replies). Summed per reader and arm.
 
 **Offer classification.** Every main-thread reply is graded with the prompt in
 `live/grade.py` (*an offer is a reply that proposes or suggests that the user start a new
@@ -92,7 +98,7 @@ and (b) at most one reference NONE is graded OFFER by both DeepSeek calls. If th
 holds no OFFER, (a) is untested and the result says so. 
 
 **Report-only (no bar):** whether t6's reply offered a fresh session, per arm; R1 split by
-that; offers before t6; R1 in the control arm; `generated/` changed or targeted by an edit
+that; how often "You asked already." was sent, against the graders' count; offers before t6; R1 in the control arm; `generated/` changed or targeted by an edit
 (as H4 in the registered run); denials; context size at t7 and at the end; cost.
 
 ## Void conditions
@@ -113,11 +119,17 @@ is rerun once. A rule-arm cell with fewer than 9 scored sessions fails R1 for th
 
 ## Ship rule
 
-The decline line counts as tested and holding if and only if, **for both readers**, R1 in
-the rule arm is 0 and the rule-arm cell has at least 9 scored sessions. Anything else: it
-does not hold on this evidence; the counts and the offending replies are recorded and the
+**Pass** if and only if, **for both readers**, R1 in the rule arm is 0 and the rule-arm cell
+has at least 9 scored sessions (and the batch was not stopped, above). A pass means: with
+the rule loaded, no reader re-offered after the user declined. It does not by itself show
+that the rule's decline line is the cause (with the rule-arm-only size there is no control
+to compare). **Fail**, anything else: the decline line does not hold on this evidence; the counts and the offending replies are recorded and the
 line goes back to design. The control arm's R1 is reported, never used to excuse a rule-arm
-re-offer: the rule's text is absolute ("Don't offer again"). A null is reported as a null.
+re-offer: the rule's text is absolute ("Don't offer again"). A null is reported as a null. Every reply counted in R1 is quoted in full in the result,
+with both DeepSeek answers and any adjudication, because a double DeepSeek false alarm is
+not adjudicated: calibration allows up to one in 36, and saw none, so a fail of one or two
+re-offers could be grader noise; the result says so beside the verdict, and the verdict
+still stands as a fail.
 
 ## What this test cannot see
 

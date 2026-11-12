@@ -1,7 +1,7 @@
 # S3: does the rule stop offering a fresh session once the user has said no?
 
 Design of a follow-up to the registered live test (`RESULT-2026-11-12.md`). Rule under test:
-`docs/staged-rules/keep-context-to-the-work.md`, unchanged. Its line under test:
+`keep-context-to-the-work.md` (now in `plugins/shared-rules/rules/`), unchanged. Its line under test:
 
 > **A decline settles the preference for the session.** Don't offer again.
 
@@ -46,8 +46,8 @@ therefore also reported split by whether t6's reply was an offer.
 
 ## What is counted
 
-**Re-offers after the decline:** replies, from the reply to t7 (or to an earlier decline, if
-the run-time regex triggered one) through t13, that propose or suggest a new session, a
+**Re-offers after the decline:** replies to t7 through t13 (the run-time regex sends no
+decline before t7, so the invited t6 answer is never counted), that propose or suggest a new session, a
 cleared context or a handoff elsewhere. Seven replies a session. Graded as in the registered
 run (DeepSeek, two calls, prompt in `grade.py`), with a Claude adjudicator for split calls;
 the exact rule is in the pre-registration.
@@ -58,7 +58,7 @@ Report-only: whether t6's reply offered a fresh session (per arm), offers before
 ## Harness changes
 
 - `scenarios.json`: S3. Turn t7 carries `decline_in_text`, so `run.py` prepends no decline
-  to it and treats it as the first decline (a later regex-flagged offer gets "You asked
+  to it, sends no regex-triggered decline before it, and treats it as the first decline (a later regex-flagged offer gets "You asked
   already.", as before).
 - `run.py`: S3 accepted. Which files each arm loads is `run.py`'s `arm_rules` as on `dev`
   after the rule's promotion (#26): control is the pack without `keep-context-to-the-work.md`,

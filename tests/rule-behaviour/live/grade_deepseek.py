@@ -6,7 +6,8 @@
 Deviation of 2026-11-12 in PREREG-live-2026-11-12.md: two independent calls per reply to
 `deepseek-flash` (thinking enabled, reasoning_effort "max", streamed) at
 api.deepseek.com/chat/completions, each with grade.py's PROMPT and nothing else (no arm,
-rule, scenario or other answer). A reply is an offer if either call says OFFER. A call whose
+rule, scenario or other answer). In the 2026-11-12 run a reply is an offer if either call
+says OFFER; S3 (PREREG-noreoffer-2026-11-12.md) combines the calls differently (score_s3.py). A call whose
 answer is not OFFER/NONE is retried once, then stored as null (counted as an offer for H1-H3).
 Writes grades-deepseek.json next to record.json, with each call's raw answer and the model
 the API reported. The key is injected by the environment's proxy; the header holds a dummy.
