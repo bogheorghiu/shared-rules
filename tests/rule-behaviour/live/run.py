@@ -44,10 +44,17 @@ def sha(p):
     return hashlib.sha256(open(p, "rb").read()).hexdigest()
 
 
+RULE = "keep-context-to-the-work.md"
+
+
 def arm_rules(arm):
-    files = sorted(glob.glob(os.path.join(REPO, "plugins", "shared-rules", "rules", "*.md")))
+    """Control: the shipped pack without the rule under test (it may be promoted into the pack
+    while this test runs); rule: the same plus the rule, from the pack if it is there, else staged."""
+    pack = sorted(glob.glob(os.path.join(REPO, "plugins", "shared-rules", "rules", "*.md")))
+    files = [f for f in pack if os.path.basename(f) != RULE]
     if arm == "rule":
-        files.append(os.path.join(REPO, "docs", "staged-rules", "keep-context-to-the-work.md"))
+        promoted = [f for f in pack if os.path.basename(f) == RULE]
+        files.append(promoted[0] if promoted else os.path.join(REPO, "docs", "staged-rules", RULE))
     elif arm != "control":
         sys.exit(f"unknown arm {arm}")
     return files
@@ -150,7 +157,7 @@ def total_tokens(turns):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--scenario", required=True, choices=["S1", "S2"])
+    ap.add_argument("--scenario", required=True, choices=["S1", "S2", "S3"])
     ap.add_argument("--arm", required=True, choices=["control", "rule"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS))
     ap.add_argument("--out", required=True)
@@ -181,7 +188,9 @@ def main():
     prev_offer = False
     for i, turn in enumerate(sc["turns"]):
         text = turn["text"]
-        if prev_offer:
+        if turn.get("decline_in_text"):  # S3: the turn declines whatever came before; it counts as the first decline
+            offers = max(offers, 1)
+        elif prev_offer:
             text = spec["decline"]["first" if offers == 1 else "again"] + " " + text
         path = os.path.join(tdir, f"{turn['id']}.jsonl")
         cmd = ["claude", "-p", text, "--model", model, "--effort", effort, "--output-format", "stream-json",
