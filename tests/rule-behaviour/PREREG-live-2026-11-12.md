@@ -203,18 +203,28 @@ Written before any pre-registered session; no pre-registered session has run.
   pass criterion, written before the re-pilot: `live/S2-REDESIGN.md`.
 - **Re-pilot result** (rule arm, one session per reader, `live/PILOT-S2-2026-11-12.md`):
   the investigation added 9,244 tokens (Sonnet) and 8,581 (Opus) to the main context,
-  with no subagent used. Both are under this document's 10,000-token floor for B1. The
-  floor is not changed.
-- **Consequence.** This document's runs are defined by the files at its own merge commit,
-  so the original S2 stays the pre-registered one, and its B1 is expected to be
-  uninformative (Floor on B1). The redesigned S2 is not pre-registered here. Because
-  `run.py`, `make_large_files.py`, `hidden/check.py` and the fixture-tree hash (which now
-  covers `fixture-s2/`) all changed, a record made with the harness at a later `dev`
-  commit is void by void condition 4 for **both** scenarios. A run under this document
-  uses the harness checked out at its merge commit. Any run on a further redesign needs
-  its own dated amendment here, written before that run, or a new pre-registration.
-- **Fixed on the way, no effect on any endpoint.** `make_large_files.py` now creates
-  `data/`, `docs/` and `logs/`, which the tracked fixture lacks; on a fresh clone the old
-  script stopped before writing anything. A run from the merge commit's harness has to
-  create those three folders in each working copy first (or carry this one fix, which
-  then voids its records by condition 4 unless an amendment allows it).
+  with no subagent used. The redesign's own criterion (`live/S2-REDESIGN.md`) used this
+  document's 10,000-token figure as its bar, and both sessions fall under it. The B1 floor
+  itself applies to a control-arm median and is not tested by two rule-arm sessions; it is
+  not changed.
+- **What is pre-registered.** This document's scenarios, fixture and harness are the files
+  at commit `27e6a02` (#19), which holds the original S2 described above (Scenarios and
+  cells). The redesigned S2 is not pre-registered here. Its files reached `dev` in a later
+  commit, and that later commit is not the one meant by "merge commit" anywhere in this
+  document. The original S2's B1 is expected to be uninformative (Floor on B1).
+- **No registered run can currently complete validly.** Two defects make this so; both
+  are on record before any run:
+  1. At `27e6a02`, `make_large_files.py` writes into `data/`, `docs/` and `logs/` without
+     creating them. The tracked fixture lacks them, so on a fresh clone every session fails
+     before its first turn. The folders can't be created beforehand either: `run.py`
+     builds each working copy with `copytree` and calls the script in the same function.
+     The fix on `dev` changes `make_large_files.py`, and void condition 4 voids any record
+     made with a changed harness.
+  2. Running says a batch driver "is written and committed before the first run". That
+     commit moves the repository off the merge commit, and void condition 4 then voids
+     every record.
+
+  So a run under this document needs a further dated amendment first, saying which commit
+  and which harness files the records are checked against. That amendment goes in with
+  the next design. Any run on a further S2 redesign needs the same: its own amendment here,
+  written before the run, or a new pre-registration.

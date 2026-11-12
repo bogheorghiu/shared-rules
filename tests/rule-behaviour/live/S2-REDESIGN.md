@@ -83,3 +83,9 @@ Rule arm, one session per reader, revised S2 only. Results: `PILOT-S2-2026-11-12
 **Outcome (added after the run):** fail. The investigation added 9,244 tokens in the Sonnet
 session and 8,581 in the Opus session. Neither used a subagent. Both figures are under
 10,000, so the design does not go to a pre-registered run.
+
+**Correction (after the run, from the blind review):** "none of them mentions randomness,
+seeds or ordering" above is wrong about ordering. `sync.py` and `export.py` say "order".
+The `limits.py`, `rebalance.py`, `statement.py` and `export.py` docstrings state the
+name-sorts-first tie rule, and the tie tests' names end in `_by_name`. Those words make the
+common idiom easier to spot. The text above is left as written before the run.
