@@ -19,7 +19,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 LIVE = os.path.relpath(HERE, REPO)
 SERVED = {"sonnet-medium": "claude-sonnet-5-5", "opus-low": "claude-opus-5-5"}
-COMMIT_TURNS = {"S1": ["t2", "t3", "t4", "t6", "t8", "t9", "t10", "t12", "t13"], "S2": ["t1", "t2", "t3", "t4", "t5", "t8"]}
+REF = "HEAD"  # set from --ref in main()
+COMMIT_TURNS = {"S1": ["t2", "t3", "t4", "t6", "t8", "t9", "t10", "t12", "t13"], "S2": ["t1", "t2", "t3", "t4", "t5", "t8"],
+                "S3": ["t2", "t3", "t4", "t7", "t9", "t10", "t11", "t12"]}
 
 
 def git(*a, binary=False):
@@ -79,7 +81,7 @@ def check(key, s, want, rules):
     # condition 1
     if r.get("stopped_early"):
         out["void"].append(f"1: stopped_early {r['stopped_early']}")
-    import_spec = json.loads(git("show", f"HEAD:{LIVE}/scenarios.json"))
+    import_spec = json.loads(git("show", f"{REF}:{LIVE}/scenarios.json"))
     if len(turns) != len(import_spec[sc]["turns"]):
         out["void"].append(f"1: {len(turns)} turns recorded of {len(import_spec[sc]['turns'])}")
     for t in turns:
@@ -114,6 +116,8 @@ def main():
     ap.add_argument("--ref", required=True)
     ap.add_argument("states", nargs="+", help="batch-state.json files; a later file's session replaces nothing, all are listed")
     a = ap.parse_args()
+    global REF
+    REF = a.ref
     want, rules = reference(a.ref)
     rows = []
     for st in a.states:

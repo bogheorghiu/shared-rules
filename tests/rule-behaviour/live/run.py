@@ -161,7 +161,7 @@ def total_tokens(turns):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--scenario", required=True, choices=["S1", "S2"])
+    ap.add_argument("--scenario", required=True, choices=["S1", "S2", "S3"])
     ap.add_argument("--arm", required=True, choices=["control", "rule"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS))
     ap.add_argument("--out", required=True)
@@ -190,9 +190,13 @@ def main():
                                   if os.path.isfile(f)}}
     offers = 0
     prev_offer = False
+    # S3: no regex-triggered decline before the scripted one, so the invited t6 answer stays outside the window
+    forced = next((j for j, t in enumerate(sc["turns"]) if t.get("decline_in_text")), None)
     for i, turn in enumerate(sc["turns"]):
         text = turn["text"]
-        if prev_offer:
+        if turn.get("decline_in_text"):  # S3: the turn declines whatever came before; it counts as the first decline
+            offers = max(offers, 1)
+        elif prev_offer and (forced is None or i > forced):
             text = spec["decline"]["first" if offers == 1 else "again"] + " " + text
         path = os.path.join(tdir, f"{turn['id']}.jsonl")
         cmd = ["claude", "-p", text, "--model", model, "--effort", effort, "--output-format", "stream-json",

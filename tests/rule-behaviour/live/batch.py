@@ -22,14 +22,15 @@ import argparse, itertools, json, os, re, subprocess, sys, threading, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 CELLS = list(itertools.product(("S1", "S2"), ("sonnet-medium", "opus-low"), ("control", "rule")))
+CELLS_S3 = list(itertools.product(("S3",), ("sonnet-medium", "opus-low"), ("control", "rule")))
 LINE = re.compile(r"^(?P<name>\S+) (?P<turn>t\d+): rc=(?P<rc>-?\d+) .* cost=(?P<cost>\S+) offer=\S+ denials=(?P<den>\d+)")
 
 
-def interleaved(reps=10):
+def interleaved(reps=10, cells=CELLS):
     out = []
     for b in range(reps):
-        k = (3 * b) % len(CELLS)  # rotate the cell order each block
-        out += [(s, arm, r) for (s, r, arm) in CELLS[k:] + CELLS[:k]]
+        k = (3 * b) % len(cells)  # rotate the cell order each block
+        out += [(s, arm, r) for (s, r, arm) in cells[k:] + cells[:k]]
     return out
 
 
@@ -40,12 +41,15 @@ def main():
     ap.add_argument("--stop-usd", type=float, default=95.0)
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--tag", default="reg")
+    ap.add_argument("--s3", type=int, metavar="REPS", help="run S3 only (NO-REOFFER-DESIGN.md): REPS sessions per cell")
+    ap.add_argument("--arms", default="control,rule", help="with --s3: the arms to run (PREREG-noreoffer, Cells)")
     a = ap.parse_args()
     out = os.path.abspath(a.out)
     if out == REPO or out.startswith(REPO + os.sep):
         sys.exit("--out must be outside the repository")
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
-    todo = [tuple(x) for x in json.load(open(a.only))] if a.only else interleaved()
+    todo = ([tuple(x) for x in json.load(open(a.only))] if a.only
+            else interleaved(a.s3, [c for c in CELLS_S3 if c[2] in a.arms.split(",")]) if a.s3 else interleaved())
     state = {"planned": [list(x) for x in todo], "sessions": {}, "stopped": None}
     lock, procs, cost = threading.Lock(), {}, {}
     queue = list(enumerate(todo))
