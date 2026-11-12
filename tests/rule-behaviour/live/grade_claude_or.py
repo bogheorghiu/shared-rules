@@ -36,7 +36,8 @@ def ask(grader, reply):
             raw, served, prov, usage = call(model, effort, reply)
         except Exception as ex:
             last = dict(last, answer=f"error: {type(ex).__name__}: {ex}"[:300]); time.sleep(5); continue
-        word = raw.upper().strip(" .*`'\"")
+        # Opus at low effort sometimes reasons first and puts the word on the last line (pilot, PILOT-S3-2026-11-12.md)
+        word = raw.strip().splitlines()[-1].upper().strip(" .*`'\"") if raw.strip() else ""
         last = {"offer": None, "answer": raw, "served": served, "provider": prov, "usage": usage}
         if word in ("OFFER", "NONE"):
             return dict(last, offer=word == "OFFER")

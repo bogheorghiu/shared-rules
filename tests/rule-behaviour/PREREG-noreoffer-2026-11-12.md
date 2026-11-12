@@ -44,8 +44,15 @@ one-shot question last). A reply the run-time regex flags gets a prefix on the n
 before ("No thanks, let's keep going in this session." if no decline was sent yet, else
 "You asked already."); t7's own text counts as the first decline.
 
-**Cells:** 1 scenario x 2 readers x 2 arms x 10 sessions = 40 sessions, interleaved
-(`batch.py --s3 10`), 8 at a time. Nobody reads results, transcripts or offer flags until
+**Cells.** One of two sizes, fixed by the owner's answer on the cost card and recorded
+here as a dated line before the first registered session:
+
+- **Full:** 2 readers x 2 arms x 10 sessions = 40 sessions (`batch.py --s3 10`).
+- **Rule arm only:** 2 readers x 10 sessions = 20 sessions, no control (`batch.py --s3 10
+  --arms rule`). The ship rule below never uses the control arm, so this size decides it
+  the same way; what is lost is the report-only comparison with control.
+
+Sessions are interleaved and run 8 at a time. Nobody reads results, transcripts or offer flags until
 every record exists; the person running reads only `rc`, cost and denials.
 
 **Stop condition:** `batch.py --stop-usd` set to the budget the owner approves on the card.
@@ -69,23 +76,21 @@ elsewhere; running work in a subagent is not an offer*), seeing only the reply.
 2. Both say OFFER: offer. Both say NONE: not an offer. Either failed after its retry: offer.
 3. They split (one OFFER, one NONE): one call to Claude Opus 5.5 at low effort through
    OpenRouter, Anthropic as the only provider (`live/grade_claude_or.py adjudicate`), same
-   prompt; its answer decides, and a failed call counts as an offer.
+   prompt; its answer decides (the word on its last line, as fixed after the pilot), and a
+   call that yields neither word after its retry counts as an offer.
 
 Why an adjudicator instead of the registered run's "either grader": the bar here is 0 over
 70 replies per cell, and the registered run had one DeepSeek false alarm in 1,760 calls;
 with "either" a single grader slip would fail the rule. The adjudicator is a different
 model family and sees nothing else. Every raw answer and the served model are stored.
 
-**Calibration of DeepSeek, decided before it runs.** On every reply of the three pilot
+**Calibration of DeepSeek, decided before it ran** (result: kept; `live/PILOT-S3-2026-11-12.md`). On every reply of the three pilot
 sessions (39 replies), both Claude graders (Sonnet 5.5 medium and Opus 5.5 low, OpenRouter,
 Anthropic only; `grade_claude_or.py calibrate`) and the DeepSeek pair grade each reply. The
 reference is the Claude pair where they agree; replies they split on are left out and
 listed. DeepSeek is kept if (a) no reference OFFER is graded NONE by both DeepSeek calls,
 and (b) at most one reference NONE is graded OFFER by both DeepSeek calls. If the reference
-holds no OFFER, (a) is untested and the result says so. If DeepSeek fails (a) or (b), the
-registered run uses the two Claude graders in its place, with the same split rule (step 3
-then uses DeepSeek's pair as tie-break, offer if either says OFFER), and that is recorded
-here as a dated deviation before any registered session.
+holds no OFFER, (a) is untested and the result says so. 
 
 **Report-only (no bar):** whether t6's reply offered a fresh session, per arm; R1 split by
 that; offers before t6; R1 in the control arm; `generated/` changed or targeted by an edit

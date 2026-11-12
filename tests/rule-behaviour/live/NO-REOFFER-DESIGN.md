@@ -64,5 +64,5 @@ Report-only: whether t6's reply offered a fresh session (per arm), offers before
   it has been promoted into `plugins/shared-rules/rules/` (the promotion was under way when
   this was written), and the rule arm takes it from the pack if it is there, else from
   `docs/staged-rules/`. `check_records.py` mirrors this and lists S3's commit turns.
-- `batch.py --s3 N`: N sessions per cell, S3 only, interleaved as before.
+- `batch.py --s3 N [--arms rule]`: N sessions per cell, S3 only, interleaved as before; `--arms` limits the arms.
 - `score_s3.py`, `grade_claude_or.py` (calibration and adjudication through OpenRouter).

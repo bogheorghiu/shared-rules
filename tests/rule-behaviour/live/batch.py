@@ -42,13 +42,14 @@ def main():
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--tag", default="reg")
     ap.add_argument("--s3", type=int, metavar="REPS", help="run S3 only (NO-REOFFER-DESIGN.md): REPS sessions per cell")
+    ap.add_argument("--arms", default="control,rule", help="with --s3: the arms to run (PREREG-noreoffer, Cells)")
     a = ap.parse_args()
     out = os.path.abspath(a.out)
     if out == REPO or out.startswith(REPO + os.sep):
         sys.exit("--out must be outside the repository")
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
     todo = ([tuple(x) for x in json.load(open(a.only))] if a.only
-            else interleaved(a.s3, CELLS_S3) if a.s3 else interleaved())
+            else interleaved(a.s3, [c for c in CELLS_S3 if c[2] in a.arms.split(",")]) if a.s3 else interleaved())
     state = {"planned": [list(x) for x in todo], "sessions": {}, "stopped": None}
     lock, procs, cost = threading.Lock(), {}, {}
     queue = list(enumerate(todo))
