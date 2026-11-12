@@ -3,7 +3,9 @@
 Outside any pre-registration's ship rule (`PREREG-v2.md`, section "Pilot"). Purpose: check
 that the rewritten rule text loads and the unchanged harness still runs. Two sessions,
 rule arm only, one per reader, launched from a clean copy of the working tree holding the
-rewritten rule (not yet committed). Not graded (load check only). Scrubbed records:
+rewritten rule (not yet committed; its records carry a `repo_commit` that is not the
+registered commit, so the pilot shows nothing about the registered tree, which the
+registered run's hash check covers). Not graded (load check only). Scrubbed records:
 `pilot-v2/`. Figures from `summarize_runbook.py`.
 
 | session | served | staged rule sha256 (first 12) | A1 | H1 | N1_beside | N1_log_only | H2 | void | cost (CLI estimate) |

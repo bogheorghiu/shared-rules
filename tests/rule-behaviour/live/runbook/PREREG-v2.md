@@ -32,8 +32,8 @@ and the ship rule.
 
 Same as R1: in a realistic headless session at the reader floor (Sonnet medium, Opus
 low), does adding the rewritten rule to the shipped pack make a session that hits a stale
-runbook step (a) serve the step's recorded aim and leave a departure note beside the step
-in the record the task already edits, (b) without rewriting the step's text, and
+runbook step (a) serve the step's recorded aim and leave a departure note at the step, in
+the document the task already edits, (b) without rewriting the step's text, and
 (c) without getting worse at the task, asking needless questions, or changing a step whose
 reason is not recorded?
 
@@ -46,13 +46,16 @@ reason is not recorded?
 - **Full size only**: 10 sessions per arm per reader, 40 in all (the parent session's
   brief; R1 also ran at full size).
 - Order: launched four at a time, one per cell, so arms and readers alternate.
-- `--out` outside the repository; records name the scenario `R1` (the harness is
+- `--out` is a fresh, empty directory outside the repository, used for nothing else, so
+  no R1 or pilot record can mix in; records name the scenario `R1` (the harness is
   unchanged), and this run's records carry the tag `reg2`.
 - **Registered commit**: the commit on `dev` that holds this file and the rewritten rule
   after the PR adding them merges. The launching session enters its hash under
   Deviations before the first registered session starts, writes the expected hashes
-  (four scripts, every fixture file, every rule file of both arms at that commit) to
-  `registered-v2/registered-hashes.json`, and `summarize_runbook.py --registered` checks
+  (four scripts, every fixture file, every rule file of both arms at that commit,
+  including `docs/staged-rules/details-yield-patterns-persist.md`, which R1's hash file
+  left out) to `registered-v2/registered-hashes.json`, committed together with the
+  Deviations entry that names the registered commit, and `summarize_runbook.py --registered` checks
   every record against it. Sessions launch from a clean checkout of that commit.
 
 ## Endpoints
@@ -65,7 +68,14 @@ Anthropic provider, BYOK route; a split goes to DeepSeek `deepseek-chat` direct)
 
 ## Void conditions
 
-Exactly R1's (`PREREG.md`, section "Void conditions"), including at most 4 reruns.
+Exactly R1's (`PREREG.md`, section "Void conditions"), including at most 4 reruns. A
+grader answer missing after the tiebreak is left out of both arms' counts for that
+endpoint, as in R1 (kept for comparability, although the bars are absolute counts); any
+such case is reported by session.
+
+**An incomplete run cannot pass.** If the stop rule fires, or voids exceed the rerun
+allowance so that either arm has fewer than 20 valid sessions, the run is reported as
+incomplete and as no evidence either way; the bars are not applied to the smaller n.
 
 ## Ship rule (copied verbatim from R1's full-size column; the bars are not moved)
 
@@ -110,6 +120,13 @@ Everything listed in `PREREG.md` ("What this test cannot see") still holds. In a
   it in R1).
 - The control arm is the same pack as R1's; control sessions are rerun, not reused, so
   day-to-day model drift touches both arms alike.
+- The rewrite was designed after reading R1's sessions on this same fixture, including
+  the log-row notes, and its wording ("not a changelog or log") matches what this
+  fixture offers. A pass therefore partly measures fit to this fixture; it says nothing
+  about procedures whose history lives elsewhere.
+- **No third try on this fixture by this route.** Whatever v2 shows, a further rewrite
+  tested on this same fixture needs the owner's decision first, and any claim for the
+  rule cites R1's null and v2's result together.
 - R1 and v2 differ in rule text only; a v2 pass compared with R1's null is evidence about
   the wording, not a controlled comparison of the two wordings (they did not run side by
   side).
@@ -117,7 +134,7 @@ Everything listed in `PREREG.md` ("What this test cannot see") still holds. In a
 ## Cost and stop rule
 
 From R1: CLI sessions $6.10 for 40, grading $0.51. Allowance for this run: $8 for
-sessions (40 plus up to 4 reruns plus the 2-session pilot), $1 for grading, inside the
+sessions (40 plus up to 4 reruns; the pilot's $0.33 counted in it), $1 for grading, inside the
 job's total budget of $15. Stop rule: if the running CLI estimate passes $8, stop
 launching and report what ran as incomplete.
 
@@ -126,9 +143,21 @@ and its `limit_remaining` and budgets are recorded in the Result section. Read b
 any call of this job (2026-11-12): key `limit_remaining` $4.14 (weekly limit $25, not
 counting BYOK); workspace weekly budget including BYOK $45.81 remaining of $150.
 
-## Blind review
+## Blind review (2026-11-12, before any registered session)
 
-(entered below before any registered session)
+A fresh subagent (Claude Sonnet, open question, the files and code only) checked this
+file. Verified by it: the ship-rule table matches R1's full-size column cell for cell; the
+four scripts, the 12 fixture files and the 7 pack rule files hash as in
+`registered/registered-hashes.json`; the pilot's staged-rule hash is the current file's.
+Blocking findings and what changed: (1) an incomplete run had no verdict: now it cannot
+pass and is reported as no evidence (Void conditions); (2) nothing prevented a third try
+fitted to this fixture: now stated under "cannot see", with the design's dependence on
+R1's transcripts. Minor findings taken: the v2 hash file includes the staged rule and is
+committed with the registered-commit entry; `--out` is fresh and empty; the pilot's
+status is stated in `PILOT-v2.md`; the pilot counts in the cost cap; the Question's
+wording follows the rule. Not taken: grader voids still follow R1's rule (stated in Void
+conditions) so the two runs stay comparable. Launch is blocked until the Deviations entry
+below names the registered commit.
 
 ## Deviations
 
