@@ -228,3 +228,35 @@ Written before any pre-registered session; no pre-registered session has run.
   and which harness files the records are checked against. That amendment goes in with
   the next design. Any run on a further S2 redesign needs the same: its own amendment here,
   written before the run, or a new pre-registration.
+
+### 2026-11-12 (later): the two run blockers, and the prose-document S2
+
+Written before any session it affects: the re-pilot of the prose S2 and any registered run.
+No pre-registered session has run.
+
+- **Which files a record is checked against (replaces "the merge commit" in Arms, void
+  conditions 2 and 4).** The reference is the merge commit of the pull request that adds
+  this amendment (the *reference commit*). A record is tied to it by content, not by
+  commit id. The arm's rule files, `scenarios.json`, `run.py`, `hidden/check.py`,
+  `make_large_files.py` and the fixture tree (both overlays included) must have the same
+  sha256 as at the reference commit, and `harness_dirty` must be false. `repo_commit` is
+  still recorded. A later commit is acceptable only if every one of those hashes matches.
+  The check is run by a script that compares each record's `provenance` and
+  `rules_loaded` against the reference commit's files. The script is committed before
+  scoring, and nothing is scored before it has run.
+- **Blocker 1 (`make_large_files.py` failed on a fresh clone).** Fixed: the version at
+  the reference commit creates `data/`, `docs/` and `logs/` itself. Every record is checked
+  against that version, so the fix no longer trips void condition 4.
+- **Blocker 2 (the batch driver's commit moved the repository off the merge commit).**
+  Fixed by the rule above. A batch driver changes none of the hashed files and may be
+  committed after the reference commit. It must not live in `live/fixture*/`, and it may
+  not edit any hashed file.
+- **Which S2.** S2 is the prose-document version (`live/S2-PROSE.md`, overlay
+  `live/fixture-s2/` with `docs/incidents/flaky-ci-thread.md`), as it stands at the
+  reference commit. The Scenarios and cells text about a "1,535-line CI log" describes the
+  original S2 and does not apply to it. The S2 endpoints are unchanged. The new hidden-check
+  field `agreed_shape` is report-only and is in no endpoint.
+- **When a registered run may start.** Only if the re-pilot of the prose S2 clears the
+  criterion in `live/S2-PROSE.md`, and the owner then answers the cost card. If it does not
+  clear it, the live test of the rule stops (owner's decision, board
+  `d-live-test-after-s2-redesign`) and no registered run happens under this document.
