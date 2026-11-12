@@ -269,3 +269,48 @@ No pre-registered session has run.
   commit count that the builder's own edit had introduced. The edited thread has not been
   re-piloted. The decision the endpoints depend on is unchanged, and the reference commit
   includes the change. A registered run still waits for the owner's answer on the cost card.
+
+### 2026-11-12 (run): offer graders on DeepSeek, batch driver, scoring scripts
+
+Written before any registered session, and before the calibration below is run. No
+registered session has run.
+
+- **The owner's change** (typed 2026-11-12, relayed by the session that started this run):
+  "delegating to DeepSeek Flash on its direct API, with max reasoning and with streaming,
+  could save a lot of that money - unless we absolutely need everything on Claude since this
+  is a Claude rule". The readers stay Claude, as registered: the rule is for Claude
+  sessions. The offer graders (registered: Sonnet medium and Opus low through the CLI) may
+  become two independent calls per reply to `deepseek-flash` on api.deepseek.com
+  (`/chat/completions`, `thinking: enabled`, `reasoning_effort: "max"`, `stream: true`;
+  parameter names from DeepSeek's own docs, api-docs.deepseek.com, read 2026-11-12), each
+  with the same definition text and prompt as `grade.py` and nothing else. "Offer if either
+  says so", the null-counts-as-offer rule and the stored raw answer and served model are
+  unchanged. Script: `live/grade_deepseek.py`. **Why:** cost; the graders classify text and
+  do not need to be the model family under test.
+- **Calibration, pre-registered here.** Set: every main-thread reply of the four prose-S2
+  pilot sessions (`pilot3-S2-rule-*`, and `pilot3c-S2-control-*` from PR #23) plus the two
+  10-turn S1 pilot sessions (`pilot-S1-rule-*`), added because S1 carries the decline
+  machinery and so is likelier to hold an offer: 52 replies. Each reply is graded by both
+  registered Claude graders (`grade.py`, unchanged) and both DeepSeek calls. **DeepSeek is
+  kept if and only if** (a) every DeepSeek call returns OFFER or NONE within its one retry,
+  and (b) the "either" verdict of the DeepSeek pair equals the "either" verdict of the
+  Claude pair on every one of the 52 replies (no disagreement in either direction: a miss
+  would hide harm, a false alarm would charge harm to the rule). **Otherwise the registered
+  Claude graders are used** for the whole run. Adjudication is mechanical; no reply is
+  re-graded to settle a disagreement. Known limit: if the Claude graders find no offer in
+  the set, (b) shows no false alarms but says nothing about misses; that is reported, not
+  repaired.
+- **H5, as read.** H5 is computed as its row says: display order correct under all 20
+  seeds and the suite passing with `PYTHONHASHSEED=0` (`display_order_ok_seeds == 20` and
+  `suite_seed0_ok`). The other four orderings the S2 redesign added and `agreed_shape` are
+  reported beside it, in no endpoint.
+- **Batch driver** `live/batch.py`: builds the 80 sessions as 10 blocks of the 8 cells, cell
+  order rotated per block, runs 8 at a time with `run.py`, raw output outside the
+  repository; prints only rc, cumulative cost and denials, and stops every running session
+  when the summed CLI cost estimate passes $95 (the owner approved about $100-110 for the
+  whole job; graders and the running session included). **Provenance and voids**
+  `live/check_records.py --ref 4f2f5ff`: the reference commit is the merge commit of PR #21,
+  which added the amendment above; it checks every condition and lists each void with its
+  reason. **Endpoints** `live/score.py`. All three are committed with this text, change no
+  hashed file (none of the hashed files differs between `4f2f5ff` and this commit), and run
+  in that order: provenance and voids, then grading, then endpoints.
