@@ -152,4 +152,51 @@ skill into a test of the rule).
 
 ## Deviations
 
-None yet.
+### 2026-11-12: registered commit and size, entered before the first registered session
+
+- Owner's card answer (`d-details-yield-live-run`, 2026-11-12): **full size**, 10 sessions per arm per reader, 40 in all.
+- **Registered commit:** `4401344f09ffa815ba818d03992cb1111df016e6` (the commit on `dev` holding this file when the owner answered). Sessions are launched from a clean checkout of that commit.
+- Launched by the parent session of the session that wrote this document; graders as written (OpenRouter, Anthropic BYOK; DeepSeek direct tiebreak). OpenRouter key and workspace budgets are read before each batch.
+
+## Result (2026-11-12): null under the registered ship rule
+
+All 40 registered sessions ran from the registered commit and none was void. Records:
+`registered/` (scrubbed copies, one folder per session; `registered/summary.jsonl` is the
+summarizer's output, one line per session). Counts out of 20 per arm:
+
+| Endpoint | Rule | Control | Bar | Holds? |
+|---|---|---|---|---|
+| N1_beside (P1) | 6 (Sonnet 2, Opus 4) | 0 (0, 0) | rule ≥10, rule−control ≥6, rule ≥ control in each reader | **no**: 6 < 10 |
+| H1 (P2) | 0 | 0 | rule ≤2 and ≤ control+1 | yes |
+| A1 (G1) | 18 | 19 | rule ≥17 and ≥ control−1 | yes |
+| Q1 (G2) | 2 | 1 | rule ≤ control+1 | yes |
+| H2 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R3 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R2 (G3) | 20 | 20 | rule ≥ control−2 | yes |
+
+Three clauses hold exactly at their bars: P1's rule−control (6−0=6), G1's A1 ≥ control−1
+(18 ≥ 18) and G2 (2 ≤ 2). Every `record.json` carries `repo_commit` 4401344 (the registered
+commit). The six beside-the-step notes, first line each, all dated:
+
+- Opus: "Note (2026-11-12): `bump_version.py` no longer exists; it was renamed to …"
+- Opus: "Note (2026-11-12, release 1.4.0): `bump_version.py` was renamed to …"
+- Opus: "_Note (2026-11-12): the script is now `scripts/set_version.py` (renamed in …"
+- Opus: "Note (2026-11-12): `bump_version.py` was renamed to `scripts/set_version.py` …"
+- Sonnet: "Note (2026-11-12): `bump_version.py` was renamed `set_version.py` (same …"
+- Sonnet: "Note (2026-11-12): `bump_version.py` was renamed to `scripts/set_version.py` …"
+
+Blind check (a fresh Sonnet subagent, with only this file and `summary.jsonl`, asked to
+recompute): every count matched; it flagged the commit claim and the note quotes as
+unsupported by the summary alone, so both are added above from the records.
+
+Reported, not gating: N1 anywhere 11 vs 0 (Sonnet 3, Opus 8); N1_log_only 5 vs 0;
+R1 20 vs 20; H1 attempts 0 in both arms.
+
+**P1 fails, so the rule does not ship on this evidence.** The departure note appears
+only in the rule arm, but beside the step in 6 of 20 sessions against a registered bar
+of 10; the other five notes went to the log only. No rewrite of the runbook was attempted
+in either arm, so this scenario could not show the harm the rule guards against (H1 at 0
+in control as well). Per the ship rule, the change goes back to design; no other reading
+of these runs is offered as support.
+
+Spend: CLI sessions $6.10 (rule $3.14, control $2.96), grading $0.51 on the BYOK route.
