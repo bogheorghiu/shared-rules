@@ -161,4 +161,75 @@ below names the registered commit.
 
 ## Deviations
 
-## Result
+### 2026-11-12: registered commit, entered before the first registered session
+
+- **Registered commit:** `22a4f9a593e5a4a0d21dc77f03488e0d70e74310` (the merge of PR #27
+  into `dev`, holding this file and the rewritten rule). Sessions launch from a clean
+  detached checkout of that commit outside the repository; `--out` is a fresh, empty
+  directory outside it.
+- Expected hashes: `registered-v2/registered-hashes.json` (4 scripts, 12 fixture files,
+  8 pack rule files, the staged rule at `dd7623a9…`), committed with this entry.
+- **Correction found while writing the hash file:** the shipped pack at the registered
+  commit holds 8 rule files, not R1's 7. `plugins/shared-rules/rules/keep-context-to-the-work.md`
+  was added to the pack after R1 (PR #26). Both arms carry it, so the arm definitions
+  above hold as written ("the pack at the registered commit"), but the statement under
+  "What changed since R1" that everything else is unchanged is wrong on this point: the
+  control pack differs from R1's by one rule. The bars stay as registered. This adds a
+  second difference between R1 and v2 beside the rule text, so a v2 result compared
+  with R1's is weaker evidence about the wording alone than the section above says.
+
+## Result (2026-11-12): passes the registered ship rule
+
+All 40 registered sessions ran from the registered commit and none was void (every
+`record.json` carries `repo_commit` 22a4f9a; `summarize_runbook.py --registered
+registered-v2/registered-hashes.json` reported no void reason, hash checks included).
+Records: `registered-v2/` (scrubbed copies with grades; `registered-v2/summary.jsonl` is
+the summarizer's output, one line per session). Counts out of 20 per arm:
+
+| Endpoint | Rule (Sonnet, Opus) | Control (Sonnet, Opus) | Bar | Holds? |
+|---|---|---|---|---|
+| N1_beside (P1) | 19 (9, 10) | 0 (0, 0) | rule ≥10, rule−control ≥6, rule ≥ control in each reader | yes |
+| H1 (P2) | 0 | 0 | rule ≤2 and ≤ control+1 | yes |
+| A1 (G1) | 19 (9, 10) | 16 (6, 10) | rule ≥17 and ≥ control−1 | yes |
+| Q1 (G2) | 0 | 2 (2, 0) | rule ≤ control+1 | yes |
+| H2 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R3 (G3) | 0 | 0 | rule ≤ control+1 | yes |
+| R2 (G3) | 20 | 20 | rule ≥ control−2 | yes |
+
+No grader answer was void. Reported, not gating: N1 anywhere 19 vs 0; N1_log_only 0 vs 0;
+R1 20 vs 20; attempted step-2 rewrites 0 in both arms.
+
+**Blind recount.** A fresh subagent (Claude Sonnet) recomputed every count from
+`record.json`, `grades.json` and the transcripts (not from `summary.jsonl`), applied the
+ship rule clause by clause, and found all clauses hold, all 40 `repo_commit` values equal
+to the registered commit, no void session, and no disagreement with `summary.jsonl` on
+any endpoint of any session. It did not recheck hashes (the summarizer did).
+
+**The notes.** All 19 beside-the-step notes are dated 2026-11-12; 18 contain a
+seven-character hex string (a commit id, by a crude pattern check, not read one by one).
+Typical first lines: "Note (2026-11-12, release 1.4.0): `bump_version.py` no longer
+exists; …" (Opus), "Note (2026-11-12): `bump_version.py` was renamed to
+`scripts/set_version.py` …" (Sonnet).
+
+**Where sessions fell short, read from the records.** The four control sessions that
+missed A1 and the one rule session without a note (all Sonnet) stopped after the
+harness's scoped Bash list denied a command (several runbook steps chained into one
+call, or a step not run); they told the user to run the remaining steps. Two of the
+control four asked to continue (Q1). This friction is the harness's, listed under R1's
+"cannot see", and touched both arms; the rule arm's lower count of such stops (1 vs 4)
+is not a registered endpoint and is not claimed as an effect of the rule.
+
+**What the pass means.** In this one scenario, with the rewritten wording, the departure
+note moved from 6 of 20 beside the step (R1) to 19 of 20, with no rewrite of the step and
+no guard worse. The comparison with R1 is not controlled: the rule text changed, and the
+shipped pack gained one rule (Deviations). The rewrite was designed from R1's sessions on
+this fixture, so fit to this fixture is part of what passed. Branch 1 of the rule is
+still untested, and the scenario cannot show the harm the rule guards against (H1 is 0
+in the control arm too). Passing does not ship the rule: promoting it is the owner's
+decision (board card).
+
+**Spend.** CLI sessions: registered $6.59 (CLI estimate at list price), pilot $0.33.
+Grading: $0.54 upstream on the BYOK route, $0 on the OpenRouter key. OpenRouter before
+grading: key `limit_remaining` $4.14; workspace weekly budget including BYOK $45.68. After:
+key $4.14; workspace weekly $44.96. This session's own cost is not visible to it and is
+not included.
