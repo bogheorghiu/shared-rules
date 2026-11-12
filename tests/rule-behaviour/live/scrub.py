@@ -17,7 +17,7 @@ FORBIDDEN = re.compile(r"claude\.ai/code|session_0|cse_0|/tmp/claude-0|scratchpa
 
 def scrub(text, run, ids):
     text = text.replace(os.path.abspath(run), "<RUN>")
-    text = re.sub(r"/tmp/claude-0/[^\s\"']*", "<TMP>", text)
+    text = re.sub(r"/tmp/claude-0/[^\s\"'\\]*", "<TMP>", text)
     text = re.sub(r"[-\w.]*scratchpad[-\w.]*", "<TMP>", text)  # the path again, flattened into a folder name
     text = UUID.sub(lambda m: ids.setdefault(m.group(0).lower(), f"<uuid-{len(ids) + 1}>"), text)
     return EMAIL.sub(lambda m: m.group(0) if m.group(0).endswith("example.invalid") else "<email>", text)

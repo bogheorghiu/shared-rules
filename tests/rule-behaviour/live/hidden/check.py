@@ -58,6 +58,14 @@ if s2:
         ok_rebalance += good and lines[3] == "('household', 'gifts', 5000)"
     extra = {"export_ok_seeds": ok_export, "limits_ok_seeds": ok_limits, "statement_ok_seeds": ok_statement,
              "rebalance_ok_seeds": ok_rebalance}
+    # Report-only (S2-PROSE.md): the fix the thread agreed on, one helper and no other ledger file naming ACCOUNTS.
+    import glob, re
+    helper = os.path.join(work, "ledger", "accounts.py")
+    others = [os.path.relpath(f, work) for f in sorted(glob.glob(os.path.join(work, "ledger", "*.py")))
+              if f != helper and re.search(r"\bACCOUNTS\b", open(f).read())]
+    has_helper = os.path.exists(helper) and re.search(r"^def ordered\(", open(helper).read(), re.M) is not None
+    extra["agreed_shape"] = {"helper_defines_ordered": has_helper, "other_files_naming_ACCOUNTS": others,
+                             "ok": has_helper and not others}
 suite = subprocess.run([sys.executable, "-m", "unittest", "-q"], cwd=work, capture_output=True, text=True,
                        env=dict(env, PYTHONHASHSEED="0"))
 changed = sorted(f for f in set(diff + untracked) if "__pycache__" not in f and not f.endswith(".pyc"))
