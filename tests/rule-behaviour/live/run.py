@@ -53,6 +53,18 @@ def arm_rules(arm):
     return files
 
 
+def provenance():
+    """Repository commit and the hashes a pre-registered record must match (void condition 4)."""
+    tree = hashlib.sha256()
+    for f in sorted(glob.glob(os.path.join(HERE, "fixture", "**", "*"), recursive=True, include_hidden=True)):
+        if os.path.isfile(f) and "__pycache__" not in f:
+            tree.update(os.path.relpath(f, HERE).encode() + b"\0" + open(f, "rb").read())
+    commit = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    dirty = subprocess.run(["git", "-C", REPO, "status", "--porcelain", "--", HERE], capture_output=True, text=True).stdout
+    return {"repo_commit": commit, "harness_dirty": bool(dirty.strip()), "fixture_tree_sha256": tree.hexdigest(),
+            **{f"{n}_sha256": sha(os.path.join(HERE, n)) for n in ("scenarios.json", "run.py", "hidden/check.py", "make_large_files.py")}}
+
+
 def make_home(home, arm):
     dest = os.path.join(home, ".claude", "rules", "shared-rules")
     os.makedirs(dest)
@@ -142,7 +154,7 @@ def main():
     spec = json.load(open(os.path.join(HERE, "scenarios.json")))
     sc = spec[a.scenario]
     model, effort = READERS[a.reader]
-    name = f"{a.tag + '-' if a.tag else ''}{a.scenario}-{a.arm}-{a.reader}-{time.strftime('%Y%m%dT%H%M%S')}"
+    name = f"{a.tag + '-' if a.tag else ''}{a.scenario}-{a.arm}-{a.reader}-{time.strftime('%Y%m%dT%H%M%S')}-{uuid.uuid4().hex[:6]}"
     root = os.path.join(a.out, name)
     home, work, tdir = (os.path.join(root, x) for x in ("home", "work", "transcripts"))
     os.makedirs(tdir)
@@ -151,7 +163,7 @@ def main():
     env = clean_env(home, sc["env"])
     sid = str(uuid.uuid4())
     rec = {"scenario": a.scenario, "arm": a.arm, "reader": a.reader, "model_requested": model,
-           "effort_requested": effort, "rules_loaded": loaded, "initial_commit": base, "turns": [],
+           "effort_requested": effort, "rules_loaded": loaded, "provenance": provenance(), "initial_commit": base, "turns": [],
            "cli_version": subprocess.run(["claude", "--version"], capture_output=True, text=True).stdout.strip(),
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "stopped_early": None}
     offers = 0

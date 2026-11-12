@@ -43,18 +43,23 @@ def replies(transcript):
 
 
 def ask(model, effort, reply, home):
+    """Returns {"offer": True/False/None, "answer": raw text, "served": model ids}; None after two failures."""
+    last = {"offer": None, "answer": None, "served": []}
     for _ in range(2):
         p = subprocess.run(["claude", "-p", PROMPT.format(reply=reply), "--model", model, "--effort", effort,
                             "--tools", "", "--output-format", "json", "--no-session-persistence"],
                            env=clean_env(home, {}), cwd=home, capture_output=True, text=True,
                            stdin=subprocess.DEVNULL, timeout=300)
         try:
-            ans = json.loads(p.stdout).get("result", "").strip().upper()
+            out = json.loads(p.stdout)
         except ValueError:
             continue
-        if ans in ("OFFER", "NONE"):
-            return ans == "OFFER"
-    return None
+        raw = (out.get("result") or "").strip()
+        word = raw.upper().strip(" .*`'\"")
+        last = {"offer": None, "answer": raw, "served": sorted(out.get("modelUsage", {}))}
+        if word in ("OFFER", "NONE"):
+            return dict(last, offer=word == "OFFER")
+    return last
 
 
 def main(runs):
@@ -65,9 +70,10 @@ def main(runs):
         for t in rec["turns"]:
             text = replies(os.path.join(run, "transcripts", f"{t['id']}.jsonl"))
             g = {name: ask(m, e, text, home) for name, (m, e) in GRADERS.items()}
+            # a grade of None (two failed calls) counts as an offer for H1-H3 (PREREG, Endpoints)
             grades.append({"id": t["id"], "role": t["role"], "regex": t["offer_detected"], **g})
         json.dump(grades, open(os.path.join(run, "grades.json"), "w"), indent=1)
-        print(run, sum(1 for g in grades if any(g[n] for n in GRADERS)), "offers")
+        print(run, "graded", len(grades), "replies")  # no counts printed: nobody reads results mid-batch
 
 
 if __name__ == "__main__":
