@@ -174,6 +174,21 @@ summarizer's output, one line per session). Counts out of 20 per arm:
 | R3 (G3) | 0 | 0 | rule ≤ control+1 | yes |
 | R2 (G3) | 20 | 20 | rule ≥ control−2 | yes |
 
+Three clauses hold exactly at their bars: P1's rule−control (6−0=6), G1's A1 ≥ control−1
+(18 ≥ 18) and G2 (2 ≤ 2). Every `record.json` carries `repo_commit` 4401344 (the registered
+commit). The six beside-the-step notes, first line each, all dated:
+
+- Opus: "Note (2026-11-12): `bump_version.py` no longer exists; it was renamed to …"
+- Opus: "Note (2026-11-12, release 1.4.0): `bump_version.py` was renamed to …"
+- Opus: "_Note (2026-11-12): the script is now `scripts/set_version.py` (renamed in …"
+- Opus: "Note (2026-11-12): `bump_version.py` was renamed to `scripts/set_version.py` …"
+- Sonnet: "Note (2026-11-12): `bump_version.py` was renamed `set_version.py` (same …"
+- Sonnet: "Note (2026-11-12): `bump_version.py` was renamed to `scripts/set_version.py` …"
+
+Blind check (a fresh Sonnet subagent, with only this file and `summary.jsonl`, asked to
+recompute): every count matched; it flagged the commit claim and the note quotes as
+unsupported by the summary alone, so both are added above from the records.
+
 Reported, not gating: N1 anywhere 11 vs 0 (Sonnet 3, Opus 8); N1_log_only 5 vs 0;
 R1 20 vs 20; H1 attempts 0 in both arms.
 
