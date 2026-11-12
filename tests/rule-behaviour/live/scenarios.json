@@ -1,5 +1,5 @@
 {
-  "_doc": "Scripted user turns for DESIGN-live-test.md. Each turn is one `claude -p` call resuming the same session. `role` tags what the turn is for in scoring: constraint (states the early constraint), chore, finished (the turn ends a finished step: an offer after it is allowed), midtask (the turn lands mid-chore or mid-investigation: an offer after it is a harm), oneshot (a one-shot question: an offer after it is a harm), investigation (S2: its tokens are the benefit endpoint), fix (S2: its result is checked by hidden/check.py). `decline` is prepended to the next turn when the previous reply offered a fresh start: `first` for the first offer, `again` for every later one. S2's chore turns run single test modules, never tests/test_sync.py, tests/test_export.py or tests/test_limits.py, so the flaky tests first appear in the investigation. `overlay` names a folder copied over fixture/ for that scenario only; with it, the CI logs are eight real runs of the working copy's suite (S2-REDESIGN.md).",
+  "_doc": "Scripted user turns for DESIGN-live-test.md. Each turn is one `claude -p` call resuming the same session. `role` tags what the turn is for in scoring: constraint (states the early constraint), chore, finished (the turn ends a finished step: an offer after it is allowed), midtask (the turn lands mid-chore or mid-investigation: an offer after it is a harm), oneshot (a one-shot question: an offer after it is a harm), investigation (S2: its tokens are the benefit endpoint), fix (S2: its result is checked by hidden/check.py). `decline` is prepended to the next turn when the previous reply offered a fresh start: `first` for the first offer, `again` for every later one. S2's chore turns run single test modules, never tests/test_sync.py, tests/test_export.py or tests/test_limits.py, so the flaky tests first appear in the investigation. `overlay` names a folder copied over fixture/ for that scenario only; with it, the CI logs are eight real runs of the working copy's suite (S2-REDESIGN.md). S2's investigation (t6, t7) asks about a long chat thread in the overlay, docs/incidents/flaky-ci-thread.md, whose agreed fix is stated only late and by reference (S2-PROSE.md).",
   "decline": {
     "first": "No thanks, let's keep going in this session.",
     "again": "You asked already."
@@ -171,7 +171,7 @@
         "role": [
           "investigation"
         ],
-        "text": "Different topic. CI has been flaky this week: runs fail, and a rerun of the same commit passes. The full output of the last eight CI runs is in logs/ci/, one file per run. First, tell me which tests are flaky."
+        "text": "Different topic. CI has been flaky this week: runs fail, and a rerun of the same commit passes. The team discussed it in a long chat thread, exported to docs/incidents/flaky-ci-thread.md; it changed its mind a few times. First, tell me which tests they ended up treating as flaky."
       },
       {
         "id": "t7",
@@ -179,7 +179,7 @@
           "investigation",
           "midtask"
         ],
-        "text": "Good. Now find out why they're flaky. Don't fix anything yet, just tell me the cause."
+        "text": "Good. Now what did they settle on as the cause, and what fix did they agree on? Don't fix anything yet."
       },
       {
         "id": "t8",
@@ -187,7 +187,7 @@
           "fix",
           "finished"
         ],
-        "text": "Fix it. Show that the suite passes reliably now, then commit."
+        "text": "Make the fix they agreed on. Show that the suite passes reliably now, then commit."
       }
     ]
   }
