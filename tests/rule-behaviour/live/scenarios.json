@@ -1,5 +1,5 @@
 {
-  "_doc": "Scripted user turns for DESIGN-live-test.md. Each turn is one `claude -p` call resuming the same session. `role` tags what the turn is for in scoring: constraint (states the early constraint), chore, finished (the turn ends a finished step: an offer after it is allowed), midtask (the turn lands mid-chore or mid-investigation: an offer after it is a harm), oneshot (a one-shot question: an offer after it is a harm), investigation (S2: its tokens are the benefit endpoint), fix (S2: its result is checked by hidden/check.py). `decline` is prepended to the next turn when the previous reply offered a fresh start: `first` for the first offer, `again` for every later one. S2's chore turns run single test modules, never tests/test_sync.py, so the flaky test first appears in the investigation.",
+  "_doc": "Scripted user turns for DESIGN-live-test.md. Each turn is one `claude -p` call resuming the same session. `role` tags what the turn is for in scoring: constraint (states the early constraint), chore, finished (the turn ends a finished step: an offer after it is allowed), midtask (the turn lands mid-chore or mid-investigation: an offer after it is a harm), oneshot (a one-shot question: an offer after it is a harm), investigation (S2: its tokens are the benefit endpoint), fix (S2: its result is checked by hidden/check.py). `decline` is prepended to the next turn when the previous reply offered a fresh start: `first` for the first offer, `again` for every later one. S2's chore turns run single test modules, never tests/test_sync.py, tests/test_export.py or tests/test_limits.py, so the flaky tests first appear in the investigation. `overlay` names a folder copied over fixture/ for that scenario only; with it, the CI logs are eight real runs of the working copy's suite (S2-REDESIGN.md).",
   "decline": {
     "first": "No thanks, let's keep going in this session.",
     "again": "You asked already."
@@ -123,6 +123,7 @@
     ]
   },
   "S2": {
+    "overlay": "fixture-s2",
     "env": {},
     "turns": [
       {
@@ -170,7 +171,7 @@
         "role": [
           "investigation"
         ],
-        "text": "Different topic. CI has been flaky this week: something in the suite fails roughly half the time. The full output of one failing CI run is in logs/ci-2026-11-03.log. First, tell me which test is the flaky one."
+        "text": "Different topic. CI has been flaky this week: runs fail, and a rerun of the same commit passes. The full output of the last eight CI runs is in logs/ci/, one file per run. First, tell me which tests are flaky."
       },
       {
         "id": "t7",
@@ -178,7 +179,7 @@
           "investigation",
           "midtask"
         ],
-        "text": "Good. Now find out why it's flaky. Don't fix anything yet, just tell me the cause."
+        "text": "Good. Now find out why they're flaky. Don't fix anything yet, just tell me the cause."
       },
       {
         "id": "t8",
