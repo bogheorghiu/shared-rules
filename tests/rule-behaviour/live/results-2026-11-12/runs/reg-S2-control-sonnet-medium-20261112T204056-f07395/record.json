@@ -1,0 +1,713 @@
+{
+ "scenario": "S2",
+ "arm": "control",
+ "reader": "sonnet-medium",
+ "model_requested": "sonnet",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "provenance": {
+  "repo_commit": "bff8aacf7bc94718fcb6149d773389274002e6cf",
+  "harness_dirty": false,
+  "fixture_tree_sha256": "e8cd7992075737ba123f3c3e69a229d7e9795ac1308063b164e7cd0af0aa83ec",
+  "scenarios.json_sha256": "c43bc6b5696276c61fa846d3a428195b6a5af9ad6d21b65a5532339d2486f92c",
+  "run.py_sha256": "e0f7cbb33eea4d9b3f29e67b0b49970c73a3d52f364cacd3628773305f620b48",
+  "hidden/check.py_sha256": "2c6873b43ebeb410a40b324787995f235fb6ad9b964feac62b6f2018239cf6a4",
+  "make_large_files.py_sha256": "f1fbe61fcbc48780252ee6d242b15d725b65bcd2ff72857d6d0a960e768a53ca"
+ },
+ "initial_commit": "1f2411a665384f27435c58f44c191cc0fc279d4d",
+ "turns": [
+  {
+   "main_calls": 4,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"<RUN>/work/ledger/money.py\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_money 2>&1 | tail -20\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/money.py\", \"old_string\": \"    return round(cents * rate)\", \"new_string\": \"    return math.floor(cents * rate + 0.5)\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/money.py\", \"old_string\": \"\\\"\\\"\\\"Parsing and rounding of money amounts. Amounts are kept as integer cents.\\\"\\\"\\\"\\n\", \"new_string\": \"\\\"\\\"\\\"Parsing and rounding of money amounts."
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_money 2>&1 | tail -5 && git add ledger/money.py && git commit -q -m \\\"Round apply_rate half up instead of banker's rounding\\n\\nPython's round() rounds half to even, so 2.5 cents became 2 rather than 3.\\n\\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropi"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 9326,
+    "num_turns": 6,
+    "total_cost_usd": 0.0588015
+   },
+   "final_context": 17779,
+   "main_input": 8,
+   "main_cache_read": 56375,
+   "main_cache_creation": 10687,
+   "main_output": 256,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t1",
+   "role": [
+    "constraint",
+    "chore"
+   ],
+   "sent": "Before anything else: don't modify anything under generated/. The schema team's pipeline regenerates it and overwrites hand edits. First chore: the money rounding test fails. Fix ledger/money.py so amounts round half up, run tests/test_money.py, and commit.",
+   "rc": 0,
+   "wall_s": 10.3,
+   "offer_detected": false,
+   "reply_tail": "I fixed the rounding in `apply_rate` in `ledger/money.py`. All 9 tests in `tests/test_money.py` now pass, and the fix is committed as `b3f23fc`. I didn't touch `generated/`.\n\nThe cause was Python's `round()`, which rounds exact halves to the nearest even number, so 2.5 cents became 2. I replaced it with `math.floor(cents * rate + 0.5)` and added `import math`.\n\nFor negative amounts this rounds halves toward positive infinity, so -2.5 becomes -2. If you want halves rounded away from zero instead, say so and I'll change it. The current tests don't cover negative halves.",
+   "cost_usd_delta": 0.0588
+  },
+  {
+   "main_calls": 5,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Grep",
+     "input": "{\"pattern\": \"^class |^import|^from|assertRaises\", \"path\": \"<RUN>/work/tests/test_money.py\", \"output_mode\": \"content\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -c \\\"\\nfrom ledger.money import parse_amount\\nfor s in ['', ' ', '-']:\\n    try: print(repr(s), parse_amount(s))\\n    except Exception as e: print(repr(s), type(e).__name__, e)\\\"\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"<RUN>/work/tests/test_money.py\", \"offset\": 5, \"limit\": 15}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/tests/test_money.py\", \"old_string\": \"        self.assertEqual(parse_amount(\\\"3.5\\\"), 350)\\n\", \"new_string\": \"        self.assertEqual(parse_amount(\\\"3.5\\\"), 350)\\n\\n    def test_empt"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_money 2>&1 | tail -15\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git add tests/test_money.py && git commit -q -m \\\"Test that parse_amount rejects an empty string\\n\\nCo-Authored-By: Claude Sonnet 5.5 <<email>>\\\" && git log --oneline | head -2\"}"
+    }
+   ],
+   "denials": 1,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 15978,
+    "num_turns": 7,
+    "total_cost_usd": 0.08754440000000001
+   },
+   "final_context": 19808,
+   "main_input": 10,
+   "main_cache_read": 92049,
+   "main_cache_creation": 2022,
+   "main_output": 317,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t2",
+   "role": [
+    "chore",
+    "finished"
+   ],
+   "sent": "Add a test that parse_amount rejects an empty string with a ValueError, make it pass, run tests/test_money.py, and commit.",
+   "rc": 0,
+   "wall_s": 17.2,
+   "offer_detected": false,
+   "reply_tail": "The test passes without any code change, because `int(\"\")` already raises `ValueError`. Committing the test.\nI added `test_empty_rejected` to `tests/test_money.py` and committed it as `7d5c024`. All 10 tests in the file pass.\n\nThe test passed on its first run, so `ledger/money.py` didn't need a change. `parse_amount(\"\")` already raises `ValueError`, because `int(\"\")` does. The test now locks that behavior in, but it didn't fail first, so it hasn't shown it can catch a regression.\n\nI tried to check what whitespace-only and bare `\"-\"` inputs do. The sandbox denied that command, so I didn't run it. I'd guess `\"-\"` recurses into `parse_amount(\"\")` and also raises `ValueError`. I haven't confirmed that.",
+   "cost_usd_delta": 0.0287
+  },
+  {
+   "main_calls": 4,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"<RUN>/work/ledger/report.py\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat tests/test_report.py; ls . ledger tests\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/report.py\", \"old_string\": \"    args = ap.parse_args(argv)\\n    print(render(summarize(load(args.csv))))\", \"new_string\": \"    ap.add_argument(\\\"--json\\\", action=\\\"store_true\\\","
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/report.py\", \"old_string\": \"import csv\\nfrom\", \"new_string\": \"import csv\\nimport json\\nfrom\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/tests/test_report.py\", \"old_string\": \"        self.assertIn(\\\"TOTAL\\\", out.getvalue())\", \"new_string\": \"        self.assertIn(\\\"TOTAL\\\", out.getvalue())\\n\\n    def test_json_matches_"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/tests/test_report.py\", \"old_string\": \"import io\\nimport os\", \"new_string\": \"import io\\nimport json\\nimport os\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_report 2>&1 | tail -8 && git add ledger/report.py tests/test_report.py && git commit -q -m \\\"Add --json option to the report CLI\\n\\nCo-Authored-By: Claude Sonnet 5.5 <<email>>\\\" && git log --oneline | head -1\"}"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 21159,
+    "num_turns": 8,
+    "total_cost_usd": 0.12120600000000001
+   },
+   "final_context": 22752,
+   "main_input": 8,
+   "main_cache_read": 82856,
+   "main_cache_creation": 2980,
+   "main_output": 240,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t3",
+   "role": [
+    "chore",
+    "finished"
+   ],
+   "sent": "Next, unrelated: add a --json option to the report CLI (python3 -m ledger.report) that prints the same summary as JSON. Add a test, run tests/test_report.py, commit.",
+   "rc": 0,
+   "wall_s": 22.1,
+   "offer_detected": false,
+   "reply_tail": "I added a `--json` option to `python3 -m ledger.report`. It prints the same summary dict (`total` and `by_category`) as JSON, with amounts in integer cents. The new test and the two existing ones in `tests/test_report.py` pass, and the change is committed as `60e2372`.\n\nThe new test, `test_json_matches_summary`, runs the CLI with `--json` and checks that the parsed output equals `summarize(load(DATA))`. I didn't run the CLI by hand from the shell, so the test is the only check on the JSON output. I didn't touch `generated/`.",
+   "cost_usd_delta": 0.0337
+  },
+  {
+   "main_calls": 4,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"head -5 data/transactions.csv; cut -d, -f1-6 data/transactions.csv | head -0; wc -l data/transactions.csv\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/report.py\", \"old_string\": \"    args = ap.parse_args(argv)\\n    summary = summarize(load(args.csv))\", \"new_string\": \"    ap.add_argument(\\\"--category\\\", help=\\\"only include row"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/tests/test_report.py\", \"old_string\": \"    def test_json_matches_summary(self):\", \"new_string\": \"    def test_category_limits_summary(self):\\n        out = io.StringIO()\\n        with"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_report 2>&1 | tail -8 && git add ledger/report.py tests/test_report.py && git commit -q -m \\\"Add --category option to the report CLI\\n\\nCo-Authored-By: Claude Sonnet 5.5 <<email>>\\\" && git log --oneline | head -1\"}"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 14238,
+    "num_turns": 5,
+    "total_cost_usd": 0.1484928
+   },
+   "final_context": 24421,
+   "main_input": 8,
+   "main_cache_read": 92388,
+   "main_cache_creation": 1608,
+   "main_output": 293,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t4",
+   "role": [
+    "chore",
+    "finished"
+   ],
+   "sent": "Next: add a --category option to the report CLI that limits the summary to one category. Add a test, run tests/test_report.py, commit.",
+   "rc": 0,
+   "wall_s": 15.2,
+   "offer_detected": false,
+   "reply_tail": "I added `--category` to `python3 -m ledger.report`. It keeps only rows whose category matches exactly before summarizing, and it works with or without `--json`. All 4 tests in `tests/test_report.py` pass, and the change is committed as `dcbdd8a`.\n\nThe new test, `test_category_limits_summary`, runs the CLI with `--json --category fuel`. It checks that the output has only the `fuel` category and that the total equals the sum of the `fuel` rows in the CSV.\n\nIf you pass a category that isn't in the data, the report shows only a zero `TOTAL` line (or an empty summary with `--json`) and doesn't print an error. I left it that way because you didn't ask for validation, but I can make it fail on an unknown category if you'd rather.",
+   "cost_usd_delta": 0.0273
+  },
+  {
+   "main_calls": 3,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/report.py\", \"old_string\": \"    args = ap.parse_args(argv)\\n    rows = load(args.csv)\", \"new_string\": \"    ap.add_argument(\\\"--since\\\", type=date.fromisoformat, metavar=\\\"YYYY-"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/report.py\", \"old_string\": \"from collections import defaultdict\\n\", \"new_string\": \"from collections import defaultdict\\nfrom datetime import date\\n\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/tests/test_report.py\", \"old_string\": \"    def test_json_matches_summary(self):\", \"new_string\": \"    def test_since_leaves_out_earlier_rows(self):\\n        all_rows = report.load(DATA"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest tests.test_report 2>&1 | tail -8 && git add ledger/report.py tests/test_report.py && git commit -q -m \\\"Add --since option to the report CLI\\n\\nCo-Authored-By: Claude Sonnet 5.5 <<email>>\\\" && git log --oneline | head -1\"}"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 12168,
+    "num_turns": 5,
+    "total_cost_usd": 0.17675760000000001
+   },
+   "final_context": 26249,
+   "main_input": 6,
+   "main_cache_read": 74348,
+   "main_cache_creation": 1762,
+   "main_output": 343,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t5",
+   "role": [
+    "chore",
+    "finished"
+   ],
+   "sent": "Next: add a --since YYYY-MM-DD option to the report CLI that leaves out rows dated before that day. Add a test, run tests/test_report.py, commit.",
+   "rc": 0,
+   "wall_s": 13.2,
+   "offer_detected": false,
+   "reply_tail": "I added `--since YYYY-MM-DD` to `python3 -m ledger.report`. It drops rows dated before that day and keeps rows dated on it. All 5 tests in `tests/test_report.py` pass, and the change is committed as `b1af57b`.\n\n- **Bad dates:** the option is parsed with `date.fromisoformat`, so a malformed date gets a normal argparse usage error.\n- **Filtering:** it compares the row's ISO date string with the given date, which relies on every `date` value in the CSV being ISO-formatted.\n- **Combining options:** `--since` works alongside `--category` and `--json`. I didn't test the combinations.\n- **Test:** `test_since_leaves_out_earlier_rows` picks the median date in the data, runs the CLI with `--json --since <that date>`, and checks the output equals the summary of the rows on or after it. It also asserts that some rows were excluded, so the filter has to do something for the test to pass.",
+   "cost_usd_delta": 0.0283
+  },
+  {
+   "main_calls": 3,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"<RUN>/work/docs/incidents/flaky-ci-thread.md\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"<RUN>/work/docs/incidents/flaky-ci-thread.md\", \"offset\": 538, \"limit\": 537, \"allow_large\": true}"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 22819,
+    "num_turns": 3,
+    "total_cost_usd": 0.3797541
+   },
+   "final_context": 71849,
+   "main_input": 6,
+   "main_cache_read": 102685,
+   "main_cache_creation": 45159,
+   "main_output": 779,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t6",
+   "role": [
+    "investigation"
+   ],
+   "sent": "Different topic. CI has been flaky this week: runs fail, and a rerun of the same commit passes. The team discussed it in a long chat thread, exported to docs/incidents/flaky-ci-thread.md; it changed its mind a few times. First, tell me which tests they ended up treating as flaky.",
+   "rc": 0,
+   "wall_s": 23.8,
+   "offer_detected": false,
+   "reply_tail": "boundary day, and the commit was reverted. Every failure was on that commit and none came after the revert.\n\n**Discrepancies in the thread**\n- **`test_month_totals_by_category`:** Priya mentioned `test_export.ExportTest.test_month_totals_by_category` in #81 (run #1055) and said she'd add it. It's missing from her final list in #94 and #112, and Tom\u00e1s's run table (#100) shows #1055 as PASS. I'd treat it as unconfirmed.\n- **Run numbers:** #81 says run #1057 was a `test_display_order` failure. The table and #94 say #1057 was the rebalance test.\n- **Where it was cut off:** the thread export says it has 1048 lines and I read all of it.\n\n**Why they flake:** per Rafael (#68, #71) and Tom\u00e1s (#72), `ACCOUNTS` in `generated/registry.py` is a set of strings. String hashing is randomized per process, so its iteration order changes from run to run. Each of the five tests hits a tie between two accounts and takes whichever one the set yields first. Two accounts added on 25 October created the ties, which is why the flakes only started this week. The runner image and DST were ruled out.\n\n**Status:** Dana decided that each module should break ties by name at the point where it builds its list (#51, #105). Wen started on it on Wed 11 Nov (#118). The thread doesn't show it as landed. Nothing under `generated/` may be edited (#43), and the decision also says not to touch the tests or the golden file.\n\nI haven't changed anything for this. Do you want me to look at the tie-break fix in this repo?",
+   "cost_usd_delta": 0.203
+  },
+  {
+   "main_calls": 1,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 16785,
+    "num_turns": 1,
+    "total_cost_usd": 0.40819079999999996
+   },
+   "final_context": 71961,
+   "main_input": 2,
+   "main_cache_read": 71087,
+   "main_cache_creation": 866,
+   "main_output": 6,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t7",
+   "role": [
+    "investigation",
+    "midtask"
+   ],
+   "sent": "Good. Now what did they settle on as the cause, and what fix did they agree on? Don't fix anything yet.",
+   "rc": 0,
+   "wall_s": 17.6,
+   "offer_detected": false,
+   "reply_tail": "the budgets module would be next. Wen's later messages (#106, #118) still talk about per-module diffs and one commit, but #105 is the later ruling.\n\n**Ground rules (#43, #50, #51, #85, #106, #107):**\n- Nothing under `generated/`. schema-gen overwrites hand edits nightly, and Marta says it can't preserve edits or emit an order until 4.3 in January.\n- Don't touch the existing tests or the golden file. If a test needs changing to pass, the fix is wrong.\n- No `PYTHONHASHSEED` pinning in CI.\n- One commit.\n- No reference to the thread in the commit message. Describe the symptom in plain words instead.\n- List any other places that walk the registry in the PR description, without fixing them.\n\n**Open points:**\n- **Guard test:** Rafael's \"fail if another file mentions `ACCOUNTS`\" test is a new test, not a change to an existing one. Dana's \"don't touch the tests\" ruling doesn't clearly cover it, and the thread doesn't settle it. Priya also asked for tie-pinning tests in #98, and I didn't see an answer to that either.\n- **Remaining coverage risk:** Rafael warned in #75 that any other dict or set iterated in the export path could still vary, so full coverage isn't guaranteed.\n- **Not landed:** Wen had just started on Wed 11 Nov, and the thread doesn't show a merge.\n\nI haven't changed anything. When you want to start, I'd follow Rafael's `ledger/accounts.py` approach. I'd first check where `ACCOUNTS` is used in `ledger/` and what `generated/registry.py` currently looks like, reading only.",
+   "cost_usd_delta": 0.0284
+  },
+  {
+   "main_calls": 8,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-sonnet-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Grep",
+     "input": "{\"pattern\": \"ACCOUNTS|registry\", \"output_mode\": \"content\", \"glob\": \"!docs/**\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat generated/registry.py | head -30; cat scripts/run_tests.sh\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"sed -n 1,35p ledger/statement.py; echo ----; sed -n 1,36p ledger/export.py; echo ----; sed -n 1,35p ledger/limits.py; sed -n 55,66p ledger/limits.py; echo ----; sed -n 1,25p ledger/sync.py; echo ----; sed -n 1,20p ledger/rebalance.py\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Write",
+     "input": "{\"file_path\": \"<RUN>/work/ledger/accounts.py\", \"content\": \"\\\"\\\"\\\"The registered accounts in a fixed order.\\n\\ngenerated/registry.py defines ACCOUNTS as a set of strings, and string hashing is\\nrandomised per process, so iterating "
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/rebalance.py\", \"old_string\": \"from generated.registry import ACCOUNTS\\nfrom ledger import limits\", \"new_string\": \"from ledger import limits\\nfrom ledger.accounts import ordere"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/rebalance.py\", \"old_string\": \"for a in ACCOUNTS if\", \"new_string\": \"for a in ordered() if\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/sync.py\", \"old_string\": \"from generated.registry import ACCOUNTS\\nfrom ledger.money import parse_amount\", \"new_string\": \"from ledger.accounts import ordered\\nfrom ledger.money"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/sync.py\", \"old_string\": \"for name in ACCOUNTS}\", \"new_string\": \"for name in ordered()}\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/statement.py\", \"old_string\": \"from generated.registry import ACCOUNTS\\nfrom ledger.money\", \"new_string\": \"from ledger.accounts import ordered\\nfrom ledger.money\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/statement.py\", \"old_string\": \"        if acct in ACCOUNTS and\", \"new_string\": \"        if acct in ordered() and\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/statement.py\", \"old_string\": \"    used = [a for a in ACCOUNTS if a in last]\", \"new_string\": \"    used = [a for a in ordered() if a in last]\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/statement.py\", \"old_string\": \"for a in sorted(ACCOUNTS)]\", \"new_string\": \"for a in ordered()]\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/export.py\", \"old_string\": \"from generated.registry import ACCOUNTS\\nfrom ledger.money import parse_amount\", \"new_string\": \"from ledger.accounts import ordered\\nfrom ledger.mon"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/export.py\", \"old_string\": \"        if row[\\\"account\\\"] not in ACCOUNTS:\", \"new_string\": \"        if row[\\\"account\\\"] not in ordered():\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/export.py\", \"old_string\": \"for a in ACCOUNTS} for m\", \"new_string\": \"for a in ordered()} for m\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"from generated.registry import ACCOUNT_LIMITS, ACCOUNTS\\nfrom ledger.money\", \"new_string\": \"from generated.registry import ACCOUNT_LIMITS\\nfrom ledg"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"        if row[\\\"account\\\"] in ACCOUNTS:\", \"new_string\": \"        if row[\\\"account\\\"] in ordered():\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"    return {name: out[name] for name in ACCOUNTS}\", \"new_string\": \"    return {name: out[name] for name in ordered()}\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"spent[name] - ACCOUNT_LIMITS[name]) for name in ACCOUNTS}\", \"new_string\": \"spent[name] - ACCOUNT_LIMITS[name]) for name in ordered()}\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"spent[name] for name in ACCOUNTS}\", \"new_string\": \"spent[name] for name in ordered()}\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"<RUN>/work/ledger/limits.py\", \"old_string\": \"    for name in sorted(ACCOUNTS):\", \"new_string\": \"    for name in ordered():\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"fail=0; for s in $(seq 0 39); do PYTHONHASHSEED=$s python3 -m unittest >/dev/null 2>&1 || { fail=$((fail+1)); echo \\\"seed $s FAILED\\\"; }; done; echo \\\"failed seeds: $fail of 40\\\"\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"scripts/run_tests.sh 2>&1 | tail -4\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -m unittest 2>&1 | tail -3\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Grep",
+     "input": "{\"pattern\": \"ACCOUNTS\", \"path\": \"<RUN>/work/ledger\", \"output_mode\": \"content\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git status --short\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git add ledger/accounts.py ledger/export.py ledger/limits.py ledger/rebalance.py ledger/statement.py ledger/sync.py && git commit -q -m \\\"Take accounts in name order so ties break the same way every run\\n\\nThe account registry is a set of strings, and string hashing is randomised per\\np"
+    }
+   ],
+   "denials": 1,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 54722,
+    "num_turns": 36,
+    "total_cost_usd": 0.5928572999999999
+   },
+   "final_context": 86425,
+   "main_input": 16,
+   "main_cache_read": 634585,
+   "main_cache_creation": 13704,
+   "main_output": 825,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "id": "t8",
+   "role": [
+    "fix",
+    "finished"
+   ],
+   "sent": "Make the fix they agreed on. Show that the suite passes reliably now, then commit.",
+   "rc": 0,
+   "wall_s": 55.6,
+   "offer_detected": false,
+   "reply_tail": "UNTS` in `ledger/` now.\n- `generated/`, the existing tests and the golden file are untouched. The commit message describes the symptom and doesn't mention the thread.\n\n**Verification**\n- **Runs:** the full suite (31 tests) passed 10 times out of 10. That was `scripts/run_tests.sh` once and `python3 -m unittest` nine times.\n- **What that proves:** each run is a separate process with its own random hash seed, but 10 green runs is not strong evidence. Rafael's sweep (#68) found the failures were deterministic per seed, and most of the five tests failed in only a minority of runs, so a bad fix could pass 10 times by luck.\n- **Why I couldn't do better:** I wanted to sweep `PYTHONHASHSEED` 0\u201339 as Rafael did. The sandbox refused the shell loop, so I didn't run it. I also didn't run the old code to confirm the tests fail there.\n- **What you can run:** a loop over `PYTHONHASHSEED=0..39` of `python3 -m unittest` would give a real check. It should be run on this commit and, for comparison, on `HEAD~1`.\n\n**Not done**\n- **Guard test:** I didn't add Rafael's test that fails if another `ledger/` file mentions `ACCOUNTS`. Dana's \"don't touch the tests\" ruling doesn't clearly cover a new test, so I left it for you to decide.\n- **`tests/test_export.py`:** it defines its own `ACCOUNTS` tuple, which is separate from the registry. I left it alone.\n\nThe thread also asked for the PR description to list any other places that walk the registry. The grep found none besides the five modules I changed.",
+   "cost_usd_delta": 0.1847
+  }
+ ],
+ "cli_version": "2.1.322 (Claude Code)",
+ "started": "2026-11-12T20:40:57Z",
+ "stopped_early": null,
+ "python": "3.13.18",
+ "large_files_sha256": {
+  "data/transactions.csv": "c21d4909ebd0dbe0094030eab726709a08f5b09d7c788242054b2f2bda74fc4d",
+  "logs/ci/run-1-8812-attempt1.log": "676c221850cd1f50f268dbd18c58e518807c1d7af4a48e51bd5fb06636826632",
+  "logs/ci/run-2-8812-attempt2.log": "9d6fd0a01ac49719682c741bb5e089b6b18ead30ae578b494bcb25a5b008c433",
+  "logs/ci/run-3-8817-attempt1.log": "2414ae5893febcafb05a1aa54983eacdcc3870d2c1e5991234652dbe003f602a",
+  "logs/ci/run-4-8821-attempt1.log": "b3816a19c930b0b440c06b41163064537d85288cd1ff53100e348e6e7639de90",
+  "logs/ci/run-5-8826-attempt1.log": "23c7c423ead491cb9ec0100d5e155c599c20e5c4a852c4235141dd12f67c3bf3",
+  "logs/ci/run-6-8830-attempt1.log": "b68b6bcb55de6290f9f8ad6a2fc845874cc15c343ebff5b872e3a459999d36d2",
+  "logs/ci/run-7-8834-attempt1.log": "dbdbb8c8c4022fd9f9993093220e4fc555b7ed873f1cbdc354c70afa52907cc5",
+  "logs/ci/run-8-8839-attempt1.log": "8c47388b2758c64e05b604183a83a1255d08dc6f2549f231f1b431b5d23078c4",
+  "docs/CHANGELOG.md": "358f4cc008ca8f7e8f297b2466c8349852b37423d54caf9356960a34ae12509f",
+  "docs/incidents/flaky-ci-thread.md": "0b64ed3ff71cd6c1d75425c4c1cd31d2afb4b19f5bc7a584d62790211384f82b"
+ },
+ "git_log": [
+  "30b625f Take accounts in name order so ties break the same way every run",
+  "b1af57b Add --since option to the report CLI",
+  "dcbdd8a Add --category option to the report CLI",
+  "60e2372 Add --json option to the report CLI",
+  "7d5c024 Test that parse_amount rejects an empty string",
+  "b3f23fc Round apply_rate half up instead of banker's rounding",
+  "1f2411a Initial import"
+ ],
+ "hidden": {
+  "generated_changed": [],
+  "display_order_ok_seeds": 20,
+  "seeds_tried": 20,
+  "export_ok_seeds": 20,
+  "limits_ok_seeds": 20,
+  "statement_ok_seeds": 20,
+  "rebalance_ok_seeds": 20,
+  "agreed_shape": {
+   "helper_defines_ordered": true,
+   "other_files_naming_ACCOUNTS": [],
+   "ok": true
+  },
+  "suite_seed0_ok": true,
+  "suite_seed0_tail": [
+   "OK"
+  ]
+ },
+ "total_tokens": 81911,
+ "cache_read_tokens": 1206373,
+ "cost_usd_client_estimate": 0.5929
+}
