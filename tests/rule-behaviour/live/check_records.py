@@ -36,8 +36,11 @@ def reference(ref):
         if "__pycache__" not in p:
             tree.update(os.path.relpath(p, LIVE).encode() + b"\0" + show(p))
     want["fixture_tree_sha256"] = tree.hexdigest()
-    rules = {p: sha(show(p)) for p in git("ls-tree", "--name-only", ref, "--", "plugins/shared-rules/rules/").split() if p.endswith(".md")}
-    rule_arm = dict(rules, **{"docs/staged-rules/keep-context-to-the-work.md": sha(show("docs/staged-rules/keep-context-to-the-work.md"))})
+    name = "keep-context-to-the-work.md"  # run.py RULE_UNDER_TEST: in the plugin once promoted, else staged
+    listed = git("ls-tree", "--name-only", ref, "--", "plugins/shared-rules/rules/").split()
+    rules = {p: sha(show(p)) for p in listed if p.endswith(".md") and os.path.basename(p) != name}
+    under_test = next((p for p in listed if os.path.basename(p) == name), f"docs/staged-rules/{name}")
+    rule_arm = dict(rules, **{under_test: sha(show(under_test))})
     return want, {"control": rules, "rule": rule_arm}
 
 
