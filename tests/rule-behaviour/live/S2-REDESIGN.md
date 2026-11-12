@@ -79,3 +79,7 @@ control-arm median of ten sessions; the full run measures that.
 ## Re-pilot
 
 Rule arm, one session per reader, revised S2 only. Results: `PILOT-S2-2026-11-12.md`.
+
+**Outcome (added after the run):** fail. The investigation added 9,244 tokens in the Sonnet
+session and 8,581 in the Opus session. Neither used a subagent. Both figures are under
+10,000, so the design does not go to a pre-registered run.

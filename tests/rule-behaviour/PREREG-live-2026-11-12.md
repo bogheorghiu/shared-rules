@@ -189,3 +189,32 @@ which the rule also uses.
 ## Deviations
 
 Recorded here, with the reason, before scoring anything they affect.
+
+### 2026-11-12: S2 redesigned and re-piloted; no pre-registered run on it
+
+Written before any pre-registered session; no pre-registered session has run.
+
+- **What changed.** After the owner chose "redesign S2 first" (board decision
+  `d-live-test-run`), S2 got an overlay (`live/fixture-s2/`, four more modules and tests
+  whose tie-breaking follows the generated set's order), eight CI logs that are real runs
+  of the session's own suite (`make_large_files.py --ci-runs`), new t6 and t7 texts, and
+  a hidden check of all five orderings. `run.py` copies the overlay and records the
+  Python version and the large files' hashes. S1 is unchanged. Design, reasons and the
+  pass criterion, written before the re-pilot: `live/S2-REDESIGN.md`.
+- **Re-pilot result** (rule arm, one session per reader, `live/PILOT-S2-2026-11-12.md`):
+  the investigation added 9,244 tokens (Sonnet) and 8,581 (Opus) to the main context,
+  with no subagent used. Both are under this document's 10,000-token floor for B1. The
+  floor is not changed.
+- **Consequence.** This document's runs are defined by the files at its own merge commit,
+  so the original S2 stays the pre-registered one, and its B1 is expected to be
+  uninformative (Floor on B1). The redesigned S2 is not pre-registered here. Because
+  `run.py`, `make_large_files.py`, `hidden/check.py` and the fixture-tree hash (which now
+  covers `fixture-s2/`) all changed, a record made with the harness at a later `dev`
+  commit is void by void condition 4 for **both** scenarios. A run under this document
+  uses the harness checked out at its merge commit. Any run on a further redesign needs
+  its own dated amendment here, written before that run, or a new pre-registration.
+- **Fixed on the way, no effect on any endpoint.** `make_large_files.py` now creates
+  `data/`, `docs/` and `logs/`, which the tracked fixture lacks; on a fresh clone the old
+  script stopped before writing anything. A run from the merge commit's harness has to
+  create those three folders in each working copy first (or carry this one fix, which
+  then voids its records by condition 4 unless an amendment allows it).
