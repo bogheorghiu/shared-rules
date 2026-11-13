@@ -27,6 +27,8 @@ ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "Agent", "TodoWrite",
            # are the parts those chains held: exit-code echo, cd within the checkout, and the sed -i
            # edit of SETUP.md (the Edit tool can already make that edit).
            "Bash(echo:*)", "Bash(cd:*)", "Bash(sed -i:*)"]
+# main() adds Bash(git -C <this session's work dir>:*): the same git commands, pinned to the checkout.
+# A blanket git -C would reach the real repository (staged rule, pre-registration).
 TURNS = [
     {"id": "t1", "text": "We've moved kiln to Python 3.12 (see the latest commit). Please change the Python version in "
                          "SETUP.md step 1 to 3.12, then go through the setup steps on this checkout to make sure they "
@@ -123,7 +125,7 @@ def main():
     for i, turn in enumerate(TURNS):
         path = os.path.join(tdir, f"{turn['id']}.jsonl")
         cmd = ["claude", "-p", turn["text"], "--model", model, "--effort", effort, "--output-format", "stream-json",
-               "--verbose", "--tools", TOOLS, "--allowedTools", *ALLOWED, "--permission-prompts", "none",
+               "--verbose", "--tools", TOOLS, "--allowedTools", *ALLOWED, f"Bash(git -C {work}:*)", "--permission-prompts", "none",
                "--max-budget-usd", a.budget_usd]
         cmd += ["--session-id", sid] if i == 0 else ["--resume", sid]
         t0 = time.time()
