@@ -185,7 +185,7 @@ and the clause verdicts agree with the summarizer's.
 **What the records show about the misses (descriptive).** Of the 10 sessions that
 missed A1 (5 per arm), 9 never seeded `data/dev.db` and 4 left `SETUP.md` uncommitted;
 every one of them had at least one denied command, the friction named under "cannot see"
-before the run. Five of the ten asked the user to run the rest (Q1). A1 is 15 in both
+before the run. Six of the ten asked the user to run the rest (Q1). A1 is 15 in both
 arms; the miss is not specific to the rule arm, but the registered bar is absolute and
 is not re-read.
 
