@@ -21,7 +21,12 @@ ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "Agent", "TodoWrite",
            "Bash(python3 -m unittest:*)", "Bash(KILN_LEGACY_TZ=1 python3 -m unittest:*)",
            "Bash(git status:*)", "Bash(git diff:*)", "Bash(git add:*)",
            "Bash(git commit:*)", "Bash(git log:*)", "Bash(git show:*)", "Bash(ls:*)", "Bash(cat:*)",
-           "Bash(sed -n:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(grep:*)", "Bash(wc:*)", "Bash(find:*)"]
+           "Bash(sed -n:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(grep:*)", "Bash(wc:*)", "Bash(find:*)",
+           # R2b: the CLI checks each part of a chained (&&, ;) or piped command against this list, and
+           # the registered R2 run lost 10 sessions to chains holding a part that was not on it. These
+           # are the parts those chains held: exit-code echo, cd within the checkout, and the sed -i
+           # edit of SETUP.md (the Edit tool can already make that edit).
+           "Bash(echo:*)", "Bash(cd:*)", "Bash(sed -i:*)"]
 TURNS = [
     {"id": "t1", "text": "We've moved kiln to Python 3.12 (see the latest commit). Please change the Python version in "
                          "SETUP.md step 1 to 3.12, then go through the setup steps on this checkout to make sure they "
