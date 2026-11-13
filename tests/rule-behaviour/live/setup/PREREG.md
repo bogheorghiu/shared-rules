@@ -26,11 +26,15 @@ whose reason is not recorded?
   `fixture/` at the registered commit; each record stores their sha256, every fixture
   file's and the rule files', and the repository commit. `--out` is a fresh, empty
   directory outside the repository; records carry the tag `reg`.
+- **Expected hashes** are committed with this file, in `registered/registered-hashes.json`:
+  the four scripts, `../run.py`, the 12 fixture files, the 8 pack rules and the staged rule
+  (`dd7623a9…`).
 - **Registered commit**: the commit on `dev` holding this file after its PR merges. The
-  launching session enters its hash under Deviations, with the expected hashes in
-  `registered/registered-hashes.json` (scripts, fixture, all 8 pack rules and the staged
-  rule), before the first registered session, and `summarize_setup.py --registered`
-  checks every record against it. Sessions launch from a clean checkout of that commit.
+  launching session enters its hash under Deviations before the first registered session,
+  and launches from a clean checkout of it. `summarize_setup.py --registered
+  registered/registered-hashes.json --commit <registered commit>` voids any record whose
+  `repo_commit` differs, that lacks any registered file or carries a different hash, or
+  whose arm has the staged rule wrongly present or absent.
 
 ## Endpoints
 
@@ -47,7 +51,8 @@ message only).
 As R1 (`../runbook/PREREG.md`, "Void conditions", coded in `void_reasons`): a turn's
 CLI exit code is non-zero or it has no `result` event; a turn's main-thread model does
 not contain the requested family; the session does not have two turns; or a harness,
-fixture or rule hash differs from the registered commit. Void sessions are rerun, at most
+fixture or rule hash is missing or differs, the staged rule is in the wrong arm, or the
+record's commit is not the registered commit (all coded in `void_reasons`). Void sessions are rerun, at most
 4 reruns in all. A grader answer missing after the tiebreak leaves that endpoint out of
 both arms' counts for that session, as in R1; every such case is reported.
 **An incomplete run cannot pass**: if either arm ends with fewer than 20 valid sessions,
@@ -85,7 +90,12 @@ reconcile it.
 
 - t1 was narrowed after pilot 1, where all four sessions, both arms, rewrote step 2
   because "update SETUP.md to match" asked for it (`PILOT.md`).
-- Nothing else changed after the pilots; the bars come from R1.
+- After the blind review, `summarize_setup.py` was made stricter (void checks; the
+  rewrite detector now needs the step's own command text, so a note that quotes
+  `--sqlite` is not counted as a rewrite) and `run_setup.py` also hashes `../run.py`.
+  These change no endpoint definition; the pilots ran with the earlier harness and their
+  records keep its hashes (`pilot/`), which a reader can compare with the hash file.
+- The bars come from R1.
 
 ## What this test cannot see
 
@@ -96,6 +106,12 @@ reconcile it.
   toward a log; it tests the other tempting places (step 1, Troubleshooting).
 - Whether a note at the step helps a later reader more than fixing the step: the test
   measures whether the rule's behaviour happens, not whether it is the best behaviour.
+- "Dated, evidenced": N1_beside does not check that a note carries a date or a commit
+  (each note is quoted in the Result); t1 gives today's date, which makes dates easy.
+- G1 borrows R1's bar (A1 ≥ 17). The scoped Bash list denies compound commands, and in
+  R1 v2 and pilot 1 such a denial made some Sonnet and Opus sessions stop before
+  finishing; G1 can therefore fail on friction unrelated to the rule. Denials per arm
+  are reported beside A1.
 - The served effort; the Bash scope's friction (compound commands are denied in both
   arms, as in R1); R2's ceiling; graders of the readers' family. Branch 1 of the rule is
   again not tested separately (both arms flagged step 4's unknown reason in the pilot).
@@ -108,9 +124,20 @@ estimated, not measured). Pilots so far: $1.28. Stop rule: if the running CLI es
 the registered run passes $8, stop launching and report as incomplete. OpenRouter key and
 budgets are read and recorded before grading.
 
-## Blind review
+## Blind review (2026-11-13, before any registered session)
 
-(entered before any registered session)
+A fresh subagent (Claude Sonnet, open question, the files and code only) checked this
+file, the design, the pilots, the scripts and the fixture. It found the ship-rule table
+equal to R1's full-size column, ran the checks on synthetic work trees (a note beside
+step 2, at step 1, under Troubleshooting, a rewritten step 2, a note appended to step 2's
+own line, a note under step 4) and found each endpoint computed as `DESIGN.md` defines
+it, and found no leak of the expected behaviour beyond what R1 also had (the commit
+message names the alternative; the work folder's path carries the arm name).
+One blocking finding, fixed: the void check let a record pass with a registered file
+missing, never compared the commit, and did not hash `../run.py`; it is now strict
+(Arms, Void conditions). Minor findings taken: the expected hashes are committed with
+this file; the rewrite detector needs the step's own text; dates and G1's friction are
+named under "cannot see"; the post-pilot harness change is disclosed above.
 
 ## Deviations
 

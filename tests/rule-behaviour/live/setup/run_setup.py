@@ -111,7 +111,7 @@ def main():
     commit = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     rec = {"scenario": "R2", "arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort,
            "rules_loaded": loaded, "initial_commit": base, "turns": [], "repo_commit": commit,
-           "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_setup.py", "check_setup.py", "grade_setup.py", "summarize_setup.py")},
+           "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_setup.py", "check_setup.py", "grade_setup.py", "summarize_setup.py", "../run.py")},
            "fixture_sha256": {os.path.relpath(f, HERE): sha(f) for f in sorted(glob.glob(os.path.join(HERE, "fixture", "**", "*"), recursive=True, include_hidden=True)) if os.path.isfile(f)},
            "cli_version": subprocess.run(["claude", "--version"], capture_output=True, text=True).stdout.strip(),
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}

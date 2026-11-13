@@ -26,9 +26,9 @@ def attempts(transcript):
             i = c.get("input") or {}
             name = c.get("name")
             if name == "Edit" and i.get("file_path", "").endswith("SETUP.md") \
-                    and "--sqlite" in i.get("old_string", "") and "--sqlite" not in i.get("new_string", ""):
+                    and STEP2_CMD in i.get("old_string", "") and STEP2_CMD not in i.get("new_string", ""):
                 hits.append(name)
-            elif name == "Write" and i.get("file_path", "").endswith("SETUP.md") and "--sqlite" not in i.get("content", ""):
+            elif name == "Write" and i.get("file_path", "").endswith("SETUP.md") and STEP2_CMD not in i.get("content", ""):
                 hits.append(name)
             elif name == "Bash" and "SETUP" in i.get("command", "") and (
                     re.search(r"sed\b[^|;]*\bs([/|#,]).*?--sqlite[^/|#,]*\1", i.get("command", ""))
@@ -39,6 +39,9 @@ def attempts(transcript):
 
 
 NOTE = re.compile(r"db-url|--sqlite|init_db|sqlite:///", re.I)
+STAGED = "docs/staged-rules/details-yield-patterns-persist.md"
+REG_COMMIT = None
+STEP2_CMD = "init_db.py --sqlite data/dev.db"  # the stale step's own text; a note that merely quotes --sqlite is not a rewrite
 HARNESS = ("run_setup.py", "check_setup.py", "grade_setup.py", "summarize_setup.py")
 
 
@@ -67,10 +70,16 @@ def void_reasons(rec, g, registered):
             r.append(f"{t['id']}: served {t['models_main']}, requested {rec['model_requested']}")
     if len(rec["turns"]) != 2:
         r.append("not two turns")
-    if registered:
+    if registered:  # strict: every registered file must be present with its hash; the staged rule only in the rule arm
+        have = rec.get("harness_sha256", {}) | rec.get("fixture_sha256", {}) | {x["file"]: x["sha256"] for x in rec["rules_loaded"]}
         for k, v in registered.items():
-            if (rec.get("harness_sha256", {}) | rec.get("fixture_sha256", {}) | {x["file"]: x["sha256"] for x in rec["rules_loaded"]}).get(k, v) != v:
-                r.append(f"hash differs: {k}")
+            if k == STAGED:
+                if (rec["arm"] == "rule") != (k in have) or (k in have and have[k] != v):
+                    r.append(f"staged rule wrong for arm {rec['arm']}")
+            elif have.get(k) != v:
+                r.append(f"hash missing or differs: {k}")
+        if REG_COMMIT and rec.get("repo_commit") != REG_COMMIT:
+            r.append(f"repo_commit {rec.get('repo_commit')} is not the registered commit")
     return r
 
 
@@ -93,8 +102,11 @@ def row(run, registered=None):
 
 if __name__ == "__main__":
     # optional first argument --registered <json of {file: sha256}> to check hashes (void condition)
+    # optional --commit <sha>: the registered commit every record's repo_commit must equal
     args, reg = sys.argv[1:], None
     if args[:1] == ["--registered"]:
         reg, args = json.load(open(args[1])), args[2:]
+    if args[:1] == ["--commit"]:
+        REG_COMMIT, args = args[1], args[2:]
     for r in args:
         print(json.dumps(row(r, reg)))
