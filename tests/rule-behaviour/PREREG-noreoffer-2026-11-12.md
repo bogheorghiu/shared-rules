@@ -158,5 +158,16 @@ counts reported. Not fixed, on record: the stop can overrun by one turn per runn
 
 ## Reference commit and cell size
 
-Entered here, dated, before the first registered session: (not yet; the owner's answer on
-the cost card decides the size).
+Entered 2026-11-13, before the first registered session:
+
+- **Cell size: rule arm only**, 2 readers x 10 sessions = 20 sessions (owner's answer on the
+  board card `d-context-no-nag-run`, option `rule-only`, 2026-11-13T02:48Z). Command:
+  `batch.py --s3 10 --arms rule --stop-usd 18 --out <outside the repository>`.
+- **Reference commit: `131a153`** (`dev` head at this entry). #28 merged at `0eba706`;
+  `131a153` (#29) changed none of the hashed files (`scenarios.json`, `run.py`,
+  `hidden/check.py`, `make_large_files.py`, `fixture/`, `fixture-s2/`,
+  `plugins/shared-rules/rules/`) nor `batch.py`, `check_records.py`, `score_s3.py` or the
+  graders (`git diff --stat 0eba706 131a153` on those paths is empty). Records are checked
+  with `check_records.py --ref 131a153`.
+- The batch runs from a checkout whose `tests/rule-behaviour/live/` matches `131a153`
+  (this entry changes only this document, outside that folder).
