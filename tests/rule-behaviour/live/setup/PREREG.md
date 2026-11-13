@@ -141,4 +141,12 @@ named under "cannot see"; the post-pilot harness change is disclosed above.
 
 ## Deviations
 
+### 2026-11-13: registered commit, entered before the first registered session
+
+- **Registered commit:** `e7b7e1f70c7a91b2287131814720b322315d1867` (the merge of PR #30
+  into `dev`). Sessions launch from a clean detached checkout of it outside the repository;
+  `--out` is a fresh, empty directory outside it. Every file in
+  `registered/registered-hashes.json` hashes as listed at that commit (checked before
+  launch).
+
 ## Result
