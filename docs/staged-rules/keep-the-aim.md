@@ -53,4 +53,3 @@ restored, hold that part and ask first.
 
 **Siblings.** `state-the-why.md`: ask rather than guess an aim. `no-drive-by-edits.md`
 bounds how much an adaptation may touch.
-
