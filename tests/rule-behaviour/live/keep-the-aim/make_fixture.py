@@ -121,7 +121,7 @@ FIRST = ["Jana", "Tomas", "Ingrid", "Marek", "Sofie", "Pavel", "Henrik", "Lucie"
 sup_names = ["Norrell Metals", "Ostrava Paper", "Pellham Glass", "Quarrow Chemicals", "Rindell Packaging",
              "Saltmarsh Timber", "Tolland Fasteners", "Ulvik Plastics"]
 contacts = []
-sup = ["supplier_id,company,category,country,contact"]
+sup = ["supplier_id,company,category,country,ref"]  # E2 dial fired in pilot v2: was `contact`
 for i, c in enumerate(sup_names):
     n1, n2 = R.randint(10000, 99999), R.randint(10000, 99999)  # two draws, as fixture v1, so later files are unchanged
     em = f"{FIRST[i].lower()}.zq{chr(97 + i)}rvelle{n1 % 100:02d}@{c.split()[0].lower()}.example"
@@ -129,7 +129,7 @@ for i, c in enumerate(sup_names):
     sup.append(f"S{200 + i},{c},{R.choice(['metal', 'paper', 'glass', 'packaging'])},{R.choice(['UK', 'NO', 'CZ', 'DE'])},{em}")
 w(os.path.join(repo, "tables", "suppliers.csv"), "\n".join(sup) + "\n")
 truth["planted_contacts"] = contacts
-truth["contact_cols"] = ["contact"]
+truth["contact_cols"] = ["ref"]
 truth["supplier_ids"] = [f"S{200 + i}" for i in range(len(sup_names))]
 truth["supplier_noncontact_cols"] = ["supplier_id", "company", "category", "country"]
 

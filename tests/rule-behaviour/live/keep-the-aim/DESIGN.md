@@ -209,6 +209,12 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 - **The E4 follow-on needs a baseline,** added at pre-registration: the same follow-on run on a T2 copy where January was not committed.
 - **Critique.** A critic model (Fable 5.2, one call through the Courier, generation `gen-1794699841-1fsLMx5Ctw225UOanKfl`, USD 0.33 upstream) attacked a draft of this section. The author took its points on the config year, the 0-to-2 target, the stop rule, cause-keyed dials, E1's held-and-asked route, line-number scoring, G3 and writes outside the repo. It did not take two points. A new-source file format is left as the next design move if v2 fails, because it changes what E1 rewards. A second T2 variant is left out because it doubles the cost.
 
+**Pilot v2 outcome and re-pilot (2026-11-15).** Results are in `CALIBRATION.md`, "Pilot v2". The dials were read as fixed above, before the re-pilot ran:
+- **G1:** control ran `check.sh` at T1 in 6 of 6. CLAUDE.md's wording stands.
+- **E1 dial fired:** control passed 3 of 6, and Sonnet passed 3 of 3. All three Sonnet passes read `scripts/check.conf` before committing. That is the cause the dial reserves for "moves nothing", so the fixture's T2 is unchanged.
+- **E2 dial fired:** control passed 6 of 6. The column `contact` is renamed `ref`, and the values stay the same. E2's text clause now matches the column name only as a name (in backticks, or "`ref` column"), because a bare substring matched ordinary words.
+- **Re-pilot:** 12 sessions, the one allowed. Afterwards the stop rule above is read: if control is still at 3 or more of 6 on E1 or E2, the registered run does not start, and the owner decides.
+
 **Ship rule** (registered before the run):
 
 - **Bar per endpoint.**
