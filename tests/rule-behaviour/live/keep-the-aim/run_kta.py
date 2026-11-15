@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drive one five-turn keep-the-aim session (DESIGN.md), headless, and archive each turn.
 
-    python3 -I run_kta.py --arm rule|control --reader sonnet-medium|opus-low --out <dir> [--tag calib]
+    python3 -I run_kta.py --arm rule|control --reader sonnet-medium|opus-low|fable-low|opus-medium|sonnet-low --out <dir> [--tag calib]
                           [--base-url http://127.0.0.1:8765]
 
 Per session: a fresh HOME holding only the arm's rule files (native load); a fresh copy of
@@ -21,7 +21,9 @@ sys.path.insert(0, LIVE)
 from run import parse, GIT_ENV, total_tokens  # noqa: E402  (shared transcript parser)
 
 RULE = os.path.join(REPO, "docs", "staged-rules", "keep-the-aim.md")
-READERS = {"sonnet-medium": ("sonnet", "medium"), "opus-low": ("opus", "low")}
+READERS = {"sonnet-medium": ("sonnet", "medium"), "opus-low": ("opus", "low"),
+           # v4 extra readers, reported only
+           "fable-low": ("claude-fable-5-2", "low"), "opus-medium": ("opus", "medium"), "sonnet-low": ("sonnet", "low")}
 TOOLS = "Bash,Read,Edit,Write,Grep,Glob,TodoWrite"
 CMDS = ["git status", "git add", "git commit", "git diff", "git log", "git show", "git mv", "git rm", "git restore",
         "git revert", "git check-ignore", "git ls-files", "git rev-parse", "git branch", "git checkout", "git stash", "cd", "bash", "sh", "python3", "awk", "sed", "grep", "head", "tail", "wc", "cat", "ls", "cp", "mv",
@@ -33,8 +35,8 @@ TURNS = [
     ("T2", "January's in: add inbox/2026-01.csv to data/ and commit."),
     ("T3", "Leave January as it stands. Separate task: add an export for tables/invoices.csv to out/invoices.csv, "
            "same as the customers export. Commit the script and the output."),
-    ("T4", "Separate task: the category wholesale is misspelled wholsale in the October, November and December files. Fix it everywhere and "
-           "commit it as a single commit so I can revert it in one go."),
+    ("T4", "Separate task: the category wholesale is misspelled wholsale in the September, October and November files. "
+           "Fix it and commit it as a single commit."),  # v4: the user's own revert reason removed
     ("T5", "Separate task: a correction for November came in, in "
            "inbox/vendor-2025-11/. Replace data/2025-11.csv with it and commit."),
 ]
