@@ -16,7 +16,11 @@ Nothing is loaded whole: the record is about 8 MB.
 The run ends when every participant's latest post carries `AGREE: <id>` naming the same proposal (a post
 with a line starting `PROPOSAL <id>:`); or at --cap-usd (OpenRouter credits, plus DeepSeek direct estimated
 from tokens); or at --byok-cap-usd (Fable's upstream cost on the owner's Anthropic key); or when every
-participant has used --max-turns model calls. Every round, tool call and post is logged to DIR/log.jsonl,
+participant has used --max-turns model calls. If the roster names a decider (`"role": "decider"`), the
+run ends instead when the decider posts a line `FINAL: <id>` naming an existing proposal; the others only
+advise, and a member marked `"role": "optional"` is told it may stay silent. --context FILE is appended
+verbatim to every participant's system prompt (skills, rules). --call-timeout bounds one model call's
+wall-clock time, so a hung stream cannot stall the room. Every round, tool call and post is logged to DIR/log.jsonl,
 and the room to DIR/room.md.
 """
 import argparse, asyncio, glob, json, os, re, sys, time
@@ -42,6 +46,8 @@ PARTICIPANTS = [
      "price_per_m": (0.038, 0.5), "extra": {"thinking": {"type": "enabled"}, "reasoning_effort": "high"}},
     {"name": "MiMo", "model": "xiaomi/mimo-v2.6-pro:exacto", "provider": None},
 ]
+
+CONTEXT, CALL_TIMEOUT = "", 1200.0
 
 # ---------- the record, read-only ----------
 SESSIONS = {}
@@ -166,6 +172,17 @@ class Room:
         self.check_agreement()
 
     def check_agreement(self):
+        deciders = {p["name"] for p in PARTICIPANTS if p.get("role") == "decider"}
+        if deciders:  # the decider has the final say; the others advise
+            for m in self.msgs:
+                if m["who"] in deciders:
+                    f = re.findall(r"(?m)^\s*FINAL:\s*(\S+)", m["text"])
+                    if f:
+                        pid = f[-1].strip(".,;`*")
+                        if any(re.search(rf"(?m)^\s*PROPOSAL {re.escape(pid)}:", x["text"]) for x in self.msgs):
+                            if not self.done.is_set():
+                                self.agreed = pid; self.emit("final", proposal=pid, by=m["who"]); self.done.set()
+            return
         latest = {}
         for m in self.msgs:
             latest[m["who"]] = m["text"]
@@ -210,13 +227,24 @@ class Room:
         read_room; the hub never puts room messages into its context. If it stops calling tools before the
         council ends, it gets a bare "(the council is still open)" up to 3 times."""
         me = p["name"]
-        system = (brief + f"\n\nYou are {me}, one member of a design council with "
+        role = p.get("role")
+        deciders = [x["name"] for x in PARTICIPANTS if x.get("role") == "decider"]
+        if role == "decider":
+            ending = ("You have the final say. When you are satisfied, post the complete final design with a line "
+                      "`PROPOSAL <id>:` and end that post (or a later one) with a line `FINAL: <id>`; that ends the council.")
+        elif deciders:
+            ending = (f"{', '.join(deciders)} has the final say; you advise. "
+                      + ("Contribute when, and only when, you have something to add: a checked fact, an error you found, "
+                         "an alternative worth weighing. Silence is fine; reading costs little. " if role == "optional" else ""))
+        else:
+            ending = ("To put forward a complete redesign, post a message that starts with `PROPOSAL <short id>:`. When you accept "
+                      "a proposal as final, end a post with `AGREE: <id>`. ")
+        system = (brief + (("\n\n" + CONTEXT) if CONTEXT else "") + f"\n\nYou are {me}, one member of a design council with "
                   + ", ".join(x["name"] for x in PARTICIPANTS if x["name"] != me)
                   + ". There is one shared room. Nothing is sent to you: you read the room yourself with read_room "
                   "(it waits for new messages if there are none yet) and you speak only with post. Read the room often. "
                   "Use the record tools to check claims before you rely on them, and disagree where the data says so. "
-                  "To put forward a complete redesign, post a message that starts with `PROPOSAL <short id>:`. When you accept "
-                  "a proposal as final, end a post with `AGREE: <id>`. Keep posts focused.")
+                  + ending + "Keep posts focused.")
         self.history[me] = [{"role": "system", "content": system},
                             {"role": "user", "content": "The council is open."}]
         nudges = 0
@@ -273,7 +301,7 @@ class Room:
             for i in (0, len(msgs) - 1):
                 if isinstance(msgs[i].get("content"), str) and msgs[i]["content"]:
                     msgs[i]["content"] = [{"type": "text", "text": msgs[i]["content"], "cache_control": {"type": "ephemeral"}}]
-        body = {"model": p["model"], "messages": msgs, "tools": TOOL_SPECS, "stream": True, "max_tokens": 12000}
+        body = {"model": p["model"], "messages": msgs, "tools": TOOL_SPECS, "stream": True, "max_tokens": p.get("max_tokens", 12000)}
         if p.get("url"):
             body["stream_options"] = {"include_usage": True}
         else:
@@ -295,9 +323,12 @@ class Room:
                                      headers={"Content-Type": "application/json", "Authorization": "Bearer dummy"})
         content, calls, usage = "", {}, None
         for attempt in range(3):
+            t0 = time.time()
             try:
-                with urllib.request.urlopen(req, timeout=900) as r:
+                with urllib.request.urlopen(req, timeout=300) as r:
                     for raw in r:
+                        if time.time() - t0 > CALL_TIMEOUT:  # a stream that trickles forever is a hang too
+                            raise TimeoutError(f"call exceeded {CALL_TIMEOUT}s")
                         line = raw.decode("utf-8", "replace").strip()
                         if not line.startswith("data:") or line == "data: [DONE]":
                             continue
@@ -329,7 +360,7 @@ class Room:
         if n == 1:
             return "", [{"id": f"{me}-1", "type": "function", "function": {"name": "list_sessions", "arguments": json.dumps({"filter": "repilot-v3"})}}], {"cost": 0.01}
         if last["role"] == "tool" and last["content"] not in ("posted",) and n % 2 == 0:
-            text = f"{me} view {n}." + ("\nPROPOSAL F1: test." if me == "Fable" and n == 2 else "") + (" AGREE: F1" if n >= 4 else "")
+            text = f"{me} view {n}." + ("\nPROPOSAL F1: test." if me == "Fable" and n == 2 else "") + (" AGREE: F1" if n >= 4 else "") + ("\nFINAL: F1" if n >= 6 and p.get("role") == "decider" else "")
             return "", [{"id": f"{me}-{n}", "type": "function", "function": {"name": "post", "arguments": json.dumps({"text": text})}}], {"cost": 0.01}
         return "", [{"id": f"{me}-{n}", "type": "function", "function": {"name": "read_room", "arguments": json.dumps({"wait": 2})}}], {"cost": 0.0}
 
@@ -343,8 +374,18 @@ async def main():
     ap.add_argument("--window", type=float, default=20.0)
     ap.add_argument("--max-turns", type=int, default=60, help="model calls per participant")
     ap.add_argument("--roster", help="JSON file with the participant list; replaces the built-in default roster")
+    ap.add_argument("--context", help="file appended verbatim to every system prompt (skills, rules)")
+    ap.add_argument("--call-timeout", type=float, default=1200.0, help="wall-clock seconds per model call")
+    ap.add_argument("--extra-docs", nargs="*", help="globs, relative to the repo root, added to read_doc")
     ap.add_argument("--mock", action="store_true")
     a = ap.parse_args()
+    global CONTEXT, CALL_TIMEOUT
+    CONTEXT = open(a.context).read() if a.context else ""
+    CALL_TIMEOUT = a.call_timeout
+    for pat in a.extra_docs or []:  # more read-only documents for read_doc, named by path relative to the repo root
+        root = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+        for f in sorted(glob.glob(os.path.join(root, pat), recursive=True)):
+            DOCS[os.path.relpath(f, root)] = f
     os.makedirs(a.out, exist_ok=True)
     if a.roster:  # the orchestrator chooses who sits in the room and by which route
         PARTICIPANTS[:] = json.load(open(a.roster))
