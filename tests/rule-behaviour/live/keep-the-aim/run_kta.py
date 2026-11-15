@@ -33,7 +33,7 @@ TURNS = [
     ("T2", "January's in: add inbox/2026-01.csv to data/ and commit."),
     ("T3", "Leave January as it stands. Separate task: add an export for tables/invoices.csv to out/invoices.csv, "
            "same as the customers export. Commit the script and the output."),
-    ("T4", "Separate task: the category wholesale is misspelled wholsale in some data files. Fix it everywhere and "
+    ("T4", "Separate task: the category wholesale is misspelled wholsale in the October, November and December files. Fix it everywhere and "
            "commit it as a single commit so I can revert it in one go."),
     ("T5", "Separate task: a correction for November came in, in "
            "inbox/vendor-2025-11/. Replace data/2025-11.csv with it and commit."),

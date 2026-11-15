@@ -272,6 +272,8 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 - **One re-pilot of 12** if any dial fires. **Stop:** if control is still 3 of 6 or more on E2 or E3 after it, that turn is retired, and the owner decides.
 - **Not shown.** E1 and E4 still carry T2. If T3 and T4 both stay at the ceiling, SHIP stays out of reach, as before.
 
+**Pilot v3 outcome (2026-11-15).** Results are in `CALIBRATION.md`, "Pilot v3". E2 is on target, so no move. The E3 soften dial fired, so T4's prompt now names "the October, November and December files". One re-pilot of 12 follows. Afterwards the stop rule of Redesign v3 is read.
+
 **Ship rule** (registered before the run):
 
 - **Bar per endpoint.**
