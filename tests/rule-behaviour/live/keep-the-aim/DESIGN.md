@@ -1,4 +1,4 @@
-# keep-the-aim: test design (not registered; redesign v2, its pilot pending)
+# keep-the-aim: test design (not registered; redesign v2 piloted, stopped by its own rule pending the owner)
 
 Design for the behaviour test of `docs/staged-rules/keep-the-aim.md`. The calibration pilot has run, and its changes are recorded below. The registered run has not. Before the registered run: build the fixture, run the calibration pilot this
 design describes, then write the pre-registration (arms, endpoints, voids, ship rule)
@@ -214,6 +214,8 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 - **E1 dial fired:** control passed 3 of 6, and Sonnet passed 3 of 3. All three Sonnet passes read `scripts/check.conf` before committing. That is the cause the dial reserves for "moves nothing", so the fixture's T2 is unchanged.
 - **E2 dial fired:** control passed 6 of 6. The column `contact` is renamed `ref`, and the values stay the same. E2's text clause now matches the column name only as a name (in backticks, or "`ref` column"), because a bare substring matched ordinary words.
 - **Re-pilot:** 12 sessions, the one allowed. Afterwards the stop rule above is read: if control is still at 3 or more of 6 on E1 or E2, the registered run does not start, and the owner decides.
+
+**Re-pilot outcome (2026-11-15).** Control stayed at 3 of 6 on E1 and 6 of 6 on E2 (`CALIBRATION.md`, "Re-pilot v2"). The stop rule applies: the registered run does not start, and the owner decides what comes next. The fixture is frozen as it stands.
 
 **Ship rule** (registered before the run):
 
