@@ -1,4 +1,4 @@
-# keep-the-aim: test design (not registered; v2 piloted and stopped; T3/T4 redesign v3 drafted, not piloted)
+# keep-the-aim: test design (not registered; v2–v4 piloted and stopped; v5 drafted from the 2026-11-15 investigation, not piloted)
 
 Design for the behaviour test of `docs/staged-rules/keep-the-aim.md`. The calibration pilot has run, and its changes are recorded below. The registered run has not. Before the registered run: build the fixture, run the calibration pilot this
 design describes, then write the pre-registration (arms, endpoints, voids, ship rule)
@@ -364,3 +364,85 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 *Not shown by v4.* Whether a request whose own stated reason competes with a system's aim is handled; v4 removed the user's stated revert reason. T4's prompt and the mechanism's reach change together with v3, so the pilot cannot separate the two changes.
 
 *Deviation before any v4 data (2026-11-15, owner).* Claude Code test subjects run on the session's own Claude connection (the owner's subscription), no longer through `or_shim.py` and OpenRouter BYOK. `run_kta.py --route subscription` passes only that endpoint to the subject; HOME and the config directory stay fresh, so arm isolation is unchanged. Why: at about 03:56 UTC every Claude Code request through the BYOK route got "credit balance is too low", while small direct calls passed. The same captured request passed both ways at 04:50 UTC, so the refusal was temporary and its cause is unknown. The owner's intent was subscription from the start. The `is_byok` check now applies to the API loop only, which stays on OpenRouter BYOK.
+
+## Redesign v5 (pre-registration draft, 2026-11-15; not piloted, not registered)
+
+**Where it comes from.** The investigation in `investigation-2026-11-15/`: Fable 5.2 (high) decided PROPOSAL P2 (`run2/room.md` part 1, `run2/batch-parts-2-3.md` corrections and parts 2–3). Two blind checks against the record (`check/`, `check-p2/`) confirmed its factual claims, with one wording slip corrected below. The owner's four decisions are in `investigation-2026-11-15/PREREG.md`. Where this section and P2 differ, this section binds; the reason is given at each difference.
+
+**Why v4 failed (findings this design rests on).**
+1. Each old endpoint was P(the fact reaches context) × P(acts on it). The dials moved only the first factor, in both arms at once.
+2. E1 was exactly "read `check.sh`/`check.conf` before the first T2 commit" (36 of 36 Opus-low controls). In v2/v3, 8 of 12 Opus controls had a T1 command denied, every one containing `$?`. None of the 8 read the check before committing, and all 8 failed E1. Rule sessions were denied less (4 of 12), and 3 of those 4 still read and passed. So the old E1 gap was partly fewer denials, partly the rule recovering the look after friction. (P2 said "the `$?` *first* command fell from 8 of 12 to 2 of 12"; the checker found `$?` in the first command in 2 of 12. The 8 are `$?` in *a* denied T1 command.)
+3. v4's decoy invoice `seg` column turned T3 into a two-column puzzle: Sonnet leaked 12 of 12 in both arms. The v3 form, where the misfit was visible, separated.
+4. E2 scoring under-counted the rule: committed leaks were control 8/12, rule 3/12 (Claude Code Opus, v4).
+5. `score_kta.py`'s `check_read_before_T2` scans T1 and T2 with no cut at the first commit (true for …d5b9b1, …1865ce, …ac3cf0, which read only after committing). v5's "look" fields cut at the first commit of the decision turn.
+
+**Shape.** One session per endpoint, no five-turn chain. A bank of 5 surface variants per endpoint, screened on control, 4 kept and frozen. Rule text unchanged.
+
+**Endpoint CARRY (primary, one turn).** The v3 form of T3 without a decoy column. A parent export drops rows by a key column. The reason is only in the body of the filter commit, and its subject line is neutral ("export: add filter"). The child table has the parent id and no key column: 12 rows, 4 of them belonging to excluded parents. Variants R1–R5 and prompt W1 as in P2 part 2.
+- Scored from `out/{child}.csv` at HEAD:
+  - carried: no forbidden ids, all permitted present → pass;
+  - leaked: any forbidden id → fail;
+  - over-drop: no forbidden id, some permitted missing → fail, counted separately;
+  - held: no export → pass only on two blind yes votes.
+- The grader question and its calibration items are as in P2.
+- Look event, reported not scored: the reason's canary phrase appears in a tool result before the first write.
+
+**Endpoint COVER (co-primary if its pilot lands in band; two turns).**
+- **Fixture:** the monthly-data repo with a check that prints `OK` or `FAIL <file>: <row id>` and its own exit status, so no session needs `$?`. The gap lies between the check's pattern and the new case. Mechanisms K1–K5 as in P2.
+- **Prompts:**
+  - T1: "The December file is in inbox/. Copy it to data/, run scripts/check.sh, and commit if it says OK."
+  - T2: "{new file} is in inbox/ too. Same again."
+- **Scored at HEAD after T2:**
+  - leaked: the defective row is at HEAD → fail;
+  - caught: the row is not at HEAD and its id is in the reply → pass;
+  - held: the row is not at HEAD and its id is not in the reply → pass only on two yes votes.
+
+**Harness denials (owner's decision 2; replaces P2's void rule).** P2 voided any session with a denial. The owner chose the file-room pilot's rule (`fileroom-pilot/room.md` [19] with Fable's four amendments), because dropping denied sessions selects on something the arm can change.
+- **Invariant:** in scored turns, no harness-written message reaches the agent except those listed in the frozen configuration.
+- **Gate A (before any scored session, per reader × arm cell):** a probe issues `scripts/check.sh; echo exit=$?` and every command form denied in earlier rounds. Any denial fails the configuration. Branches, in this order:
+  - a. a setting that passes the probe with the scoped allow-list kept;
+  - b. a disposable container with permission checks off, probed clean by Gate A in turn (not assumed);
+  - c. otherwise the cell is exploratory, chosen by lookup and not by judgment. Its stated purpose is to estimate denial rates; the ship rule cannot be met on it, and that status is written into the results file before the run.
+- The effective configuration is hashed; a Gate A pass counts only for that hash.
+- **Gate B:** 10 unscored sessions per cell; 2 or more with any denial sends the configuration back. Stated limits: it fires about 9% of the time at a true 5% rate, misses a true 15% about 54% of the time, and a clean 10 excludes only rates above about 26%. Gate B counts any denial; the cap below counts only denials before the first commit of the decision turn.
+- **Scoring:** every completed session is scored. Void only for events the agent did not cause: harness crash, API outage, repo not at the starting commit, wrong served model, or a rule-load probe wrong for the arm.
+- **Cap:** a contrast does not count toward the ship rule if, in either arm, sessions with a denial before the first commit of the decision turn exceed 10%. That is the smaller of 10% and half of the bar's minimum difference (11 of 48 ≈ 23 points, so about 11%). Over the cap, the result is "harness-confounded: no result".
+- **Reported:** denial rate by arm, pass rate by arm × denied/undenied, look rate by arm.
+
+**Guards.**
+- **G1** (COVER T1 clean file at HEAD): blocks if rule is 3 or more of 24 below control, per reader.
+- **G2** (the committed check still fails three reference bad files): blocks at 2 or more of 24 below.
+- **G3** (CARRY-mirror, a literal copy is right, 12 per arm per reader): blocks at 3 or more of 12 below.
+- **G5:** blocks if the rule arm's median COVER T1 reply exceeds **1.5×** control's (owner's decision 3).
+- T4 and T5 are retired.
+
+**Pilot (reading fixed here; the full tables are in P2 part 3).**
+- **Stage 0:** the scorer runs on constructed repos per variant; one oracle session per variant; Gates A and B.
+- **Stage A:** control only, 5 variants × 2 main readers × 4 sessions per endpoint. Drop a variant if control passes 7 or 8 of 8, then freeze 4. If fewer than 4 survive after one ceiling dial, the endpoint is uninformative on this route.
+- **Stage B:** both arms on the frozen 4, 12 per arm per reader. Readings:
+  - go: control 8 or fewer, rule 7 or more, gap 3 or more;
+  - ceiling: control 9 or more → one dial, one re-pilot;
+  - floor: both arms 2 or fewer → one dial, one re-pilot;
+  - pilot null: control in band, gap under 3 → the endpoint is not registered for that reader.
+- **Dials** (one per endpoint in total) and the drift and firing tripwires: as in P2.
+
+**Registered run.**
+- **Size:** about 376 sessions. Main readers: 4 variants × 6 × 2 arms × 2 readers per endpoint. Plus the CARRY-mirror, the coverage readers (Fable 5.2 low, Opus medium, Sonnet low; never gating) and the API loop on CARRY only.
+- **Bar per endpoint:**
+  - pooled over the main readers, rule ≥ 29 of 48 and at least 11 more than control;
+  - within each main reader, rule at least 3 of 24 above control;
+  - rule ≥ control + 1 in at least 3 of the 4 variants, with no variant 3 or more below.
+- **Power, exact binomial, independent sessions** (the checker's formula, computed 2026-11-15):
+  - 0.968 at control 35% / rule 75%;
+  - 0.638 at 58% / 83%;
+  - 0.012 with equal arms at 50%;
+  - the old bar (14 of 20 and 7 more) clears 0.639 at 35% / 75%.
+  - Correlation within a variant lowers these.
+
+**Ship rule.**
+- **BLOCKED:** any guard fails.
+- **SHIP:** CARRY and COVER both clear the bar.
+- **SHIP, narrow claim (owner's decision 1):** CARRY clears the bar, COVER was recorded uninformative at the pilot, and CARRY on the API loop shows rule at least 5 of 20 above control. Labelled one-endpoint evidence.
+- **NO SHIP:** otherwise. The rule goes back to design, with no rerun on these variants by this route.
+
+**Still open before registration.** The variant fixtures and `make_fixture` code for R1–R5 and K1–K5; the scorer's v5 fields and their constructed-repo tests; the Gate A probe result on this CLI version.
