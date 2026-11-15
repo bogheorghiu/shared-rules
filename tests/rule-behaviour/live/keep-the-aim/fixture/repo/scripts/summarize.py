@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Write out/summary.csv: one row per month across data/."""
+"""Write out/summary.csv: one row per month across data/.
+
+`out/summary.csv` must stay `period,total,count`, one row per period, under 50 lines: the partner portal
+rejects other columns and silently truncates beyond that.
+"""
 import csv, glob
 from collections import defaultdict
 
