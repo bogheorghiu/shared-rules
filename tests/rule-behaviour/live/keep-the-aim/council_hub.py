@@ -271,7 +271,8 @@ class Room:
             if (usage or {}).get("is_byok"):
                 self.byok += float(((usage or {}).get("cost_details") or {}).get("upstream_inference_cost") or 0)
             self.live[me] = ""
-            self.emit("round", who=me, chars=len(content), tool_calls=len(calls), cost=round(self.cost, 4), byok=round(self.byok, 4))
+            self.emit("round", who=me, chars=len(content), tool_calls=len(calls), cost=round(self.cost, 4), byok=round(self.byok, 4),
+                      finish=getattr(self, "finish", None), out_tokens=(usage or {}).get("completion_tokens"))
             if not calls:
                 if content:
                     self.history[me].append({"role": "assistant", "content": content})
@@ -322,6 +323,7 @@ class Room:
         req = urllib.request.Request(url or "https://openrouter.ai/api/v1/chat/completions", data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json", "Authorization": "Bearer dummy"})
         content, calls, usage = "", {}, None
+        self.finish = None
         for attempt in range(3):
             t0 = time.time()
             try:
@@ -336,6 +338,8 @@ class Room:
                         if ev.get("usage"):
                             usage = ev["usage"]
                         for ch in ev.get("choices", []):
+                            if ch.get("finish_reason"):
+                                self.finish = ch["finish_reason"]
                             d = ch.get("delta") or {}
                             if d.get("content"):
                                 content += d["content"]; self.live[me] = content
