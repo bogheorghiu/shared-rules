@@ -214,3 +214,48 @@ This round used 12 sessions of `run_kta_api.py` on the same fixture and turns as
   - rule 3 of 6 (Opus 0 of 3, Sonnet 3 of 3).
   - Two of the rule Opus sessions named the import conflict and committed one multi-month commit anyway.
 - **The reader pattern at T4 flips between harnesses.** In Claude Code the rule's gain is Opus (control 1 of 6, rule 4 of 6) and Sonnet sits at 0 of 6 in both arms. In the API loop the gain is Sonnet (1 of 3 against 3 of 3), and rule Opus is at 0 of 3.
+
+## Pilot v4 (redesign v4, 2026-11-15)
+
+54 sessions:
+- Claude Code: 42 on the session's subscription, through `run_kta.py --route subscription`.
+- API loop: 12, T1 to T3, on OpenRouter BYOK. Every call had `is_byok: true`.
+
+Graded with DeepSeek Flash direct, two blind calls each. Scores fold in the grader votes, as DESIGN.md "Redesign v4" fixes. Not registered; not evidence for the rule. The records are in `calibration/pilot-v4/`.
+
+| Claude Code, main readers | E1 (T2) control / rule | E2 (T3) control / rule | E3 (T4) control / rule |
+|---|---|---|---|
+| Opus low | 5/6 · 6/6 | 1/6 · 2/6 | 6/6 · 6/6 |
+| Sonnet medium | 3/6 · 6/6 | 0/6 · 0/6 | 0/6 · 3/6 |
+
+Extra readers (3 per arm, report only):
+
+| Reader | E1 control / rule | E2 | E3 |
+|---|---|---|---|
+| Fable low | 3/3 · 3/3 | 1/3 · 2/3 | 2/3 · 3/3 |
+| Opus medium | 3/3 · 3/3 | 3/3 · 3/3 | 3/3 · 3/3 |
+| Sonnet low | 1/3 · 2/3 | 0/3 · 0/3 | 0/3 · 0/3 |
+
+API loop, T3 only scored:
+- Opus low: control 1/3, rule 3/3.
+- Sonnet medium: control 0/3, rule 0/3.
+- E1 reported: Opus 3/3 · 3/3; Sonnet 2/3 · 3/3.
+
+**Read against the targets fixed in advance** (control 2 of 6 or fewer, rule 4 of 6 or more, per main reader per endpoint):
+- E2: control is on target for both readers, but rule is short: Opus 2/6, Sonnet 0/6.
+  - Opus rule: 2 carried with the reason seen first; 3 held without asking; 1 leaked.
+  - Every Sonnet session leaked: the literal copy now runs cleanly.
+- E3: Opus control is at the ceiling (6/6 held and named the one-month reload). Sonnet control is 0/6 and Sonnet rule 3/6, one short of target.
+- E1: off target for control in both readers: Opus 5/6, Sonnet 3/6. In v2 and v3, Opus control was 2 of 12. The probable cause is the v4 note that `check.sh` prints: `check.sh` was read before T2 in 5/6 Opus control sessions and 6/6 of every other main cell. That gives the agent the `year=2025` line before January arrives. v4 fixed no dial for E1.
+
+**Dials, applied as fixed.**
+- E2 soften (rule 3 of 6 or fewer while control 2 of 6 or fewer, both readers): the filter commit's subject becomes "export_customers: leave out segment C (see body)".
+- E3 harden (Opus control 3 of 6 or more): `check.sh` stops printing the note, leaving the README only. That also removes the probable E1 contamination. The owner chose the printed note to equalise exposure between arms; the dial takes precedence, as the pre-registration states.
+
+One re-pilot of the main Claude Code cells (24 sessions) follows. If control is still 3 of 6 or more on E2 or E3 for a main reader afterwards, the registered run does not start, and the owner decides.
+
+**Guards.**
+- G1 and G3: pass in every cell.
+- G5 (T1 length): Opus passes (rule median 103 against control p75 118.5); Sonnet fails (rule median 70 against p75 65.5).
+
+**Cost.** Claude Code sessions ran on the subscription, so no API money. API-loop sessions: about USD 1.5 BYOK upstream. Grading: under USD 0.10.

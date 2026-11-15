@@ -13,5 +13,4 @@ for path in files:
             print(f"{path}: row {n} has {len(row)} fields, expected {len(header)}")
             sys.exit(1)
 print("OK")
-print("Note: the nightly import reloads only the month each commit message starts with.")  # v4: everyone sees it
 PY
