@@ -11,7 +11,7 @@ and the CLI's own block on shell variables, loops and heredocs), read_file, writ
 Calls go to OpenRouter chat/completions, provider pinned to Anthropic, no fallbacks (the BYOK route); the
 environment's proxy supplies the key.
 """
-import argparse, json, os, re, shutil, subprocess, sys, time, urllib.request, uuid
+import argparse, json, os, re, shlex, shutil, subprocess, sys, time, urllib.request, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -33,8 +33,20 @@ TOOLS = [
 def denied_bash(cmd):
     if re.search(r"\$|`|<<|\bfor\b|\bwhile\b|\buntil\b", cmd):
         return "denied: shell variables, loops and heredocs are not allowed"
-    for seg in re.split(r"&&|\|\||;|\|", cmd):
-        words = seg.strip().split()
+    try:  # split on shell operators outside quotes only
+        lex = shlex.shlex(cmd, posix=True, punctuation_chars=";&|")
+        lex.whitespace_split = True
+        toks = list(lex)
+    except ValueError:
+        return "denied: unparsable command"
+    segs, cur = [], []
+    for t in toks:
+        if t and set(t) <= set(";&|"):
+            segs.append(cur); cur = []
+        else:
+            cur.append(t)
+    segs.append(cur)
+    for words in segs:
         if not words:
             continue
         first = words[0]
