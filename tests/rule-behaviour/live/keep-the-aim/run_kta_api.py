@@ -94,6 +94,21 @@ def call(model, effort, messages):
     raise err
 
 
+def write_transcripts(messages, root):
+    """One CLI-shaped transcripts/<turn>.jsonl per turn (assistant text and tool_use entries only), so
+    grade_kta.py reads API sessions the same way as Claude Code sessions."""
+    os.makedirs(os.path.join(root, "transcripts"), exist_ok=True)
+    turn, out = 0, None
+    for m in messages:
+        if m.get("role") == "user" and isinstance(m.get("content"), str):
+            turn += 1
+            out = open(os.path.join(root, "transcripts", f"T{turn}.jsonl"), "w")
+        elif m.get("role") == "assistant" and out:
+            content = ([{"type": "text", "text": m["content"]}] if m.get("content") else []) + \
+                      [{"type": "tool_use", "name": tc["function"]["name"]} for tc in m.get("tool_calls") or []]
+            out.write(json.dumps({"type": "assistant", "message": {"content": content}}) + "\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", required=True, choices=["control", "rule"])
@@ -164,6 +179,7 @@ def main():
         shutil.copytree(work, os.path.join(adir, tid, "repo"), symlinks=True)
         print(f"{name} {tid}: rc={rc} head={rec['turns'][-1]['head'][:8]} tools={len(tools)} denials={denials} cost={round(cost, 4)}", flush=True)
     json.dump(messages, open(os.path.join(root, "messages.json"), "w"), indent=1)
+    write_transcripts(messages, root)
     rec["git_log"] = K.git(work, "log", "--format=%H %s").splitlines()
     rec["cost_usd_client_estimate"] = round(total, 4)
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)

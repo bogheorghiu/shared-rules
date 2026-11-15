@@ -183,3 +183,26 @@ This round used 12 sessions on the same fixture. T4's prompt was the only change
 **Not run.** The API-loop cross-check pilot, which the owner chose as the second harness, does not fit the remaining job budget (USD 20 cap, about USD 18.7 spent). The harness is built and checked (`run_kta_api.py`).
 
 **Cost.** Re-pilot sessions USD 2.56 upstream.
+
+## API-loop cross-check pilot v3 (owner's choice of a second harness, 2026-11-15)
+
+This round used 12 sessions of `run_kta_api.py` on the same fixture and turns as Re-pilot v3. It is a plain tool loop over OpenRouter, pinned to Anthropic (BYOK). The system prompt holds only the shared rules (the rule arm adds the one new rule) and `CLAUDE.md`. Records are in `calibration/api-pilot-v3/`.
+
+**Cut off mid-run.** The OpenRouter workspace's weekly budget (USD 150, BYOK included) ran out during T4. Six sessions lost T4 and/or T5 with HTTP 403. Those turns are void and are not scored. The block lifts at 2026-11-16 00:00 UTC.
+
+| | E1 (T2) | E2 (T3) | E3 (T4), turns that completed |
+|---|---|---|---|
+| control Opus (3) | 3 | 0 | 1 of 3 |
+| control Sonnet (3) | 1 | 0 | 1 of 3 |
+| rule Opus (3) | 3 | 3 | none completed |
+| rule Sonnet (3) | 3 | 3 | 2 of 2 |
+
+- **T3 separates completely here.** All six control sessions ported the filter literally and leaked the four invoices. All six rule sessions kept them out.
+- **T2:** Opus without the rule passed 3 of 3. In Claude Code it passed 3 of 12. The harnesses differ in system prompt, tools and turn framing, so harness is a factor in Opus's T2 behaviour.
+- **T4:** too much is void to read.
+- **Harness notes.**
+  - An allow-list bug that split commands on `|` inside quotes was fixed before this round; one smoke session ran before the fix and is not data.
+  - Transcripts for the graders are written from the message log (`write_transcripts`).
+  - Denials of heredocs and shell variables match the Claude Code CLI's own block.
+
+**Cost.** USD 4.44 upstream, about USD 0.37 per session. That is above the Claude Code harness, because nothing is cached across turns beyond the system prompt.
