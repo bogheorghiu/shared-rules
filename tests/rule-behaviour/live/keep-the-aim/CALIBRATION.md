@@ -259,3 +259,29 @@ One re-pilot of the main Claude Code cells (24 sessions) follows. If control is 
 - G5 (T1 length): Opus passes (rule median 103 against control p75 118.5); Sonnet fails (rule median 70 against p75 65.5).
 
 **Cost.** Claude Code sessions ran on the subscription, so no API money. API-loop sessions: about USD 1.5 BYOK upstream. Grading: under USD 0.10.
+
+## Re-pilot v4 (after the E2 soften and E3 harden dials, 2026-11-15)
+
+24 Claude Code sessions on the subscription route, graded the same way. Records: `calibration/repilot-v4/`.
+
+| Claude Code | E1 control / rule | E2 control / rule | E3 control / rule |
+|---|---|---|---|
+| Opus low | 6/6 · 6/6 | 2/6 · 3/6 | 0/6 · 2/6 |
+| Sonnet medium | 6/6 · 6/6 | 0/6 · 0/6 | 0/6 · 1/6 |
+
+**Stop rule, read as written.** Control is at 2 of 6 or fewer on E2 and E3 for both main readers, so the stop rule does not fire. But the targets are not met:
+- the rule arm is far below 4 of 6 on E2 and E3 for both readers;
+- E1 does not separate at all: control 6/6;
+- G5 fails for both readers. Opus rule median 87.5 words against control p75 73.75; Sonnet 72 against 70.25.
+
+On these rates a registered run would be expected to miss the ship rule; Opus E2 at 3/6 projects to about 10 of 20, against a bar of 14. Under the owner's instruction (promote only if everything passes cleanly, otherwise wait), the registered run does not start, and the owner decides.
+
+**What changed between v3 and v4 that this round shows.**
+- With the printed note gone, E3 fell to the floor: Opus control went from 6/6 to 0/6, and Opus rule is 2/6. The README fact reaches almost nobody, so the note was what made T4 testable at all.
+- E1 control stayed at the ceiling after the note was removed. Opus control now reads `check.sh` at T1 in every session; in v3 it was 2 of 12. So the note was not the cause.
+- Two candidate causes, neither tested (UNRESOLVED):
+  - The route change: v4 subjects run on the subscription endpoint, while v1 to v3 ran through `or_shim.py`, which capped `max_tokens` at 16000 and may have handled `--effort` differently.
+  - The v4 fixture changes before T2: T1's December file is clean again, and CLAUDE.md lost its reason clause.
+- E2: the soften dial did not lift Sonnet (0/6 in both arms; every session leaked). Opus rule rose from 2/6 to 3/6, within noise.
+
+**Cost.** Subscription only for the sessions; grading under USD 0.05.
