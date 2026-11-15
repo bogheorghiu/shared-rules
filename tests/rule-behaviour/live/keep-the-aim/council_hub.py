@@ -342,9 +342,12 @@ async def main():
     ap.add_argument("--byok-cap-usd", type=float, default=15.0)
     ap.add_argument("--window", type=float, default=20.0)
     ap.add_argument("--max-turns", type=int, default=60, help="model calls per participant")
+    ap.add_argument("--roster", help="JSON file with the participant list; replaces the built-in default roster")
     ap.add_argument("--mock", action="store_true")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
+    if a.roster:  # the orchestrator chooses who sits in the room and by which route
+        PARTICIPANTS[:] = json.load(open(a.roster))
     global ROOM
     room = ROOM = Room(a.out, a.cap_usd, a.window, a.max_turns, a.mock, a.byok_cap_usd)
     brief = open(a.brief).read()
