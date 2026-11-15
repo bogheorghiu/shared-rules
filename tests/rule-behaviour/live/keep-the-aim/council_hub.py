@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """A live design council: several models debate the keep-the-aim test in one shared room.
 
-    python3 -I council_hub.py --brief BRIEF.md --out DIR [--cap-usd 12] [--window 20] [--mock]
+    python3 -I council_hub.py --brief BRIEF.md --out DIR [--cap-usd 10] [--byok-cap-usd 10] [--window 20] [--mock]
 
-Each participant streams its turns from OpenRouter. A relay collects what has arrived from every
-stream and, every --window seconds, delivers everything new to all the other participants at once
-(one batch per window, not one message per sentence). A participant that is idle starts a turn when
-its inbox holds a finished message. A model cannot read while it writes, so a batch that lands while
-a model is mid-turn is queued for its next turn; text still being written is shown as "(still
-writing)" with what has streamed so far.
+Pull, never push. There is one shared room. Nothing is sent into a participant's context: each one reads
+the room itself with the read_room tool, and speaks only with the post tool. read_room returns every
+message since the participant last read, in full, plus what others are still streaming. If nothing is
+new, it waits (up to 3 windows) for someone to post, so a participant can listen without spending tokens.
+Each participant runs as one long conversation of tool rounds, streamed from its provider.
 
-Each participant has read-only tools over the full record: the session list, any session's turns
+Each participant also has read-only tools over the full record: the session list, any session's turns
 (prompt, reply, tool calls, scores, grades), a grep over all transcripts, and the design documents.
 Nothing is loaded whole: the record is about 8 MB.
 
-The run ends when every participant's latest message carries `AGREE: <proposal id>` naming the same
-proposal (a proposal is a message that starts with `PROPOSAL <id>:`); or when --cap-usd is reached
-(upstream cost as reported by OpenRouter); or when --max-turns per participant is reached. Every
-streamed chunk, relay batch and tool call is logged to DIR/log.jsonl, and the room to DIR/room.md.
+The run ends when every participant's latest post carries `AGREE: <id>` naming the same proposal (a post
+with a line starting `PROPOSAL <id>:`); or at --cap-usd (OpenRouter credits, plus DeepSeek direct estimated
+from tokens); or at --byok-cap-usd (Fable's upstream cost on the owner's Anthropic key); or when every
+participant has used --max-turns model calls. Every round, tool call and post is logged to DIR/log.jsonl,
+and the room to DIR/room.md.
 """
 import argparse, asyncio, glob, json, os, re, sys, time
 
@@ -113,8 +113,22 @@ def t_read_doc(args):
     return text[off:off + 40000] + ("\n(more: use offset)" if len(text) > off + 40000 else "")
 
 
-TOOLS = {"list_sessions": t_list_sessions, "read_session": t_read_session, "grep": t_grep, "read_doc": t_read_doc}
+ROOM = None
+
+
+def t_read_message(args):
+    m = next((x for x in ROOM.msgs if x["id"] == int(args.get("id") or 0)), None) if ROOM else None
+    return f"[{m['id']}] {m['who']}:\n{m['text']}" if m else "no such message"
+
+
+TOOLS = {"read_message": t_read_message, "list_sessions": t_list_sessions, "read_session": t_read_session, "grep": t_grep, "read_doc": t_read_doc}
 TOOL_SPECS = [
+    {"type": "function", "function": {"name": "post", "description": "Post a message to the shared room. This is the only way the others hear you.",
+                                      "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}},
+    {"type": "function", "function": {"name": "read_room", "description": "Read the shared room: every message after `since` (default: after the last one you read), in full, plus what others are still writing. If nothing is new it waits up to `wait` seconds for someone to post.",
+                                      "parameters": {"type": "object", "properties": {"since": {"type": "integer"}, "wait": {"type": "integer"}}}}},
+    {"type": "function", "function": {"name": "read_message", "description": "Re-read one room message by id.",
+                                      "parameters": {"type": "object", "properties": {"id": {"type": "integer"}}, "required": ["id"]}}},
     {"type": "function", "function": {"name": "list_sessions", "description": "List all test sessions with their round and endpoint scores. Optional substring filter (e.g. 'repilot-v3', 'control-opus').",
                                       "parameters": {"type": "object", "properties": {"filter": {"type": "string"}}}}},
     {"type": "function", "function": {"name": "read_session", "description": "Read one session: each turn's prompt, the agent's reply, its tool calls, the script scores and the grader answers. Optional turn id (T1..T5).",
@@ -136,9 +150,7 @@ class Room:
         self.done = asyncio.Event()
         self.msgs = []                      # finished messages: {"id", "who", "text"}
         self.live = {}                      # who -> text streamed so far in the current turn
-        self.seen = {p["name"]: 0 for p in PARTICIPANTS}      # index into msgs each participant has been given
-        self.inbox = {p["name"]: [] for p in PARTICIPANTS}    # relay batches waiting for that participant
-        self.wake = {p["name"]: asyncio.Event() for p in PARTICIPANTS}
+        self.seen = {p["name"]: 0 for p in PARTICIPANTS}      # id of the last room message each participant has read
         self.turns = {p["name"]: 0 for p in PARTICIPANTS}
         self.history = {p["name"]: [] for p in PARTICIPANTS}  # that participant's own chat history
 
@@ -170,73 +182,89 @@ class Room:
             if any(re.search(rf"(?m)^\s*PROPOSAL {re.escape(pid)}:", m["text"]) for m in self.msgs):  # agreement must name a real proposal
                 self.agreed = pid; self.emit("agreed", proposal=pid); self.done.set()
 
-    async def relay(self):
-        """Every window: give each participant, in one batch, everything new from the others."""
-        while not self.done.is_set():
-            await asyncio.sleep(self.window)
-            for p in PARTICIPANTS:
-                me = p["name"]
-                new = [m for m in self.msgs[self.seen[me]:] if m["who"] != me]
-                self.seen[me] = len(self.msgs)
-                partial = {w: t for w, t in self.live.items() if w != me and t}
-                if not new and not partial:
-                    continue
-                parts = [f"[{m['id']}] {m['who']}:\n{m['text']}" for m in new]
-                parts += [f"{w} (still writing, so far):\n{t[-3000:]}" for w, t in partial.items()]
-                self.inbox[me].append("\n\n".join(parts))
-                self.emit("relay", to=me, finished=[m["id"] for m in new], partial=list(partial))
-                if new:
-                    self.wake[me].set()
+    async def read_room(self, me, args):
+        """Pull, never push: every message after `since` (default: after the last one this participant read),
+        in full, plus what the others are still writing. If nothing is new it waits for the room to change,
+        up to `wait` seconds (default 3 windows), so a participant can sit and listen. Long backlogs are cut
+        at 60k characters, oldest first, with a note."""
+        since = args.get("since")
+        since = int(since) if since is not None else self.seen[me]
+        deadline = time.time() + float(args.get("wait") or 3 * self.window)
+        while not self.done.is_set() and time.time() < deadline and not any(m["id"] > since and m["who"] != me for m in self.msgs):
+            await asyncio.sleep(1)
+        out, size = [], 0
+        for m in [m for m in self.msgs if m["id"] > since]:
+            block = f"[{m['id']}] {m['who']}:\n{m['text']}"
+            if size + len(block) > 60000:
+                out.append(f"(cut: messages from [{m['id']}] on not shown; call read_room with since={m['id'] - 1})")
+                break
+            out.append(block); size += len(block)
+            self.seen[me] = max(self.seen[me], m["id"])
+        live = [f"{w} (still writing, so far):\n{t[-3000:]}" for w, t in self.live.items() if w != me and t]
+        self.emit("read_room", who=me, since=since, got=len(out), live=len(live))
+        state = "The council has ended." if self.done.is_set() else ""
+        return "\n\n".join(out + live + [state]).strip() or "nothing new yet"
 
     async def participant(self, p, brief):
+        """One long conversation per participant. It speaks only through the post tool and hears only through
+        read_room; the hub never puts room messages into its context. If it stops calling tools before the
+        council ends, it gets a bare "(the council is still open)" up to 3 times."""
         me = p["name"]
         system = (brief + f"\n\nYou are {me}, one member of a design council with "
                   + ", ".join(x["name"] for x in PARTICIPANTS if x["name"] != me)
-                  + ". Messages from the others reach you in batches. Use the tools to check claims against the record before you rely on them. "
-                  "Disagree where the data says so. To put forward a complete redesign, start a message with `PROPOSAL <short id>:`. "
-                  "When you accept a proposal as final, end your message with `AGREE: <id>`. Keep messages focused.")
+                  + ". There is one shared room. Nothing is sent to you: you read the room yourself with read_room "
+                  "(it waits for new messages if there are none yet) and you speak only with post. Read the room often. "
+                  "Use the record tools to check claims before you rely on them, and disagree where the data says so. "
+                  "To put forward a complete redesign, post a message that starts with `PROPOSAL <short id>:`. When you accept "
+                  "a proposal as final, end a post with `AGREE: <id>`. Keep posts focused.")
         self.history[me] = [{"role": "system", "content": system},
-                            {"role": "user", "content": "The council is open. Read what you need from the record, then give your first analysis."}]
-        first = True
-        while not self.done.is_set() and self.turns[me] < self.max_turns:
-            if not first:
-                await self.wake[me].wait()
-                self.wake[me].clear()
-                batch = "\n\n---\n\n".join(self.inbox[me]); self.inbox[me].clear()
-                self.history[me].append({"role": "user", "content": "New in the room:\n\n" + batch})
-            first = False
-            self.turns[me] += 1
-            text = await self.turn(p)
-            if text:
-                self.history[me].append({"role": "assistant", "content": text})
-                self.post(me, text)
+                            {"role": "user", "content": "The council is open."}]
+        nudges = 0
+        while not self.done.is_set():
+            ended = await self.turn(p)
+            if ended or self.done.is_set() or nudges >= 3:
+                break
+            nudges += 1
+            self.history[me].append({"role": "user", "content": "(the council is still open)"})
         self.live.pop(me, None)
 
     async def turn(self, p):
+        """Tool rounds until the model stops calling tools (returns False), or a limit or cap ends it (True)."""
         me = p["name"]
-        for _ in range(12):                       # tool rounds inside one turn
+        while self.turns[me] < self.max_turns:
             if self.cost >= self.cap or self.byok >= self.byok_cap:
-                self.emit("cap_reached", cost=self.cost, byok=self.byok); self.done.set(); return None
+                self.emit("cap_reached", cost=self.cost, byok=self.byok); self.done.set(); return True
+            if self.done.is_set():
+                return True
+            self.turns[me] += 1
             self.live[me] = ""
             content, calls, usage = await (self.mock_stream(p) if self.mock else self.stream(p))
             self.cost += float((usage or {}).get("cost") or 0)  # OpenRouter credits (0 for BYOK calls)
             if (usage or {}).get("is_byok"):
                 self.byok += float(((usage or {}).get("cost_details") or {}).get("upstream_inference_cost") or 0)
-            self.emit("turn_part", who=me, chars=len(content), tool_calls=len(calls), cost=self.cost)
+            self.live[me] = ""
+            self.emit("round", who=me, chars=len(content), tool_calls=len(calls), cost=round(self.cost, 4), byok=round(self.byok, 4))
             if not calls:
-                self.live[me] = ""
-                return content
+                if content:
+                    self.history[me].append({"role": "assistant", "content": content})
+                return False
             self.history[me].append({"role": "assistant", "content": content or None, "tool_calls": calls})
             for c in calls:
                 try:
                     a = json.loads(c["function"]["arguments"] or "{}")
                 except json.JSONDecodeError:
                     a = {}
-                fn = TOOLS.get(c["function"]["name"])
-                res = fn(a) if fn else "unknown tool"
-                self.emit("tool", who=me, name=c["function"]["name"], args=a, result_chars=len(res))
+                name = c["function"]["name"]
+                if name == "post":
+                    self.post(me, a.get("text", "")); res = "posted"
+                elif name == "read_room":
+                    res = await self.read_room(me, a)
+                else:
+                    fn = TOOLS.get(name); res = fn(a) if fn else "unknown tool"
+                self.emit("tool", who=me, name=name, args={k: (v if len(str(v)) < 200 else str(v)[:200] + "…") for k, v in a.items()},
+                          result_chars=len(res))
                 self.history[me].append({"role": "tool", "tool_call_id": c["id"], "content": res})
-        return None
+        self.emit("max_rounds", who=me); return True
 
     async def stream(self, p):
         msgs = self.history[p["name"]]
@@ -296,14 +324,14 @@ class Room:
 
     async def mock_stream(self, p):
         me = p["name"]; n = self.turns[me]
-        if n == 1 and not any(m["role"] == "tool" for m in self.history[me]):
+        await asyncio.sleep(0.05)
+        last = self.history[me][-1]
+        if n == 1:
             return "", [{"id": f"{me}-1", "type": "function", "function": {"name": "list_sessions", "arguments": json.dumps({"filter": "repilot-v3"})}}], {"cost": 0.01}
-        text = f"{me} turn {n}: analysis." + (f"\nPROPOSAL {me[0]}1: test." if me == "Fable" and n == 1 else "") + (" AGREE: F1" if n >= 2 else "")
-        out = ""
-        for w in text.split():
-            out += w + " "; self.live[me] = out.replace(" PROPOSAL", "\nPROPOSAL")
-            await asyncio.sleep(0.05)
-        return text, [], {"cost": 0.01}
+        if last["role"] == "tool" and last["content"] not in ("posted",) and n % 2 == 0:
+            text = f"{me} view {n}." + ("\nPROPOSAL F1: test." if me == "Fable" and n == 2 else "") + (" AGREE: F1" if n >= 4 else "")
+            return "", [{"id": f"{me}-{n}", "type": "function", "function": {"name": "post", "arguments": json.dumps({"text": text})}}], {"cost": 0.01}
+        return "", [{"id": f"{me}-{n}", "type": "function", "function": {"name": "read_room", "arguments": json.dumps({"wait": 2})}}], {"cost": 0.0}
 
 
 async def main():
@@ -313,25 +341,22 @@ async def main():
     ap.add_argument("--cap-usd", type=float, default=12.0)
     ap.add_argument("--byok-cap-usd", type=float, default=15.0)
     ap.add_argument("--window", type=float, default=20.0)
-    ap.add_argument("--max-turns", type=int, default=8)
+    ap.add_argument("--max-turns", type=int, default=60, help="model calls per participant")
     ap.add_argument("--mock", action="store_true")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
-    room = Room(a.out, a.cap_usd, a.window, a.max_turns, a.mock, a.byok_cap_usd)
+    global ROOM
+    room = ROOM = Room(a.out, a.cap_usd, a.window, a.max_turns, a.mock, a.byok_cap_usd)
     brief = open(a.brief).read()
     room.emit("start", participants=[{k: p[k] for k in ("name", "model")} for p in PARTICIPANTS], cap=a.cap_usd, window=a.window,
               sessions=len(SESSIONS), scored=len(SCORES))
     tasks = [asyncio.create_task(room.participant(p, brief)) for p in PARTICIPANTS]
-    relay = asyncio.create_task(room.relay())
     waiter = asyncio.create_task(room.done.wait())
     await asyncio.wait(tasks + [waiter], return_when=asyncio.FIRST_COMPLETED)
     while not room.done.is_set() and not all(t.done() for t in tasks):
         await asyncio.sleep(1)
     room.done.set()
-    for w in room.wake.values():
-        w.set()
     await asyncio.sleep(0.2)
-    relay.cancel()
     room.emit("end", cost=round(room.cost, 4), byok=round(room.byok, 4), turns=room.turns, messages=len(room.msgs))
     print(json.dumps({"cost": round(room.cost, 4), "byok_upstream": round(room.byok, 4), "turns": room.turns, "messages": len(room.msgs), "agreed": room.agreed}))
 
