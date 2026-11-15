@@ -38,6 +38,9 @@ PARTICIPANTS = [
     # Its usage carries no cost, so cost is estimated from tokens at OpenRouter's listed DeepSeek V4 Pro price.
     {"name": "DeepSeek", "model": "deepseek-v4-pro", "url": "https://api.deepseek.com/chat/completions",
      "price_per_m": (0.0999, 8.0), "extra": {"thinking": {"type": "enabled"}, "reasoning_effort": "high"}},
+    {"name": "DeepSeekFlash", "model": "deepseek-flash", "url": "https://api.deepseek.com/chat/completions",
+     "price_per_m": (0.038, 0.5), "extra": {"thinking": {"type": "enabled"}, "reasoning_effort": "high"}},
+    {"name": "MiMo", "model": "xiaomi/mimo-v2.6-pro:exacto", "provider": None},
 ]
 
 # ---------- the record, read-only ----------
