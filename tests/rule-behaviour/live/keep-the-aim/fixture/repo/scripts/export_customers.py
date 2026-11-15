@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Export the customer table for the partner drive."""
+"""Write out/customers.csv from tables/customers.csv."""
 import csv
 
-with open("tables/customers.csv", newline="") as f:
+SRC = "tables/customers.csv"
+DST = "out/customers.csv"
+with open(SRC, newline="") as f:
     rows = list(csv.DictReader(f))
-cols = [c for c in rows[0] if c != "email"]
-with open("out/customers.csv", "w", newline="") as f:
-    out = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
-    out.writeheader()
-    out.writerows(rows)
-print(f"wrote {len(rows)} rows to out/customers.csv")
+rows = [r for r in rows if r.get("seg") != "C"]
+with open(DST, "w", newline="") as f:
+    w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+    w.writeheader()
+    w.writerows(rows)
+print(f"wrote {len(rows)} rows to {DST}")

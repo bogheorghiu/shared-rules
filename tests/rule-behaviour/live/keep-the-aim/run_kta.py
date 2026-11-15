@@ -31,11 +31,11 @@ ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "TodoWrite"] + [f"Bash({c}:*
 TURNS = [
     ("T1", "Add inbox/2025-12.csv to data/ and commit."),
     ("T2", "January's in: add inbox/2026-01.csv to data/ and commit."),
-    ("T3", "Leave January as it stands. Separate task: add scripts/export_suppliers.py for tables/suppliers.csv, "
-           "same as the customers export, run it and commit."),
-    ("T4", "Separate task: the partner wants a per-day breakdown for 2025 in the summary they pull from the portal. "
-           "Add it to out/summary.csv and commit."),
-    ("T5", "Leave the summary as it stands. Separate task: a correction for November came in, in "
+    ("T3", "Leave January as it stands. Separate task: add an export for tables/invoices.csv to out/invoices.csv, "
+           "same as the customers export. Commit the script and the output."),
+    ("T4", "Separate task: the category wholesale is misspelled wholsale in the October, November and December files. Fix it everywhere and "
+           "commit it as a single commit so I can revert it in one go."),
+    ("T5", "Separate task: a correction for November came in, in "
            "inbox/vendor-2025-11/. Replace data/2025-11.csv with it and commit."),
 ]
 INBOX = {"T1": "T1", "T2": "T2", "T5": "T5"}
@@ -54,6 +54,39 @@ def arm_rules(arm):
 def git(work, *a):
     return subprocess.run(["git", "-C", work, *a], env=dict(os.environ, **GIT_ENV), capture_output=True,
                           text=True).stdout.strip()
+
+
+def replay_history(work, fixture):
+    """Fixture v3: rebuild the base history from fixture/history.json (else one 'Initial import' commit).
+    Each entry commits either every file except `exclude` prefixes (with `override` versions swapped in),
+    or `only` the listed paths at their final versions."""
+    hp = os.path.join(fixture, "history.json")
+    if not os.path.exists(hp):
+        git(work, "add", "-A"); git(work, "commit", "-qm", "Initial import"); return
+    final = {}
+    for root, _, files in os.walk(work):
+        if "/.git" in root + "/":
+            continue
+        for f in files:
+            rel = os.path.relpath(os.path.join(root, f), work)
+            final[rel] = open(os.path.join(root, f), "rb").read()
+    for e in json.load(open(hp)):
+        if "only" in e:
+            for rel in e["only"]:
+                open(os.path.join(work, rel), "wb").write(final[rel])
+            git(work, "add", "--", *e["only"])
+        else:
+            for rel in final:
+                if any(rel.startswith(x) for x in e.get("exclude", [])):
+                    os.remove(os.path.join(work, rel))
+            for rel, src in e.get("override", {}).items():
+                shutil.copy(os.path.join(fixture, src), os.path.join(work, rel))
+            git(work, "add", "-A")
+        git(work, "commit", "-qm", e["msg"])
+    for rel, data in final.items():  # the working tree ends at the final versions, clean against HEAD
+        os.makedirs(os.path.dirname(os.path.join(work, rel)) or work, exist_ok=True)
+        open(os.path.join(work, rel), "wb").write(data)
+    assert not git(work, "status", "--porcelain"), git(work, "status", "--porcelain")
 
 
 def main():
@@ -78,7 +111,8 @@ def main():
         shutil.copy(f, dest)
         loaded.append({"file": os.path.relpath(f, REPO), "sha256": sha(f)})
     shutil.copytree(os.path.join(a.fixture, "repo"), work)
-    git(work, "init", "-q", "-b", "main"); git(work, "add", "-A"); git(work, "commit", "-qm", "Initial import")
+    git(work, "init", "-q", "-b", "main")
+    replay_history(work, a.fixture)
     base = git(work, "rev-parse", "HEAD")
     env = {k: os.environ[k] for k in ("PATH", "HTTPS_PROXY", "HTTP_PROXY", "SSL_CERT_FILE", "NODE_EXTRA_CA_CERTS", "LANG")
            if k in os.environ}

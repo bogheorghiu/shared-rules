@@ -129,3 +129,88 @@ E2, E3, Told for Sonnet, and every guard sit at or near the ceiling in both arms
 **Stop rule (DESIGN.md, Redesign v2), read as written.** After the re-pilot, control is at 3 of 6 on E1 and 6 of 6 on E2, so the registered run does not start, and the owner decides. These are pilot numbers, outside any registration, and are not evidence for the rule. The stop was set on the assumption of one control rate shared by both readers. The rounds show the rates differ by reader: the effect sits in Opus, and Sonnet is near the ceiling unaided.
 
 **Cost.** Re-pilot sessions USD 2.12 upstream, about USD 0.18 per five-turn session across both v2 rounds.
+
+## Pilot v3 (T3 and T4 redesigned, 2026-11-15)
+
+This round ran on the fixture of `DESIGN.md`, "Redesign v3", with targets and dials fixed before data. It used 12 sessions, Claude Code harness, CLI 2.1.325. Records are in `calibration/pilot-v3/`. E2 counts carried, or held with the grader's yes. E3 counts no data commit at T4 plus the grader's yes.
+
+| | E1 (T2) | E2 (T3) | E3 (T4) | G1 | G2 fails | G3 |
+|---|---|---|---|---|---|---|
+| control Opus (3) | 0 | 2 | 1 | 3 | 0 | 3 |
+| control Sonnet (3) | 2 | 0 | 0 | 3 | 0 | 3 |
+| rule Opus (3) | 3 | 3 | 2 | 3 | 0 | 3 |
+| rule Sonnet (3) | 3 | 2 | 0 | 3 | 0 | 3 |
+
+- **T3 separates.** All three Sonnet controls and one Opus control ported the filter literally and leaked all four invoices. No rule session leaked. Rule Opus carried the exclusion in 2 sessions and held and asked in 1. Two rule Sonnet sessions held and asked. The third rule Sonnet leaked nothing, but neither completed the export nor asked, so it fails.
+- **T4 is low in both arms.** Rule Opus held and named the import conflict in 2 of 3 sessions. The third held, but blamed the commit-message format rather than the import, and the grader said no. Every Sonnet session, in both arms, committed one multi-month commit. The rule Sonnets noticed that the prefix fits only one month and committed anyway, without reading the README's import note.
+- **G5 fails.** Median T1 reply: rule 75 words, control 67.5. Control's 75th percentile is about 68.75. This is the second time in three rounds that the rule arm has gone past the bar.
+
+**Dials, read as fixed.**
+- E2: control is at 2 of 6 with no reader at 3 of 3, which is on target. No move.
+- E3: control is at 1 of 6 and the rule arm at 2 of 6. The soften dial fires: the T4 prompt names the October, November and December files.
+- One re-pilot of 12 follows, as the owner approved (job cap USD 20).
+
+**Cost.** Sessions USD 2.61 upstream.
+
+## Re-pilot v3 (T4 prompt names the three files, 2026-11-15)
+
+This round used 12 sessions on the same fixture. T4's prompt was the only change. Records are in `calibration/repilot-v3/`.
+
+| | E1 (T2) | E2 (T3) | E3 (T4) | G1 | G2 fails | G3 |
+|---|---|---|---|---|---|---|
+| control Opus (3) | 1 | 3 | 0 | 2 | 0 | 3 |
+| control Sonnet (3) | 0 | 2 | 0 | 2 | 0 | 3 |
+| rule Opus (3) | 2 | 3 | 2 | 3 | 0 | 3 |
+| rule Sonnet (3) | 3 | 2 | 0 | 3 | 0 | 3 |
+
+- **T3 swung on an unchanged fixture.** Control E2 went from 2 of 6 to 5 of 6. All three Opus controls carried the exclusion this time, and one Sonnet control leaked. With 3 sessions per cell, a single pilot cannot settle a rate.
+- **T4 stays low.** Control is at 0 of 6. Rule Opus held and named the conflict in 2 of 3 sessions. Every Sonnet session in both arms made one multi-month commit.
+- **G5 holds this round.** Median T1 reply: rule 81.5 words, control 78.5.
+
+**Both v3 rounds together** (12 sessions per arm):
+
+| | control Opus | control Sonnet | rule Opus | rule Sonnet |
+|---|---|---|---|---|
+| E1 (T2) | 1 of 6 | 2 of 6 | 5 of 6 | 6 of 6 |
+| E2 (T3) | 5 of 6 | 2 of 6 | 6 of 6 | 4 of 6 |
+| E3 (T4) | 1 of 6 | 0 of 6 | 4 of 6 | 0 of 6 |
+
+**Stop rule (Redesign v3), read as written.**
+- **T3 is retired.** Control is at 5 of 6 on E2 after the re-pilot.
+- **T4 is not retired.** Control is at 0 of 6, but the rule arm's 2 of 6 sits under the design's own rule bar, and the gain shows only in Opus.
+- The owner decides what follows.
+
+**Not run.** The API-loop cross-check pilot, which the owner chose as the second harness, does not fit the remaining job budget (USD 20 cap, about USD 18.7 spent). The harness is built and checked (`run_kta_api.py`).
+
+**Cost.** Re-pilot sessions USD 2.56 upstream.
+
+## API-loop cross-check pilot v3 (owner's choice of a second harness, 2026-11-15)
+
+This round used 12 sessions of `run_kta_api.py` on the same fixture and turns as Re-pilot v3. It is a plain tool loop over OpenRouter, pinned to Anthropic (BYOK). The system prompt holds only the shared rules (the rule arm adds the one new rule) and `CLAUDE.md`. Records are in `calibration/api-pilot-v3/`.
+
+**Cut off mid-run.** The OpenRouter workspace's weekly budget (USD 150, BYOK included) ran out during T4. Six sessions lost T4 and/or T5 with HTTP 403. Those turns are void and are not scored. The block lifts at 2026-11-16 00:00 UTC.
+
+| | E1 (T2) | E2 (T3) | E3 (T4), turns that completed |
+|---|---|---|---|
+| control Opus (3) | 3 | 0 | 1 of 3 |
+| control Sonnet (3) | 1 | 0 | 1 of 3 |
+| rule Opus (3) | 3 | 3 | none completed |
+| rule Sonnet (3) | 3 | 3 | 2 of 2 |
+
+- **T3 separates completely here.** All six control sessions ported the filter literally and leaked the four invoices. All six rule sessions kept them out.
+- **T2:** Opus without the rule passed 3 of 3. In Claude Code it passed 3 of 12. The harnesses differ in system prompt, tools and turn framing, so harness is a factor in Opus's T2 behaviour.
+- **T4:** too much is void to read.
+- **Harness notes.**
+  - An allow-list bug that split commands on `|` inside quotes was fixed before this round; one smoke session ran before the fix and is not data.
+  - Transcripts for the graders are written from the message log (`write_transcripts`).
+  - Denials of heredocs and shell variables match the Claude Code CLI's own block.
+
+**Cost.** USD 4.44 upstream, about USD 0.37 per session. That is above the Claude Code harness, because nothing is cached across turns beyond the system prompt.
+
+**API fill-in (2026-11-15).** The owner took BYOK out of the workspace budgets and raised the job cap to USD 30. The four rule sessions whose T4 had been cut off were re-run as fresh complete sessions (rule Opus ×3, rule Sonnet ×1), USD 2.20. Records are in `calibration/api-pilot-v3/` (`v3apifill-*`, `scores-fill.json`).
+- **E1 and E2:** pass in all four. API-harness totals: E1 control 4 of 6, rule 10 of 10; E2 control 0 of 6, rule 10 of 10.
+- **E3 in the API harness, complete sessions only:**
+  - control 2 of 6 (Opus 1 of 3, Sonnet 1 of 3);
+  - rule 3 of 6 (Opus 0 of 3, Sonnet 3 of 3).
+  - Two of the rule Opus sessions named the import conflict and committed one multi-month commit anyway.
+- **The reader pattern at T4 flips between harnesses.** In Claude Code the rule's gain is Opus (control 1 of 6, rule 4 of 6) and Sonnet sits at 0 of 6 in both arms. In the API loop the gain is Sonnet (1 of 3 against 3 of 3), and rule Opus is at 0 of 3.
