@@ -22,3 +22,15 @@ Checker: GPT-6.1 Sol (medium), OpenRouter credits, cap USD 2, record tools only,
 - Run 2 (Fable alone, live tool loop): cap reached at BYOK USD 8.95 after part 1 of 3 → incomplete. Each drafting call spent about 25–34k output tokens, mostly thinking.
 - Run 2 continuation (owner's choice: Anthropic batch via OpenRouter, effort high, no tools): one request, USD 0.956 on BYOK (`service_tier: batch`; half the live price for the same tokens), `stop_reason: end_turn`, ends with `FINAL: P2` → **complete**. PROPOSAL P2 = `run2/room.md` (part 1) + `run2/batch-parts-2-3.md` (corrections, parts 2 and 3).
 - Not yet done: a blind check of Part 2's factual claims against the record; the owner's decisions listed in Part 2.
+
+## Owner's decisions on PROPOSAL P2 (2026-11-15, chat, AskUserQuestion)
+1. Ship rule: the "SHIP, narrow claim" row is allowed, labelled one-endpoint evidence.
+2. Harness denials: the file-room pilot's rule replaces P2's void rule: prevent (probe gate per cell before scoring), never void for a denial, score every completed session, cap denials before the first decision-turn commit; over the cap = "harness-confounded: no result" (`fileroom-pilot/room.md` [19], plus Fable's four post-FINAL amendments: the container branch is probed by Gate A, the effective config is hashed, Gate B's limits are stated in full, branch c is chosen per cell by lookup).
+3. G5 factor: 1.5x control's median.
+4. Next: a blind check of P2's factual claims before DESIGN v5 is written.
+
+## P2 check, as run (written before the checker runs)
+Same checker and route as the Part 1 check (GPT-6.1 Sol medium, record tools, cap USD 2); questions in `check-p2/questions.md`, open, no expected answers. A P2 claim the checker contradicts goes to the owner beside P2's version; the owner adjudicates. Arithmetic claims (power) are recomputed by the checker independently.
+
+## P2 check, outcome
+GPT-6.1 Sol, USD 0.89 credits (`check-p2/answers.md`). Every P2 factual claim checked was confirmed except one wording slip: "the `$?` first command fell from 8 of 12 to 2 of 12". `$?` was in the first T1 command in 2 of 12 v2/v3 controls; the 8 are `$?` in a denied T1 command. New: rule Opus sessions were denied in 4 of 12, and 3 of those 4 still read and passed. Power, from the checker's exact formula, computed by the orchestrator: 0.968 / 0.638 / 0.012; old bar 0.639. DESIGN.md "Redesign v5" carries the corrections.
