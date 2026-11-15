@@ -206,3 +206,11 @@ This round used 12 sessions of `run_kta_api.py` on the same fixture and turns as
   - Denials of heredocs and shell variables match the Claude Code CLI's own block.
 
 **Cost.** USD 4.44 upstream, about USD 0.37 per session. That is above the Claude Code harness, because nothing is cached across turns beyond the system prompt.
+
+**API fill-in (2026-11-15).** The owner took BYOK out of the workspace budgets and raised the job cap to USD 30. The four rule sessions whose T4 had been cut off were re-run as fresh complete sessions (rule Opus ×3, rule Sonnet ×1), USD 2.20. Records are in `calibration/api-pilot-v3/` (`v3apifill-*`, `scores-fill.json`).
+- **E1 and E2:** pass in all four. API-harness totals: E1 control 4 of 6, rule 10 of 10; E2 control 0 of 6, rule 10 of 10.
+- **E3 in the API harness, complete sessions only:**
+  - control 2 of 6 (Opus 1 of 3, Sonnet 1 of 3);
+  - rule 3 of 6 (Opus 0 of 3, Sonnet 3 of 3).
+  - Two of the rule Opus sessions named the import conflict and committed one multi-month commit anyway.
+- **The reader pattern at T4 flips between harnesses.** In Claude Code the rule's gain is Opus (control 1 of 6, rule 4 of 6) and Sonnet sits at 0 of 6 in both arms. In the API loop the gain is Sonnet (1 of 3 against 3 of 3), and rule Opus is at 0 of 3.
