@@ -362,3 +362,5 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 - G5 stays a gating guard. Whether to loosen it is the owner's call.
 
 *Not shown by v4.* Whether a request whose own stated reason competes with a system's aim is handled; v4 removed the user's stated revert reason. T4's prompt and the mechanism's reach change together with v3, so the pilot cannot separate the two changes.
+
+*Deviation before any v4 data (2026-11-15, owner).* Claude Code test subjects run on the session's own Claude connection (the owner's subscription), no longer through `or_shim.py` and OpenRouter BYOK. `run_kta.py --route subscription` passes only that endpoint to the subject; HOME and the config directory stay fresh, so arm isolation is unchanged. Why: at about 03:56 UTC every Claude Code request through the BYOK route got "credit balance is too low", while small direct calls passed. The same captured request passed both ways at 04:50 UTC, so the refusal was temporary and its cause is unknown. The owner's intent was subscription from the start. The `is_byok` check now applies to the API loop only, which stays on OpenRouter BYOK.
