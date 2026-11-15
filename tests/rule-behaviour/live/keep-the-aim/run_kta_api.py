@@ -138,7 +138,7 @@ def main():
            "route": "OpenRouter /api/v1/chat/completions, provider anthropic only, allow_fallbacks false",
            "harness_sha256": {n: K.sha(os.path.join(HERE, n)) for n in ("run_kta_api.py", "run_kta.py", "make_fixture.py")}}
     total = 0.0
-    for tid, text in K.TURNS:
+    for tid, text in K.TURNS[:3]:  # v4: the API loop runs T1-T3 only; only T3 (E2) is harness-neutral
         if tid in K.INBOX:
             shutil.copytree(os.path.join(a.fixture, "inbox", K.INBOX[tid]), os.path.join(work, "inbox"), dirs_exist_ok=True)
         messages.append({"role": "user", "content": text})
@@ -152,6 +152,8 @@ def main():
             served.add(r.get("model"))
             u = r.get("usage") or {}
             cost += (u.get("cost_details") or {}).get("upstream_inference_cost") or u.get("cost") or 0
+            if u.get("is_byok") is not True:  # v4: every call must be billed to the owner's key
+                rec.setdefault("not_byok_calls", []).append({"turn": tid, "is_byok": u.get("is_byok"), "id": r.get("id")})
             msg = r["choices"][0]["message"]
             keep = {k: msg[k] for k in ("role", "content", "tool_calls", "reasoning_details") if msg.get(k) is not None}
             messages.append(keep)
