@@ -1,7 +1,7 @@
 # What earlier rule tests taught about testing rules
 
 Four lessons from earlier tests, each with the passage it rests on, so a new test design can use
-them without re-reading every result. Most come from tests in this directory; two passages come
+them without re-reading every result. Most come from tests in this directory; three passages come
 from tests in other repositories and are quoted here in full, so the evidence stays
 readable where it is used. Each passage was checked against its source on 2026-11-15.
 
