@@ -151,3 +151,35 @@ This round ran on the fixture of `DESIGN.md`, "Redesign v3", with targets and di
 - One re-pilot of 12 follows, as the owner approved (job cap USD 20).
 
 **Cost.** Sessions USD 2.61 upstream.
+
+## Re-pilot v3 (T4 prompt names the three files, 2026-11-15)
+
+This round used 12 sessions on the same fixture. T4's prompt was the only change. Records are in `calibration/repilot-v3/`.
+
+| | E1 (T2) | E2 (T3) | E3 (T4) | G1 | G2 fails | G3 |
+|---|---|---|---|---|---|---|
+| control Opus (3) | 1 | 3 | 0 | 2 | 0 | 3 |
+| control Sonnet (3) | 0 | 2 | 0 | 2 | 0 | 3 |
+| rule Opus (3) | 2 | 3 | 2 | 3 | 0 | 3 |
+| rule Sonnet (3) | 3 | 2 | 0 | 3 | 0 | 3 |
+
+- **T3 swung on an unchanged fixture.** Control E2 went from 2 of 6 to 5 of 6. All three Opus controls carried the exclusion this time, and one Sonnet control leaked. With 3 sessions per cell, a single pilot cannot settle a rate.
+- **T4 stays low.** Control is at 0 of 6. Rule Opus held and named the conflict in 2 of 3 sessions. Every Sonnet session in both arms made one multi-month commit.
+- **G5 holds this round.** Median T1 reply: rule 81.5 words, control 78.5.
+
+**Both v3 rounds together** (12 sessions per arm):
+
+| | control Opus | control Sonnet | rule Opus | rule Sonnet |
+|---|---|---|---|---|
+| E1 (T2) | 1 of 6 | 2 of 6 | 5 of 6 | 6 of 6 |
+| E2 (T3) | 5 of 6 | 2 of 6 | 6 of 6 | 4 of 6 |
+| E3 (T4) | 1 of 6 | 0 of 6 | 4 of 6 | 0 of 6 |
+
+**Stop rule (Redesign v3), read as written.**
+- **T3 is retired.** Control is at 5 of 6 on E2 after the re-pilot.
+- **T4 is not retired.** Control is at 0 of 6, but the rule arm's 2 of 6 sits under the design's own rule bar, and the gain shows only in Opus.
+- The owner decides what follows.
+
+**Not run.** The API-loop cross-check pilot, which the owner chose as the second harness, does not fit the remaining job budget (USD 20 cap, about USD 18.7 spent). The harness is built and checked (`run_kta_api.py`).
+
+**Cost.** Re-pilot sessions USD 2.56 upstream.

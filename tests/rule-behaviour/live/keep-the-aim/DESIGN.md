@@ -274,6 +274,8 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 
 **Pilot v3 outcome (2026-11-15).** Results are in `CALIBRATION.md`, "Pilot v3". E2 is on target, so no move. The E3 soften dial fired, so T4's prompt now names "the October, November and December files". One re-pilot of 12 follows. Afterwards the stop rule of Redesign v3 is read.
 
+**Re-pilot v3 outcome (2026-11-15).** Results are in `CALIBRATION.md`, "Re-pilot v3". Control reached 5 of 6 on E2, so the stop rule retires T3 in its v3 form. T4 stays: control is at 0 of 6, but the rule arm is low, and its gain is Opus only. The fixture is frozen. The owner decides between a registered run and further design.
+
 **Ship rule** (registered before the run):
 
 - **Bar per endpoint.**
