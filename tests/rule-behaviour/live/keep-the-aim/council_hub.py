@@ -34,8 +34,10 @@ PARTICIPANTS = [
     {"name": "Fable", "model": "anthropic/claude-fable-5.2", "provider": {"only": ["anthropic"], "allow_fallbacks": False},
      "reasoning": {"effort": "medium"}},
     {"name": "Kimi", "model": "moonshotai/kimi-k3.1-pro:exacto", "provider": None, "reasoning": {"effort": "high"}},
-    {"name": "DeepSeek", "model": "deepseek/deepseek-v4-pro-0813", "provider": {"only": ["deepseek"], "allow_fallbacks": False},
-     "reasoning": {"effort": "high"}},
+    # DeepSeek direct: OpenRouter's DeepSeek endpoint is excluded by this account's data policy (checked 2026-11-15).
+    # Its usage carries no cost, so cost is estimated from tokens at OpenRouter's listed DeepSeek V4 Pro price.
+    {"name": "DeepSeek", "model": "deepseek-v4-pro", "url": "https://api.deepseek.com/chat/completions",
+     "price_per_m": (0.0999, 8.0), "extra": {"thinking": {"type": "enabled"}, "reasoning_effort": "high"}},
 ]
 
 # ---------- the record, read-only ----------
@@ -122,11 +124,12 @@ TOOL_SPECS = [
 
 # ---------- the room ----------
 class Room:
-    def __init__(self, out, cap, window, max_turns, mock):
+    def __init__(self, out, cap, window, max_turns, mock, byok_cap=15.0):
         self.out, self.cap, self.window, self.max_turns, self.mock = out, cap, window, max_turns, mock
         self.log = open(os.path.join(out, "log.jsonl"), "a")
         self.cost = 0.0
         self.agreed = None
+        self.byok, self.byok_cap = 0.0, byok_cap
         self.done = asyncio.Event()
         self.msgs = []                      # finished messages: {"id", "who", "text"}
         self.live = {}                      # who -> text streamed so far in the current turn
@@ -209,11 +212,13 @@ class Room:
     async def turn(self, p):
         me = p["name"]
         for _ in range(12):                       # tool rounds inside one turn
-            if self.cost >= self.cap:
-                self.emit("cap_reached", cost=self.cost); self.done.set(); return None
+            if self.cost >= self.cap or self.byok >= self.byok_cap:
+                self.emit("cap_reached", cost=self.cost, byok=self.byok); self.done.set(); return None
             self.live[me] = ""
             content, calls, usage = await (self.mock_stream(p) if self.mock else self.stream(p))
-            self.cost += float((usage or {}).get("cost") or 0)
+            self.cost += float((usage or {}).get("cost") or 0)  # OpenRouter credits (0 for BYOK calls)
+            if (usage or {}).get("is_byok"):
+                self.byok += float(((usage or {}).get("cost_details") or {}).get("upstream_inference_cost") or 0)
             self.emit("turn_part", who=me, chars=len(content), tool_calls=len(calls), cost=self.cost)
             if not calls:
                 self.live[me] = ""
@@ -231,17 +236,31 @@ class Room:
         return None
 
     async def stream(self, p):
-        body = {"model": p["model"], "messages": self.history[p["name"]], "tools": TOOL_SPECS, "stream": True,
-                "max_tokens": 12000, "usage": {"include": True}}
+        msgs = self.history[p["name"]]
+        if p["model"].startswith("anthropic/"):  # prompt caching: re-read context bills at the cache-read rate
+            msgs = [dict(m) for m in msgs]
+            for i in (0, len(msgs) - 1):
+                if isinstance(msgs[i].get("content"), str) and msgs[i]["content"]:
+                    msgs[i]["content"] = [{"type": "text", "text": msgs[i]["content"], "cache_control": {"type": "ephemeral"}}]
+        body = {"model": p["model"], "messages": msgs, "tools": TOOL_SPECS, "stream": True, "max_tokens": 12000}
+        if p.get("url"):
+            body["stream_options"] = {"include_usage": True}
+        else:
+            body["usage"] = {"include": True}
         if p.get("reasoning"):
             body["reasoning"] = p["reasoning"]
         if p.get("provider"):
             body["provider"] = p["provider"]
-        return await asyncio.to_thread(self._stream_sync, p["name"], body)
+        body.update(p.get("extra") or {})
+        content, calls, usage = await asyncio.to_thread(self._stream_sync, p["name"], body, p.get("url"))
+        if p.get("price_per_m") and usage:
+            pin, pout = p["price_per_m"]
+            usage = dict(usage, cost=(usage.get("prompt_tokens", 0) * pin + usage.get("completion_tokens", 0) * pout) / 1e6)
+        return content, calls, usage
 
-    def _stream_sync(self, me, body):
+    def _stream_sync(self, me, body, url=None):
         import urllib.request
-        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=json.dumps(body).encode(),
+        req = urllib.request.Request(url or "https://openrouter.ai/api/v1/chat/completions", data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json", "Authorization": "Bearer dummy"})
         content, calls, usage = "", {}, None
         for attempt in range(3):
@@ -289,12 +308,13 @@ async def main():
     ap.add_argument("--brief", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--cap-usd", type=float, default=12.0)
+    ap.add_argument("--byok-cap-usd", type=float, default=15.0)
     ap.add_argument("--window", type=float, default=20.0)
     ap.add_argument("--max-turns", type=int, default=8)
     ap.add_argument("--mock", action="store_true")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
-    room = Room(a.out, a.cap_usd, a.window, a.max_turns, a.mock)
+    room = Room(a.out, a.cap_usd, a.window, a.max_turns, a.mock, a.byok_cap_usd)
     brief = open(a.brief).read()
     room.emit("start", participants=[{k: p[k] for k in ("name", "model")} for p in PARTICIPANTS], cap=a.cap_usd, window=a.window,
               sessions=len(SESSIONS), scored=len(SCORES))
@@ -309,8 +329,8 @@ async def main():
         w.set()
     await asyncio.sleep(0.2)
     relay.cancel()
-    room.emit("end", cost=round(room.cost, 4), turns=room.turns, messages=len(room.msgs))
-    print(json.dumps({"cost": round(room.cost, 4), "turns": room.turns, "messages": len(room.msgs), "agreed": room.agreed}))
+    room.emit("end", cost=round(room.cost, 4), byok=round(room.byok, 4), turns=room.turns, messages=len(room.msgs))
+    print(json.dumps({"cost": round(room.cost, 4), "byok_upstream": round(room.byok, 4), "turns": room.turns, "messages": len(room.msgs), "agreed": room.agreed}))
 
 
 if __name__ == "__main__":
