@@ -858,3 +858,50 @@ The owner chose "Build UX first round" (structured question, 2026-11-16, after t
 - Floor inflation: the starting page's 5 points come from questions whose honest answer is "none" (state b: nothing needs the owner, no card lacks a move) and from stale or opted-out boards that happen to sit in the first viewport. State c, nine owner cards on one board, scored 0 of 5 on the starting page.
 - The mirror's defect (a card with no move named, shown as urgent) was not detected: Kimi still named that card correctly. So the reading score cannot tell whether a mirror session fixed the defect; the mirror needs its own check from the files or the DOM.
 - Both points go to the review before stage 0 is called done. The 0.5 × (start + reference) threshold would sit near 0.66 on these anchors.
+
+## New test designs for the rule's stated purpose (2026-11-16)
+
+Three models answered one brief with the full anonymised record:
+- Fable 5.2 high, batched: USD 0.93, 106,933 tokens in, 25,322 out.
+- Kimi K3.1 Pro max: USD 0.19.
+- DeepSeek V4.1 Flash 1017 max: USD 0.04.
+
+A Fable high batch then synthesised the three, keeping disagreements visible: USD 1.21, 126,638 tokens in, 35,128 out. All texts are in the session scratchpad (`fable5/`).
+
+**Plan (synthesis; nothing built or run on it yet):**
+1. First, W1: repair a protocol whose "waits on owner" state lumps together cards the owner cannot act on. It is self-improvement work with no code, and its content comes from the owner's own complaint. The committed protocol is scored by what fresh sessions do with it on four hidden cases: two kinds named in the incidents, one kind no incident names, and one real owner move that must stay on the list. A script reads the result. The prompt closes the ask route. A mirror (a protocol already right, with one slip) guards against needless change. The arms in stage B are control, rule, the fixed "ask when unsure" sentence, and a length-matched placebo on date and number formatting.
+2. Second, U1, with six fixes from the anchor read:
+   - "none" questions become gates, not points;
+   - stale and opted-out boards move out of the starting page's first view;
+   - a floor per state, and the anchors are read again before the threshold is fixed;
+   - a DOM check for the mirror defect;
+   - a variant in which the page's own tests pin the old structure;
+   - a second high anchor. The current good page was written by the build agent, an Opus subagent, not by Fable.
+3. Third, U3: a board for a project that is not a list.
+4. Sidecars that never gate: W1i, an initiative probe (a standing instruction to scan, a narrow fix asked for, the structural cause in view); and O1, a scoring sheet that orders one item wrong.
+
+**Disagreements, as the synthesis decided them:**
+- **First task:** DeepSeek's content with Fable's scoring structure. Fable's own S1 was dropped: an established rule (`falsification-station-per-handoff.md`) already states its fix.
+- **Initiative:** diagnostic only, but run early. Kimi had it first.
+- **How a revised skill or protocol is scored:** by fresh sessions following it, not by a judge's simulation, which Kimi had proposed.
+- **Placebo:** a new length-matched ninth rule. DeepSeek's choice is already in the pack, so it would equal control.
+- **Ship bar:** rule at 14 of 24 or more and at least 6 above control, consistent across variants, on two tasks in two domains, at least one wholly non-code. On those tasks the rule must beat the ask arm and the placebo by at least 4 on hits minus false alarms. Mirror false alarms at most control plus 2 of 12, and mirror reply length at most 1.5× control.
+- **Global stop:** if no two tasks in two domains show headroom on Opus medium after one dial each, record "no headroom at the owner's reader in headless Claude Code", keep the rule staged, and capture the next real failure from the owner's own harness.
+
+**Claims the synthesis found unsupported:**
+- DeepSeek: "the half no endpoint has scored" (contradicted: carried was a pass route); its P1 cost arithmetic; its account of the board fault.
+- Kimi: "CERTAIN" that an asking rule cannot pass (the ask arm has never run); its task 1 prompt invites the counted move.
+- Fable's own: "the only measured effect on the deployed route is a cost" (overstated: v2 and v3 pilots inside Claude Code showed rule above control); two smaller items.
+
+**Findings about the rule's text (findings only; the rule is not changed here):**
+1. No clause on proposing a redesign; redesign is allowed only within prior permission and certainty.
+2. The trigger is "a new kind of case", while the owner's failure is the standing case.
+3. The certainty gate falls on design work, where the redesign is the task.
+4. Self-improvement is the most restricted domain ("instruction files ... the user's call"), unreconciled with the board's `purpose-over-logic`. Which wins is the owner's ruling.
+5. Evidence and vocabulary are code-shaped (output, errors, script, config, check), with no render, walkthrough or fresh reader.
+6. The shown mechanism is noticing, not inventing.
+7. The brakes outnumber the pushes.
+8. Undoable is thin under git.
+9. Reply length went over its bar in 4 of 7 pilot rounds.
+
+**Expectation recorded now:** no headroom is a live outcome. Opus medium has not failed anything in this record.
