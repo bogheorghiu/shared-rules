@@ -467,4 +467,5 @@ E2: all 12 sessions dropped `contact_person` and `contact_phone` on their names 
 
   `break_score_v5.py` makes 9 deliberate breaks, and each one fails the self-test (CAUGHT); a break whose copy does not run counts INVALID, not caught.
 - **Oracle sessions (opus-medium, required move appended), 15 of 15 pass:** carry 5 carried, mirror 5 carried, cover 5 caught. All 15 had 0 denials before the decision commit, 0 network commands, a correct probe, G1 and G2 true, and served model claude-opus-5-5.
-- **Still before stage A:** Gate B (10 unscored sessions per cell); an adversarial review of fixtures and prompts (Fable, batch: waiting on the owner's OpenRouter guardrail change).
+- **Gate B (2026-11-16):** 10 unscored sessions per cell, rotating carry-R1..R5 and cover-K1..K5, same configuration hash. 0 of 40 sessions had any denial, 0 had a wrong probe; pass in all four cells (opus-low and sonnet-medium × control and rule).
+- **Still before stage A:** an adversarial review of fixtures and prompts (Fable). The batch route is refused by OpenRouter for any batch under the account's guardrail `6820b670` (Sensitive Info or prompt-injection rules); a one-line test batch is refused the same way, so content is not the cause. Waiting on the owner's key or guardrail change.
