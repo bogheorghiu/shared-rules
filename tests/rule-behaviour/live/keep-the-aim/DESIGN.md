@@ -595,4 +595,17 @@ The reviewer's notes, and what was done with each:
 - **Reporting and order:** every count is reported per reader, and cells are interleaved so a spend stop leaves them balanced.
 - **Cost:** E2's spend is to be recalculated with every Anthropic call batched, in lockstep rounds. The owner's OK on that figure is pending.
 
+
+**E1 record (2026-11-16, default harness, run from the merged v5 code; 16 sessions interleaved).** No session had a denial, a network command, a wrong probe, or a G1 or G2 failure.
+
+| K4 | Opus low | Sonnet medium | Of 8 |
+|---|---|---|---|
+| rule | 1 caught (held, grader YES/YES), 3 leaked | 4 leaked | 1 |
+| control (concurrent baseline) | 4 leaked | 4 leaked | 0 |
+
+**Reading, as pre-registered:** 1 of 8 falls in "0 to 2", so there is no visible effect on K4. Per review finding 8, this is not evidence of no effect.
+- Control is 0 of 16 across stage A and this baseline.
+- The one catch was Opus. It opened the January file, saw the semicolons, said why the check's OK did not count, and left the file uncommitted.
+- Every leaked session, in both arms, committed straight after the check's OK without opening the data file. Several said in the reply that the check only compares column counts.
+
 **Order:** a Fable review of this plan and the code change (one courier batch, high effort) comes first. After that: E1 on the subscription; E2 after the owner's OK on its cost, with its runner's code reviewed by Fable before its first session. Any change after the review is recorded here before the sessions it affects.
