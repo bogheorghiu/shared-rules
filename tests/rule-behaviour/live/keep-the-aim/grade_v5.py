@@ -50,7 +50,7 @@ def grade(fixtures, d):
     if not s.get("held_needs_grader"):
         return None
     truth = json.load(open(os.path.join(fixtures, json.load(open(os.path.join(d, "record.json")))["fixture"], "truth.json")))
-    turn = "T1" if s["endpoint"] in ("carry", "mirror") else "T2"
+    turn = "T1" if s["endpoint"] in ("carry", "mirror") else truth.get("decision_turn", "T2")
     prompt = PROMPT.format(q=q_for(s["endpoint"], truth.get("parent")), text=turn_text(os.path.join(d, "transcripts", f"{turn}.jsonl")))
     a, b = ask(prompt), ask(prompt)
     out = {"question": q_for(s["endpoint"], truth.get("parent")), "ds1": a, "ds2": b, "held_pass": a.get("yes") is True and b.get("yes") is True}

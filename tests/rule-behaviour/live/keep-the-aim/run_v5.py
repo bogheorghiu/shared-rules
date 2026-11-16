@@ -96,8 +96,8 @@ def session(a):
     git(work, "init", "-q", "-b", "main")
     replay_history(work, a.fixture)
     env = subject_env(home)
-    turns = [("T1", truth["prompt"])] if truth["endpoint"] in ("carry", "mirror") else \
-            [("T1", truth["prompts"]["T1"]), ("T2", truth["prompts"]["T2"])]
+    turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror") else \
+            sorted(truth["prompts"].items())
     if a.oracle:  # stage 0 solvability: the required move is spelled out; never used in a scored session
         hint = {"carry": lambda: f" Note: rows of {truth['parent']} with {truth['key']} = the filtered value must not be exported in any table; "
                          f"the filter commit's body says why.",
@@ -106,7 +106,7 @@ def session(a):
                          f"and if a row is malformed, do not commit it and name the row id."}[truth["endpoint"]]()
         turns[-1] = (turns[-1][0], turns[-1][1] + hint)
     rec = {"arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort, "rules_loaded": loaded,
-           "fixture": os.path.basename(a.fixture), "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
+           "fixture": os.path.basename(a.fixture), "wording": a.wording, "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "config_sha256": config_sha(),
            "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_v5.py", "run_kta.py", "make_fixture_v5.py", "score_v5.py")}}
     sid = str(uuid.uuid4())
@@ -132,5 +132,6 @@ if __name__ == "__main__":
     ap.add_argument("--reader", required=True, choices=sorted(READERS)); ap.add_argument("--out", required=True)
     ap.add_argument("--budget-usd", default="6"); ap.add_argument("--gate-a", action="store_true")
     ap.add_argument("--oracle", action="store_true", help="stage 0: append the required move to the decision turn")
+    ap.add_argument("--wording", choices=["w1", "w2"], default="w1", help="CARRY prompt wording (w2: the stage A ceiling dial)")
     a = ap.parse_args()
     gate_a(a) if a.gate_a else session(a)
