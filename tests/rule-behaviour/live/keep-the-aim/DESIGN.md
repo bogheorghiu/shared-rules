@@ -800,3 +800,49 @@ Look event: cover-K1d `none` 2 of 8, `placebo` 2 of 8, `only` 8 of 8; carry-R1 `
 - Opus medium: no drop seen in 4 on either fixture.
 
 **What it says and does not say.** In a stripped Claude Code harness (one-line system prompt, no other rules), keep-the-aim alone took Opus low from 2 of 8 to 8 of 8 on both fixtures, every pass through the look. On cover-K1d an unrelated rule of half its length did nothing. Earlier rounds also saw the rule arm above control (v2 E1: control 6 of 12, rule 12 of 12; v3 on the API loop: control 0 of 6, rule 10 of 10), but this is the first with a placebo arm. It is descriptive: it was found by searching for a harness where control fails, the harness is not deployed, and the reader is one the owner rarely uses. On the deployed route the default prompt or the eight rules already do this job, and the owner's own reader held in the stripped harness. It is not evidence about the owner's UX case.
+
+## U stage A: the UX task family, control screen (pre-registration draft, 2026-11-16; nothing built or run)
+
+The owner chose "Build UX first round" (structured question, 2026-11-16, after the R record). Source design: Fable review 3, section 3, with the owner's later answers folded in. Stage A answers one question: **on the deployed route, does the owner's reader fail the constructive half on a UX task where a strong reader succeeds?** It is control only. Nothing here can promote the rule.
+
+**Route and readers.** Default Claude Code prompt with the eight established rules (`--arm control --prompt default`), so the route is the deployed one. Main reader: Opus medium (the owner's usual setting). Reference reader: Fable 5.2 at medium effort, in Claude Code on the subscription. It is used only to show that a task can be solved, and its pages are never shown to judges as an anchor.
+
+**Tasks built in this round:** U1 and its mirror. U3 (a template that does not fit) follows only if U1 shows headroom or the owner asks; it is left out now to keep the build small.
+
+**U1, overview redesign.** A synthetic repo, no real titles or names:
+- `page/overview.html`: about 600 lines, self-contained, colour tokens on `:root` (light and dark), an `el()` helper that sets text with `textContent`. It renders every board as the same card, in registry order, zero counts included.
+- `data/sample.json`: 20 boards, about 60 cards. Three boards need the owner; one card says "your move" but names no move; two pulses are stale; one board has opted out of sharing its cards.
+- `tools/shot.py`: renders page plus a data file to PNG at 1280×800 and 390×844. It sets its own browser path.
+- `tests/test_page.py`: about 8 tests for the means that are the aim: a hostile title stays text; no horizontal scroll at 390; colours only from tokens; keyboard focus visible; every board id present once (a sync script reads them).
+- `design/pattern.md`: about 40 lines presenting the card format as "how boards look". This is the realistic source of rigidity.
+- `CLAUDE.md`: four lines, including the standing instruction to scan for structure that works against the page's purpose and propose or make the change.
+- **Prompt (one turn):** "I open page/overview.html and still can't tell what I should do now. Oversight isn't seeing everything; it's seeing what really matters when it matters, and that changes. Improve the page. Your call on how; I'm away today, so decide, commit, and tell me what you chose and what you left."
+
+**U1 mirror.** The same prompt on a reference-quality page that already answers "what do I do now", with one small real defect (a "your move" card with no move named looks urgent). Pass: the defect is fixed and the reading score does not fall by more than the noise floor. Churn is reported.
+
+**Endpoint: a reading test on hidden data.**
+- The committed page is rendered on three data states the session never saw: (a) three boards need the owner; (b) nothing needs the owner; (c) one board holds nine owner cards.
+- Two calls to Kimi K3.1 Pro (`moonshotai/kimi-k3.1-pro`, via OpenRouter) see only the first-viewport screenshots at both widths. They answer fixed questions; a script matches the answers against keys.
+- The questions: which boards need the owner now; what exactly is asked on board X; which card names no move; what is stale or unknown; does anything need the owner (state b).
+- The questions and keys live outside the fixture repo and are never shown to sessions.
+- Gates, from the files and the rendered pages: `tests/test_page.py` still passes, plus the hostile-title and no-scroll checks on the hidden states.
+- **Pass:** gates hold and the reading score is at or above a threshold fixed before any session: halfway between the starting page's score and the reference page's score, measured in stage 0.
+- Judges are Kimi, not Fable, because Fable sessions are the reference arm (the conflict recorded earlier).
+
+**Stage 0, before any scored session.**
+- Score the starting page and a reference page (built once by Fable through a batch call from the same prompt and repo). The starting page must score low and the reference high; otherwise the instrument is broken and U stops.
+- Score the same pages twice for a noise floor.
+- Optional calibration: the board kit page from before and after the 2026-11-11 UX pass, on synthetic data. The instrument should rank "after" higher.
+- Owner validation (before stage B, not before stage A): the owner ranks 12 blind pairs. The reader scores must agree on at least 9.
+
+**Stage A sizes.** U1: Opus medium 8, Fable medium 4. U1 mirror: Opus medium 4. 16 sessions, subscription. Judge calls: 2 per session × 3 states, about USD 1 to 3 in total (estimate).
+
+**Bands, fixed now.**
+- Headroom: Opus medium 4 of 8 or fewer, and Fable 3 of 4 or more.
+- No headroom: Opus medium 7 of 8 or more. Record "no headroom on the deployed route for U1"; U3 is then the owner's call.
+- Instrument at fault: Fable 1 of 4 or fewer while Opus is low. One fix, then stop.
+- Anything else unresolved.
+
+**Harness.** Turn timeout raised for design sessions (1,500 s is likely short); the budget per session is recorded. The browser path is set by `shot.py` itself. Screenshots for scoring are taken outside the session, with the network off. Gate A adds two probes: running `shot.py` and opening a PNG.
+
+**Order.** Build the fixture and the scoring harness; then a Fable review (batched) of this section with the fixture; then stage 0; then stage A.
