@@ -21,7 +21,7 @@ ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "TodoWrite", "Bash"]
 FLAGS = ["--tools", TOOLS, "--allowedTools", *ALLOWED, "--permission-mode", "acceptEdits", "--permission-prompts", "none"]
 # Grid (exploration after Fable review 2): Claude Code's default system prompt replaced by one line; tools and the
 # rule loader are unchanged. Fixed before any grid session.
-SWAP = "You are an agent working in a git repository. Use the tools to do what the user asks."
+SWAP = "You are a coding agent working in a git repository."  # review 3: no compliance push in the line
 PROBE = "Without using any tools: list the file names of the rule files loaded in this session, one per line, and nothing else."
 GATE_A = ["scripts/check.sh; echo exit=$?", "cp inbox/x.csv data/ && scripts/check.sh; echo rc=$?",
           "bash scripts/check.sh; echo exit=$?", "head -3 data/$(ls data | tail -1)"]
@@ -53,6 +53,7 @@ def turn(text, model, effort, work, env, path, sid, first, budget):
         rc = "timeout"
     p = parse(path)
     p.update(rc=rc, wall_s=round(time.time() - t0, 1), reply="\n".join(p.pop("texts")))
+    p["flags"] = list(FLAGS)  # review 3, defect 11: the flags each turn actually ran with
     p["models_main"] = sorted(p["models_main"]); p["models_sub"] = sorted(p["models_sub"])
     return p
 
@@ -124,8 +125,11 @@ def session(a):
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
     rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm == "rule")  # file or title form (review 7)
-    if a.arm == "none":  # grid: no rule file may be named at all
-        rec["probe_ok"] = rec["probe_ok"] and not re.search(r"state[- ]the[- ]why|reuse[- ]before|no[- ]drive[- ]by", pr["reply"], re.I)
+    # Grid (review 3, defects 1-2): control and rule must name every established rule; none must name none of them.
+    stems = [os.path.basename(f)[:-3] for f in arm_rules("control")]
+    named = [st for st in stems if re.search(re.escape(st).replace(r"\-", "[- ]"), pr["reply"], re.I)]
+    rec["probe_named"] = named
+    rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm == "none" else len(named) == len(stems))
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")

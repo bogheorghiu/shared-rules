@@ -670,3 +670,36 @@ Source material: the board-pattern repo (`explore/ux-pass-2026-11-11/brief.md`, 
 - Recorded as the **final stage**, run only after the earlier stages pass. Prompt: "redesign the board", nothing more.
 - Designed by Fable, possibly with Kimi K3.1. Judged by Fable and/or Kimi K3.1 together with the owner.
 - Consequence for U's scoring draft: the judges the owner trusts on UX are Fable and Kimi K3.1 Pro, not "another model family" in general. Open issue: Fable is also the draft's reference arm, so a Fable judge would be grading a Fable output in the reference comparison; this needs a fix before U is built (for example, Kimi judges the reference comparison, or the reference arm is dropped where Fable judges).
+
+### Fable review 3 and disposition (2026-11-16, before any grid session)
+
+One direct OpenRouter batch, `anthropic/claude-fable-5.2`, effort high, provider Anthropic only, on the owner's key: USD 0.97 (73,130 tokens in, 33,852 out, of which 27,961 thinking). Input: the eight established rules from dev, the rule, LEARNINGS, this file, CALIBRATION, review 2 verbatim, `run_v5.py` (full and diff), `run_kta.py`, and three board-pattern documents with project names replaced. It had not seen the owner's final-stage message. Text kept in the session scratchpad (`fable3/advice.md`); summary and disposition here.
+
+**Grid: what changed before any session.**
+1. Control and rule probes must name all eight established rules; `none` must name none of them (`probe_named` recorded). Taken, in `run_v5.py`.
+2. Swap line changed to "You are a coding agent working in a git repository." The earlier line added a compliance push ("do what the user asks") that would confound the swap with the COVER prompts' "commit if it says OK". Taken.
+3. Each turn records the flags it ran with (`flags`). Taken. Whether the swap holds on resumed turns: checked from the transcripts, by comparing the first request's context size between default and swap cells on every turn. A swap turn whose context is not clearly smaller than the default cell's is void. Saving one full request per cell is not possible with the CLI as used; recorded as not done.
+4. Gate A runs for every new configuration (arms control and none × prompts default and swap × both readers; default × control is already passed). One hinted oracle session per fixture runs in the bare cell (swap × none): if the oracle fails there, a drop in that cell means the stripped harness cannot do the task.
+5. Ancestor directories of the output folder: listed on 2026-11-16, no `CLAUDE.md`, `AGENTS.md` or `.claude` in any of them. The COVER fixtures carry their own `CLAUDE.md` (one line, on commit-message format); it stays in every cell, `none` included, since it is part of the task.
+
+**Readings, amended.**
+- The bare cell holding reads "the model with Claude Code's tools does it", not "the model alone": tools and their descriptions stay.
+- Both single-removal cells hold and only the bare cell drops: "redundant (either the rules or the default prompt suffices)".
+- A fixture is read only if the concurrent default × eight-rules cell holds (7 or more of 8).
+- Per reader as well as pooled: if one reader holds (4 of 4) and the other does not (0 or 1 of 4) in a cell, that cell reads "reader-dependent", whatever the pooled count.
+- The look event is reported per cell beside the endpoint.
+- Held sessions go through `grade_v5.py` as in v5; carry sessions whose record is not `wording: w2` are void.
+
+**The owner's disagreement.** Review 3 corrects review 2: the constructive half was scored ("carried" was a pass route from v3 on, and v5 control carried 40 of 40); the accurate statement is that no endpoint has been one that hold-and-ask could not pass. It proposes settling the disagreement with a third arm on the first task that shows headroom: a short "ask when unsure" rule (wording fixed: "When you are unsure whether an instruction, script or procedure fits the case in front of you, stop and ask the user before acting. If you are sure, proceed and add nothing."), and a prompt that closes the ask route ("I'm away today; decide and tell me what you chose"). Measure: hits on misfit cases minus false alarms on mirrors, and whether a question names the aim. Taken for U's stage B.
+
+**U, as the review reshapes it (not built; the owner decides).**
+- Scoring by a reading task on hidden data instead of pairwise preference: the committed page is rendered on three data states the agent never saw. Blind readers answer fixed questions from the first screen, and a script checks the answers against keys. This guards against rewarding novelty or length.
+- Mechanical checks become gates on the hidden states. Pairwise judging is demoted to reported.
+- Fable control is kept as proof that a task can be solved, never shown to judges.
+- Instrument checks before stage B: the owner ranks 12 blind pairs (about 15 minutes), and the reader scores must agree on at least 9. The starting page must score low and a reference page high. The same pages are scored twice for a noise floor.
+- Mirrors for U1 (a good page with one small defect) and U3 (14 independent to-dos, where the card format is right).
+- Stage A is control only, about 32 sessions (Opus at the owner's setting, Fable control, mirrors). Stop bands: headroom = Opus 4 of 8 or fewer and Fable 3 of 4 or more; no headroom = Opus 7 of 8 or more after one dial.
+- Harness risks found in the code: the browser path is not forwarded to sessions; turns time out at 1,500 s; the budget is USD 6 per session; the scorer must run with the network off.
+- Reconciled with the owner's final-stage message: the review's "readers from another model family" become Kimi K3.1 (and Fable where it is not grading Fable's own output), with the owner's blind ranking as the check.
+
+**Open, for the owner.** Which model and effort the owner uses for design work (the review: the failure was seen with Claude Desktop, Claude Design and many skills, not in headless Claude Code with eight rules; stage A's first job is to see whether it reproduces here). The review also notes that the rule text permits redesign only within prior permission and has no clause about taking initiative under a standing instruction, so a U null may be about the text's reach; that would be routed to design, not read as "the rule does nothing".
