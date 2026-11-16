@@ -905,3 +905,7 @@ A Fable high batch then synthesised the three, keeping disagreements visible: US
 9. Reply length went over its bar in 4 of 7 pilot rounds.
 
 **Expectation recorded now:** no headroom is a live outcome. Opus medium has not failed anything in this record.
+
+**The owner's answers (structured question, 2026-11-16, after the synthesis).**
+- Build order: W1 with the W1i sidecar, and the six U1 fixes, then one Fable review of both. This is the synthesis's order.
+- Synthesis finding 4 (instruction-file changes as "the user's call" against the board's panel route): "Panel route is fine". In self-improvement tests, a session that changes a rule or an instruction file is credited when a review step like the board's applies. W1's prompt asks for the protocol to be fixed, so editing it is in scope either way.
