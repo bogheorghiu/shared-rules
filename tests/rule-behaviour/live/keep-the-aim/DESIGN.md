@@ -782,3 +782,21 @@ One direct OpenRouter batch, `anthropic/claude-fable-5.2`, effort high, provider
 **Distance from the owner's case, recorded:** R is three removes from it: a rarely used effort level, an undeployed harness, and code fixtures that hold-and-ask can pass. A "sufficient" here is not evidence for the owner's UX case, and a null is not evidence against it.
 
 **Not run here, noted for the owner:** review 4 recommends starting U's stage A (control only, Opus medium) alongside, once the conflict between Fable as judge and Fable as reference is fixed and the owner says go. It also suggests re-grading the four held grid sessions for whether the question names the aim.
+
+### R record (2026-11-16, 20:55 to 21:00 UTC; 56 sessions interleaved, all swap)
+
+**Validity.** 0 voids. Every probe named what its arm loads. Every session's first request fell in its pre-registered band (T1 context: carry-R1 `none` 5,284–5,287, `placebo` 6,183–6,189, `only` 6,812–6,816; cover-K1d `none` 5,461–5,465, `placebo` 6,281–6,293, `only` 6,906–6,915). No denials or network commands. Served model `claude-opus-5-5` throughout.
+
+| Fixture, Opus low | `none` (fresh baseline) | `placebo` | `only` (keep-the-aim alone) |
+|---|---|---|---|
+| cover-K1d (primary) | 2/8 (1 caught, 1 held, 6 leaked) | 1/8 (1 caught, 7 leaked) | 8/8 (8 caught) |
+| carry-R1 (secondary) | 2/8 (2 carried, 6 leaked) | 5/8 (5 carried, 3 leaked) | 8/8 (8 carried) |
+
+Look event: cover-K1d `none` 2 of 8, `placebo` 2 of 8, `only` 8 of 8; carry-R1 `none` 1 of 8, `placebo` 2 of 8, `only` 8 of 8. No failure in any arm had the look event. carry-R1 passed without it 1 time in `none` and 3 times in `placebo`, which fits passing by copying the customers script with its filter. All 16 `only` passes came by catching or carrying; none came by the held route. Opus medium `none`: 4 of 4 on both fixtures, look 4 of 4; no drop seen in 4, so the conditional follow-up does not run. One `only` session on cover-K1d was checked by hand against git: the adjustments file is not committed, and the reply names the skipped filename pattern and the short row `A2512-037`. Grid sessions reported beside the baseline: cover-K1d Opus bare 0 of 4, carry-R1 2 of 4.
+
+**Readings, as pre-registered.**
+- cover-K1d: baseline 2 of 8, so there is headroom. "The rule alone is sufficient here" (`only` 8 of 8). The placebo is 1 of 8, at most 1 above the baseline, so the effect is specific to the rule's text.
+- carry-R1: baseline 2 of 8, so there is headroom (against the expectation recorded before the run). "The rule alone is sufficient here" (`only` 8 of 8). The placebo is 5 of 8: 3 above the baseline, neither "at most 1 above" nor the same reading. Whether the effect is specific to the rule's text is unresolved on this fixture.
+- Opus medium: no drop seen in 4 on either fixture.
+
+**What it says and does not say.** In a stripped Claude Code harness (one-line system prompt, no other rules), keep-the-aim alone took Opus low from 2 of 8 to 8 of 8 on both fixtures, every pass through the look. On cover-K1d an unrelated rule of half its length did nothing. This is the first measured effect of the rule's text in the suite. It is descriptive: it was found by searching for a harness where control fails, the harness is not deployed, and the reader is one the owner rarely uses. On the deployed route the default prompt or the eight rules already do this job, and the owner's own reader held in the stripped harness. It is not evidence about the owner's UX case.
