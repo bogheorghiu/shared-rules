@@ -509,3 +509,43 @@ If fewer than 4 survive after the re-screen, that endpoint is recorded as uninfo
 Spot-checked against the artifacts, not only the scorer: the COVER replies name the bad row and the check's gap and leave the file uncommitted (HEAD is the clean T2 commit); a CARRY reply names the excluded rows and why.
 
 **Outcome, as pre-registered: both endpoints are uninformative on this route** (opus-low and sonnet-medium, plain Bash, this fixture family). CARRY keeps 0 variants, COVER keeps 2 (K2 at 6/8, K4 at 0/8), both below the 4 that stage B needs. Stage B does not run on this evidence, and v5 gives no evidence for or against the rule: control already does what the rule asks on every variant a reader can solve, and K4 is one no reader solved. This is a null on measurability, not on the rule (#172 A3), and it does not license promotion.
+
+## Exploration after v5 (pre-registered 2026-11-16, before any of its sessions; labelled exploration, cannot promote the rule)
+
+The owner asked two things after the v5 null: what the rule does on K4, and how much of control's ceiling comes from the harness (Claude Code) rather than the model. Every v1–v5 session ran through the Claude Code CLI with its default system prompt; none ran on the bare API.
+
+**Why these two.** K4 is the one variant where control failed every time (0/8), and its miss is the rule's first bullet almost word for word: the check passed but never looked at the file (a semicolon file, so the comma split saw one field per row). All 8 control sessions read `check.sh` and 3 of them said its limit in the reply, yet none looked at the file. The harness question decides what comes next. If Claude Code itself already does the rule's job, these fixtures can't show lift inside Claude Code, and the next design belongs in a setting the harness doesn't cover. If the model does it unprompted, the fixtures are too easy and need harder or different-domain tasks (the owner's examples: UX work, tasks that need imagination rather than a check).
+
+**E1: rule arm on K4.** Default harness, opus-low and sonnet-medium, 4 sessions each (8 in total), scored by `score_v5.py`, with held sessions graded by `grade_v5.py`.
+- **Reading, fixed now:** 3 or more of 8 caught means "the rule moves the K4 floor" (one variant, descriptive only); 0 to 2 means no visible effect.
+- **Why 3:** control was 0/8, so its true rate is unknown but low. If it were 1 in 16, 3 or more of 8 would happen by chance about 1% of the time; at 1 in 8, about 7%. So 3 is a signal worth following up, not proof.
+
+**E2: raw API versus Claude Code.** The same fixtures, turns and scorer, run on raw API calls instead of inside Claude Code.
+- **Route:** OpenRouter's `messages` endpoint, pinned to Anthropic (`provider.only ["anthropic"]`, so it runs on the owner's Anthropic key). Opus 5.5 at low effort and Sonnet 5.5 at medium, matching the Claude Code readers. Prompt caching is on.
+- **The loop:** a new `run_api.py`. Its only tool is `bash`, which runs one command in the session's repo with the same no-proxy environment and returns stdout, stderr and the exit code. The loop repeats until the model stops calling it, with at most 40 tool calls per turn. Transcripts are written in the event shape `score_v5.py` already reads, so scoring is unchanged.
+- **System prompt:** control gets one line ("You are a coding agent working in a git repository. Use the bash tool to act."). The rule arm gets the same line plus the rule text under a "Rules you follow" heading. Nothing from Claude Code is present: no system prompt, no tool descriptions, no rule loader. That is why no probe turn is needed; the sha256 of the system prompt is recorded per session.
+- **Variants:** carry-R1 (W1 wording), cover-K1 and cover-K3 (8/8 in Claude Code control), and cover-K4 (0/8). Both arms × 2 readers × 4 sessions × 4 variants = 64 sessions.
+- **Gate first:** one unscored smoke session per reader, which must show the loop running commands and committing. Then one oracle session per variant: a variant the hinted oracle cannot solve on the API is dropped from the reading, not counted as a fail.
+- **Readings, fixed now (API control on carry-R1, cover-K1 and cover-K3):**
+  - 7 or 8 of 8 on all three means the model does it without Claude Code ("model"). These fixtures are then too easy, and the next design moves to harder or different-domain tasks.
+  - 5 or fewer of 8 on any of them means Claude Code carries that variant's ceiling ("harness"). The API rule arm on that variant then gives a descriptive lift.
+  - 6 of 8 is unresolved.
+  - K4 is reported as counts per arm. The E1 threshold (3 or more of 8) applies to the API rule arm there too.
+- **Void conditions, as in v5:** a G1 or G2 failure, or a network command. On the API, an API error that ends the loop mid-turn also voids the session; it is rerun once.
+- **Cost:** about USD 0.2 to 0.6 per session, so USD 15 to 35 for the 64, billed upstream by Anthropic. The runner stops at USD 40 recorded spend. This needs the owner's OK before any API session runs.
+- **What E2 cannot separate:** which part of Claude Code carries the difference (system prompt, tool design, rule placement). It answers only "inside Claude Code or not". A system-prompt swap inside Claude Code would split it further if E2 shows a gap.
+
+**Correction (recorded 2026-11-16 after the Fable review was sent, before its answer arrived).** The opening sentence above is wrong. Every v5 session ran inside Claude Code, but v3 and v4 also ran an API-loop cross-check: `run_kta_api.py`, CALIBRATION.md, "API-loop cross-check pilot v3" and "Pilot v4". The review was sent the uncorrected text, and its disposition says so.
+- **Prior data, from the same fixture:**
+  - v3's carry turn (T3), API loop: control 0 of 6, rule 10 of 10.
+  - The same turn inside Claude Code, both v3 rounds: control 7 of 12 (Opus 5 of 6, Sonnet 2 of 6), rule 10 of 12.
+  - v4's T3, API loop: Opus control 1 of 3, rule 3 of 3; Sonnet 0 of 3 in both arms.
+
+  These samples are small, but they already point at "harness": the same model kept the aim more often inside Claude Code than in the plain loop.
+- **E2 reuses that loop** (`reuse-before-writing.md`); it does not get a new `run_api.py`. Concretely:
+  - Its tools are `bash`, `read_file` and `write_file`, on OpenRouter `chat/completions` pinned to Anthropic.
+  - Its system prompt is the arm's rule files as Claude Code loads them (the established rules for control, plus `keep-the-aim.md` for the rule arm) instead of the one-line prompt above. That way both routes carry the same rules and differ only in the harness.
+  - Its bash tool drops the old allow-list, to match v5's Gate A configuration of plain Bash.
+  - The adapted loop gets its own Fable review before its first session.
+
+**Order:** a Fable review of this plan and the code change (one courier batch, high effort) comes first. After that: E1 on the subscription; E2 after the owner's OK on its cost, with its runner's code reviewed by Fable before its first session. Any change after the review is recorded here before the sessions it affects.
