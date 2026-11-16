@@ -14,7 +14,7 @@ import argparse, hashlib, json, os, re, shutil, subprocess, sys, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from run_kta import READERS, arm_rules, replay_history, git, sha, REPO, parse  # noqa: E402  (reuse, not copies)
+from run_kta import READERS, RULE, arm_rules, replay_history, git, sha, REPO, parse  # noqa: E402  (reuse, not copies)
 
 TOOLS = "Bash,Read,Edit,Write,Grep,Glob,TodoWrite"
 ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "TodoWrite", "Bash"]
@@ -62,7 +62,7 @@ def setup(a, root):
     home, work = os.path.join(root, "home"), os.path.join(root, "work")
     dest = os.path.join(home, ".claude", "rules", "shared-rules"); os.makedirs(dest)
     loaded = []
-    for f in ([] if a.arm == "none" else arm_rules(a.arm)):
+    for f in ({"none": [], "only": [RULE]}[a.arm] if a.arm in ("none", "only") else arm_rules(a.arm)):
         shutil.copy(f, dest); loaded.append({"file": os.path.relpath(f, REPO), "sha256": sha(f)})
     return home, work, loaded
 
@@ -124,12 +124,12 @@ def session(a):
         print(f"{name} {tid}: rc={p['rc']} head={p['head'][:8]} denials={p['denials']}", flush=True)
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
-    rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm == "rule")  # file or title form (review 7)
+    rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm in ("rule", "only"))  # file or title form (review 7)
     # Grid (review 3, defects 1-2): control and rule must name every established rule; none must name none of them.
     stems = [os.path.basename(f)[:-3] for f in arm_rules("control")]
     named = [st for st in stems if re.search(re.escape(st).replace(r"\-", "[- ]"), pr["reply"], re.I)]
     rec["probe_named"] = named
-    rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm == "none" else len(named) == len(stems))
+    rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm in ("none", "only") else len(named) == len(stems))
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")
@@ -137,7 +137,7 @@ def session(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none"])
+    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none", "only"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS)); ap.add_argument("--out", required=True)
     ap.add_argument("--budget-usd", default="6"); ap.add_argument("--gate-a", action="store_true")
     ap.add_argument("--oracle", action="store_true", help="stage 0: append the required move to the decision turn")

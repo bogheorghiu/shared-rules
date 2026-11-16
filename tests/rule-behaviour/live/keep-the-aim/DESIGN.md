@@ -724,3 +724,18 @@ Look event, pooled per cell: 8 in every cell except carry-R1 swap × eight 6, de
 **What this means for the test (session's reading, not pre-registered).** On these fixtures the ceiling is carried redundantly: by Claude Code's default prompt and, separately, by the eight established rules. Sonnet medium needs neither. Opus low with both removed fails, and every failure skips the look. This is the first cell in the suite where control fails on a code fixture for a reason the rule names, inside Claude Code: Opus low, swap, no rules, cover-K1d (0 of 4) and carry-R1 (2 of 4). It is also a harness nobody deploys, so a result there can describe what the rule does on its own but cannot feed the ship decision.
 
 **Next step proposed (not run; a test change, so it needs a Fable review and the owner's go):** add one arm, swap × keep-the-aim alone, on Opus low, cover-K1d and carry-R1, with a concurrent bare control. Rough size 16 + 8 sessions, subscription only. It answers whether the rule by itself restores what the default prompt or the eight rules restore.
+
+### R: the rule alone in the stripped harness (pre-registration, 2026-11-16, before any of its sessions; descriptive, cannot promote the rule)
+
+The owner chose "review then run" (structured question, 2026-11-16), and answered that the owner's own design work runs on "Opus medium usually, sometimes low or high, but rarely".
+
+- **Arms, all with the swap prompt:** `only` = keep-the-aim alone (`--arm only`, new); `none` = no rules (the grid's bare cell), run concurrently.
+- **Fixtures:** cover-K1d and carry-R1, the two where the grid's bare cell dropped for Opus low.
+- **Sessions:** Opus low, `only` 8 per fixture, `none` 4 per fixture (24). Owner's reader: Opus medium, `none` 4 per fixture (8), reported only. 32 sessions, interleaved, subscription.
+- **Code change:** `--arm only` loads `docs/staged-rules/keep-the-aim.md` alone; its probe must name keep-the-aim and none of the eight. Checked before any session: `setup()` loads exactly the expected files for each of control, rule, none and only. A first version had a fall-through bug (an empty list for `none` fell back to all eight rules); it was caught by that check and fixed before anything ran. The grid used the earlier, correct code: its `none` probes named no rule.
+- **Gate A** for (only, swap, Opus low) and (none, swap, Opus medium) before the sessions.
+- **Bare-control baseline, Opus low:** the grid's 4 plus the 4 new ones, 8 per fixture.
+- **Readings per fixture (Opus low):** "the rule alone restores it" if `only` is 7 or 8 of 8 and the 8-session bare baseline is 3 of 8 or fewer. "Does not restore" if `only` is 4 of 8 or fewer. Anything else is unresolved. If the bare baseline is 4 of 8 or more, there is no headroom on that fixture and it is not read.
+- **Reported beside it:** the look event per arm; the held route, graded as in v5; Opus medium's bare count. If Opus medium holds 4 of 4 bare on both fixtures, the headroom is specific to a reader the owner rarely uses; that is recorded.
+- **Voids:** as in the grid.
+- **What it cannot say:** whether the rule helps on the deployed route (default prompt and the eight rules), where control is at the ceiling.
