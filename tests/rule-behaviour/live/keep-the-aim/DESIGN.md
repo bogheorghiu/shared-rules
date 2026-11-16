@@ -665,3 +665,8 @@ Source material: the board-pattern repo (`explore/ux-pass-2026-11-11/brief.md`, 
 **Stop rule (proposed):** if Opus control reaches Fable control's level on U1 and U2 in a 16-session screen, there is no headroom on these tasks either; record it and stop.
 
 **Order:** one Fable review (batched) of G's code change and this draft; then G; U is built only after the review and the owner's go.
+
+**Owner's addition (chat, 2026-11-16, after review 3 was submitted, so review 3 has not seen it).** The owner: "a good but hard to pre-reg test (subjective) for the rule would be a redesign of the current 'Combinatia F64' board; but that's I would say for *after* everything else passes; only Fable +- Kimi K3.1 can both design and especially evaluate (together with me on the latter) such a test; the board is simple enough to be easy to redesign; the request would be simply redesign the board".
+- Recorded as the **final stage**, run only after the earlier stages pass. Prompt: "redesign the board", nothing more.
+- Designed by Fable, possibly with Kimi K3.1. Judged by Fable and/or Kimi K3.1 together with the owner.
+- Consequence for U's scoring draft: the judges the owner trusts on UX are Fable and Kimi K3.1 Pro, not "another model family" in general. Open issue: Fable is also the draft's reference arm, so a Fable judge would be grading a Fable output in the reference comparison; this needs a fix before U is built (for example, Kimi judges the reference comparison, or the reference arm is dropped where Fable judges).
