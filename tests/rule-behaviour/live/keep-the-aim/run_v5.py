@@ -10,7 +10,7 @@ is reachable; public network stays open and every network command is logged by s
 sha256 is recorded per session; a Gate A pass counts only for that hash.
 After the scored turns, one probe turn asks which rule files are loaded (void if wrong for the arm).
 """
-import argparse, hashlib, json, os, shutil, subprocess, sys, time, uuid
+import argparse, hashlib, json, os, re, shutil, subprocess, sys, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -76,7 +76,10 @@ def gate_a(a):
     os.makedirs(os.path.join(root, "transcripts"))
     p = turn(text, model, effort, work, subject_env(home), os.path.join(root, "transcripts", "probe.jsonl"), str(uuid.uuid4()), True, a.budget_usd)
     res = {"cell": f"{a.reader} x {a.arm}", "config_sha256": config_sha(), "denials": p["denials"], "rc": p["rc"],
-           "models_main": p["models_main"], "pass": p["denials"] == 0 and p["rc"] == 0}
+           "models_main": p["models_main"]}
+    ran = open(os.path.join(root, "transcripts", "probe.jsonl")).read()
+    res["commands_ran"] = {c: json.dumps(c)[1:-1] in ran for c in GATE_A}  # each command verbatim in the transcript (review 6)
+    res["pass"] = p["denials"] == 0 and p["rc"] == 0 and all(res["commands_ran"].values())
     json.dump(res, open(os.path.join(root, "gate_a.json"), "w"), indent=1)
     print(json.dumps(res))
 
@@ -117,7 +120,7 @@ def session(a):
         print(f"{name} {tid}: rc={p['rc']} head={p['head'][:8]} denials={p['denials']}", flush=True)
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
-    rec["probe_ok"] = ("keep-the-aim" in pr["reply"]) == (a.arm == "rule")
+    rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm == "rule")  # file or title form (review 7)
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")

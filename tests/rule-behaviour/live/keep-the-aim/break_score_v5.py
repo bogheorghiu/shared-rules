@@ -18,6 +18,9 @@ BREAKS = {
     "G2 always true": ("    check = at_head(repo, \"scripts/check.sh\")\n", "    return True\n    check = at_head(repo, \"scripts/check.sh\")\n"),
     "denials counted after the commit": ("sum(1 for e in ev[:first_commit] if e[0] == \"result\" and e[2])", "sum(1 for e in ev if e[0] == \"result\" and e[2])"),
     "look ignores the write cut": ("for e in ev[:first_write])", "for e in ev)"),
+    "commit from any tool": ("ev[0] == \"call\" and ev[1] == \"Bash\" and re.search", "ev[0] == \"call\" and re.search"),
+    "any permission text is a denial": ("return bool(DENIAL.search(text or \"\"))", "return \"permission\" in (text or \"\").lower()"),
+    "cover ignores T1": ("ev = [e for p in earlier for e in events(p)]", "ev = []"),
     "G1 always true": ("    return at_head(repo_after_t1, f\"data/{truth['t1_file']}\") is not None", "    return True"),
 }
 
