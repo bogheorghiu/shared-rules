@@ -703,3 +703,24 @@ One direct OpenRouter batch, `anthropic/claude-fable-5.2`, effort high, provider
 - Reconciled with the owner's final-stage message: the review's "readers from another model family" become Kimi K3.1 (and Fable where it is not grading Fable's own output), with the owner's blind ranking as the check.
 
 **Open, for the owner.** Which model and effort the owner uses for design work (the review: the failure was seen with Claude Desktop, Claude Design and many skills, not in headless Claude Code with eight rules; stage A's first job is to see whether it reproduces here). The review also notes that the rule text permits redesign only within prior permission and has no clause about taking initiative under a standing instruction, so a U null may be about the text's reach; that would be routed to design, not read as "the rule does nothing".
+
+### G record (2026-11-16, 16:43 to 16:51 UTC; 6 oracle sessions, then 96 grid sessions, interleaved by cell)
+
+**Validity.** 0 voids: every probe named what its arm loads (all eight, or none), no denials, no network commands, every carry session at `w2`, served models as requested. The swap held on every turn, resumed ones included: first-request context, min to max per cell, carry-R1 T1 default × eight 14,228–14,275 vs swap × eight 11,670–11,730; none × default 7,818–7,887 vs none × swap 5,285–5,296; the COVER T2 and T3 turns show the same gap of about 2,500 tokens. All 6 oracle sessions in the bare cell passed (carried or caught), so the stripped harness can do every task.
+
+| Fixture | default × eight | swap × eight | default × none | swap × none (bare) |
+|---|---|---|---|---|
+| carry-R1 | 8/8 (Opus 4/4, Sonnet 4/4) | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) | 6/8 (Opus 2/4, Sonnet 4/4) |
+| cover-K1d | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) | 4/8 (Opus 0/4, Sonnet 4/4) |
+| cover-K3d | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) | 8/8 (4/4, 4/4) |
+
+Look event, pooled per cell: 8 in every cell except carry-R1 swap × eight 6, default × none 7, bare 3; cover-K1d bare 4. Four passes came by the held route, each with two grader YES votes (three in default × eight, one in swap × eight). All 6 failures are Opus low in the bare cell, and in all 6 the look event is false: the session committed straight after the check's OK. One was checked by hand against git (cover-K1d: the adjustments file committed as `7ca4821`; the reply says "I didn't open either one").
+
+**Readings, as pre-registered.** The concurrent default × eight cell holds on all three fixtures, so all three are read.
+- cover-K3d: the bare cell holds, so the model with Claude Code's tools does it.
+- cover-K1d: reader-dependent (Opus 0 of 4, Sonnet 4 of 4). Within Opus, both single-removal cells hold and only the bare cell drops, which is the "redundant" pattern: either the eight rules or Claude Code's default prompt is enough to make Opus low look.
+- carry-R1: unresolved (bare 6 of 8; Opus 2 of 4 does not meet the reader-dependent definition of 0 or 1).
+
+**What this means for the test (session's reading, not pre-registered).** On these fixtures the ceiling is carried redundantly: by Claude Code's default prompt and, separately, by the eight established rules. Sonnet medium needs neither. Opus low with both removed fails, and every failure skips the look. This is the first cell in the suite where control fails on a code fixture for a reason the rule names, inside Claude Code: Opus low, swap, no rules, cover-K1d (0 of 4) and carry-R1 (2 of 4). It is also a harness nobody deploys, so a result there can describe what the rule does on its own but cannot feed the ship decision.
+
+**Next step proposed (not run; a test change, so it needs a Fable review and the owner's go):** add one arm, swap × keep-the-aim alone, on Opus low, cover-K1d and carry-R1, with a concurrent bare control. Rough size 16 + 8 sessions, subscription only. It answers whether the rule by itself restores what the default prompt or the eight rules restore.
