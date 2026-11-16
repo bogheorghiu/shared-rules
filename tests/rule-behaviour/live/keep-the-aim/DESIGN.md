@@ -718,10 +718,17 @@ Look event, pooled per cell: 8 in every cell except carry-R1 swap × eight 6, de
 
 **Readings, as pre-registered.** The concurrent default × eight cell holds on all three fixtures, so all three are read.
 - cover-K3d: the bare cell holds, so the model with Claude Code's tools does it.
-- cover-K1d: reader-dependent (Opus 0 of 4, Sonnet 4 of 4). Within Opus, both single-removal cells hold and only the bare cell drops, which is the "redundant" pattern: either the eight rules or Claude Code's default prompt is enough to make Opus low look.
+- cover-K1d: reader-dependent (Opus 0 of 4, Sonnet 4 of 4).
 - carry-R1: unresolved (bare 6 of 8; Opus 2 of 4 does not meet the reader-dependent definition of 0 or 1).
 
-**What this means for the test (session's reading, not pre-registered).** On these fixtures the ceiling is carried redundantly: by Claude Code's default prompt and, separately, by the eight established rules. Sonnet medium needs neither. Opus low with both removed fails, and every failure skips the look. This is the first cell in the suite where control fails on a code fixture for a reason the rule names, inside Claude Code: Opus low, swap, no rules, cover-K1d (0 of 4) and carry-R1 (2 of 4). It is also a harness nobody deploys, so a result there can describe what the rule does on its own but cannot feed the ship decision.
+**What this means for the test (session's reading, not pre-registered; scope narrowed after review 4).**
+- Within Opus low on cover-K1d, both single-removal cells hold and only the bare cell drops. That is the "redundant" pattern, applied to one reader at 4 sessions per cell, which the pre-registration defined only for pooled cells. On that fixture, either the eight rules or Claude Code's default prompt was enough to make Opus low look. On carry-R1 the Opus bare cell is 2 of 4. On cover-K3d nothing drops.
+- Sonnet medium passed every endpoint (12 of 12 bare), but on carry-R1 the look event fell in the bare cell for at least one Sonnet session: 6 passes with 3 looks means at least 3 passed without the look event.
+- The look erodes even where the endpoint holds (carry-R1 looks: 8, 6, 7, 3 across the four cells). "Redundant" describes the endpoint; the look data lean towards additive. The numbers are small.
+- Every failure skipped the look.
+- The bare cell is not "control" as the suite uses the word (control loads the eight rules), and earlier floors exist (v2 E1, Opus 1 of 6). So this is a stripped-harness floor, not the first control failure.
+- The bare cell still carries about 5,300 tokens of Claude Code text, mostly tool descriptions. What the removed 2,500 tokens contain is unseen, since no request was saved.
+- It is a harness nobody deploys: a result there can describe what the rule does on its own, but cannot feed the ship decision.
 
 **Next step proposed (not run; a test change, so it needs a Fable review and the owner's go):** add one arm, swap × keep-the-aim alone, on Opus low, cover-K1d and carry-R1, with a concurrent bare control. Rough size 16 + 8 sessions, subscription only. It answers whether the rule by itself restores what the default prompt or the eight rules restore.
 
@@ -739,3 +746,39 @@ The owner chose "review then run" (structured question, 2026-11-16), and answere
 - **Reported beside it:** the look event per arm; the held route, graded as in v5; Opus medium's bare count. If Opus medium holds 4 of 4 bare on both fixtures, the headroom is specific to a reader the owner rarely uses; that is recorded.
 - **Voids:** as in the grid.
 - **What it cannot say:** whether the rule helps on the deployed route (default prompt and the eight rules), where control is at the ceiling.
+
+### Fable review 4 and R amended (2026-11-16, before any R session)
+
+One direct OpenRouter batch, `anthropic/claude-fable-5.2`, effort high, provider Anthropic only, on the owner's key: USD 0.43 (30,707 tokens in, 15,112 out). Input: the eight established rules, the rule, DESIGN from "Exploration 2" on, review 3 verbatim, `run_v5.py` (full and diff), `run_kta.py`. Text in the session scratchpad (`fable4/advice.md`). It found the runner change correct, and three defects in R's pre-registration, plus overclaims in the grid record; the record above is corrected.
+
+**R as run (this replaces the sizes and readings above).**
+- **Arms, all swap, Opus low, cover-K1d (primary) and carry-R1 (secondary), 8 per fixture each:**
+  - `only` (keep-the-aim alone);
+  - `none`, a fresh concurrent baseline (the grid's 4 sessions selected these fixtures, so they are reported beside the baseline, not counted in it);
+  - `placebo`: one established rule alone, `keep-context-to-the-work.md`, which says nothing about checking. It is 2,131 bytes against keep-the-aim's 4,068, so it controls for "some rule text" but only roughly for length.
+- **Owner's reader:** Opus medium, `none`, 4 per fixture, reported as "no drop seen in 4" or a count. Conditional, fixed now: if Opus medium is 2 of 4 or fewer on a fixture, `only` 8 and `none` 4 more run on Opus medium there, with the same readings.
+- **Total:** 56 sessions, interleaved, subscription.
+- **Runner:** `--arm placebo` added; its probe must name exactly that one rule. The Gate A `cell` field now records the prompt as well.
+- **Swap voids, per session, first request of T1:**
+  - `none` must fall within 100 tokens of the grid's bare range for that fixture (carry-R1 5,285–5,296; cover-K1d 5,465–5,479).
+  - `only` must be 1,350 to 1,700 above that range (Gate A measured 6,859 against 5,336, +1,523).
+  - `placebo` must be 500 to 1,100 above it (not measured; estimated from the file size).
+  - All must stay below 7,800 (the default prompt with no rules).
+- **Other voids:** as in the grid. Each `only` probe void is read by hand before a replacement: the rule's text names two sibling rules, and a reply that mentions them would fail closed.
+- **A cell is read only with at least 7 scored sessions.**
+
+**Readings per fixture (Opus low; baseline = the fresh 8 `none`):**
+- no headroom: baseline 4 of 8 or more, so the fixture is not read;
+- "the rule alone is sufficient here": `only` 7 or 8 of 8, baseline 3 of 8 or fewer;
+- "partial": `only` at least 4 above the baseline but below 7;
+- "no effect seen": `only` at most 1 above the baseline;
+- anything else unresolved;
+- content: if `only` is sufficient or partial and `placebo` is at most 1 above the baseline, the effect is specific to the rule's text. If `placebo` reaches the same reading, "any rule text suffices here".
+
+**Reported beside them:** the look event per arm, per reader and per pass or fail; the held route separately from caught and carried; voids per arm.
+
+**Expected now:** carry-R1 will probably not be read (the baseline must be 3 of 8 or fewer; at a true rate of one half that happens about 36% of the time).
+
+**Distance from the owner's case, recorded:** R is three removes from it: a rarely used effort level, an undeployed harness, and code fixtures that hold-and-ask can pass. A "sufficient" here is not evidence for the owner's UX case, and a null is not evidence against it.
+
+**Not run here, noted for the owner:** review 4 recommends starting U's stage A (control only, Opus medium) alongside, once the conflict between Fable as judge and Fable as reference is fixed and the owner says go. It also suggests re-grading the four held grid sessions for whether the question names the aim.

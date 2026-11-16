@@ -62,7 +62,9 @@ def setup(a, root):
     home, work = os.path.join(root, "home"), os.path.join(root, "work")
     dest = os.path.join(home, ".claude", "rules", "shared-rules"); os.makedirs(dest)
     loaded = []
-    for f in ({"none": [], "only": [RULE]}[a.arm] if a.arm in ("none", "only") else arm_rules(a.arm)):
+    # R (review 4): placebo = one established rule alone, of similar length, with nothing about checking.
+    placebo = [f for f in arm_rules("control") if os.path.basename(f) == "keep-context-to-the-work.md"]
+    for f in ({"none": [], "only": [RULE], "placebo": placebo}[a.arm] if a.arm in ("none", "only", "placebo") else arm_rules(a.arm)):
         shutil.copy(f, dest); loaded.append({"file": os.path.relpath(f, REPO), "sha256": sha(f)})
     return home, work, loaded
 
@@ -79,7 +81,7 @@ def gate_a(a):
            "\n".join(f"{i + 1}. {c}" for i, c in enumerate(GATE_A))
     os.makedirs(os.path.join(root, "transcripts"))
     p = turn(text, model, effort, work, subject_env(home), os.path.join(root, "transcripts", "probe.jsonl"), str(uuid.uuid4()), True, a.budget_usd)
-    res = {"cell": f"{a.reader} x {a.arm}", "config_sha256": config_sha(), "denials": p["denials"], "rc": p["rc"],
+    res = {"cell": f"{a.reader} x {a.arm} x {a.prompt}", "config_sha256": config_sha(), "denials": p["denials"], "rc": p["rc"],
            "models_main": p["models_main"]}
     ran = open(os.path.join(root, "transcripts", "probe.jsonl")).read()
     res["commands_ran"] = {c: json.dumps(c)[1:-1] in ran for c in GATE_A}  # each command verbatim in the transcript (review 6)
@@ -129,7 +131,10 @@ def session(a):
     stems = [os.path.basename(f)[:-3] for f in arm_rules("control")]
     named = [st for st in stems if re.search(re.escape(st).replace(r"\-", "[- ]"), pr["reply"], re.I)]
     rec["probe_named"] = named
-    rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm in ("none", "only") else len(named) == len(stems))
+    if a.arm == "placebo":
+        rec["probe_ok"] = rec["probe_ok"] and named == ["keep-context-to-the-work"]
+    else:
+        rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm in ("none", "only") else len(named) == len(stems))
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")
@@ -137,7 +142,7 @@ def session(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none", "only"])
+    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none", "only", "placebo"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS)); ap.add_argument("--out", required=True)
     ap.add_argument("--budget-usd", default="6"); ap.add_argument("--gate-a", action="store_true")
     ap.add_argument("--oracle", action="store_true", help="stage 0: append the required move to the decision turn")
