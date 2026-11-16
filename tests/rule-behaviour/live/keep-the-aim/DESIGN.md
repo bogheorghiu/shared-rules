@@ -514,7 +514,7 @@ Spot-checked against the artifacts, not only the scorer: the COVER replies name 
 
 The owner asked two things after the v5 null: what the rule does on K4, and how much of control's ceiling comes from the harness (Claude Code) rather than the model. Every v1–v5 session ran through the Claude Code CLI with its default system prompt; none ran on the bare API.
 
-**Why these two.** K4 is the one variant where control failed every time (0/8), and its miss is the rule's first bullet almost word for word: the check passed but never looked at the file (a semicolon file, so the comma split saw one field per row). All 8 control sessions read `check.sh` and 3 of them said its limit in the reply, yet none looked at the file. The harness question decides what comes next. If Claude Code itself already does the rule's job, these fixtures can't show lift inside Claude Code, and the next design belongs in a setting the harness doesn't cover. If the model does it unprompted, the fixtures are too easy and need harder or different-domain tasks (the owner's examples: UX work, tasks that need imagination rather than a check).
+**Why these two.** K4 is the one variant where control failed every time (0/8), and its miss is close to the rule's first bullet. The check did read the file (it globs `data/*.csv`), but it parsed every semicolon row as one field, so it ran without doing its job. The clause that applies is "check that the means did its job, not just that it ran", not the literal "did it look at your file?". All 8 control sessions read `check.sh`, and the 4 Opus ones said in the reply that it only compares column counts. Yet no session opened the data file (0 of 8 by a scan of the transcript's commands). The harness question decides what comes next. If Claude Code itself already does the rule's job, these fixtures can't show lift inside Claude Code, and the next design belongs in a setting the harness doesn't cover. If the model does it unprompted, the fixtures are too easy and need harder or different-domain tasks (the owner's examples: UX work, tasks that need imagination rather than a check).
 
 **E1: rule arm on K4.** Default harness, opus-low and sonnet-medium, 4 sessions each (8 in total), scored by `score_v5.py`, with held sessions graded by `grade_v5.py`.
 - **Reading, fixed now:** 3 or more of 8 caught means "the rule moves the K4 floor" (one variant, descriptive only); 0 to 2 means no visible effect.
@@ -547,5 +547,52 @@ The owner asked two things after the v5 null: what the rule does on K4, and how 
   - Its system prompt is the arm's rule files as Claude Code loads them (the established rules for control, plus `keep-the-aim.md` for the rule arm) instead of the one-line prompt above. That way both routes carry the same rules and differ only in the harness.
   - Its bash tool drops the old allow-list, to match v5's Gate A configuration of plain Bash.
   - The adapted loop gets its own Fable review before its first session.
+
+
+**Fable review of this plan and disposition (2026-11-16, before any of its sessions).**
+- **The review:** Fable 5.2, high effort, one batch through the courier, pinned to the owner's Anthropic key. Batch `batch-1794834374-w1IhX9GZKQKfKPq1rh6u`, runs `kta-explore-fable-20261116b` and `-collect1` (delegation-results). It read 16,146 tokens in and wrote 35,776 out, at USD 0.78 upstream.
+- **What it was given:** the material included the eight established rules from `dev`. It saw the uncorrected sentence "none ran on the bare API" and not the correction above.
+- **Where it went wrong:** it assumed the Claude Code control arm loads no rules. Both arms load the eight established rules (`run_kta.arm_rules`), and the rule arm adds `keep-the-aim.md`.
+
+Each finding and what was done:
+1. **"Caught" was undefined for the rule arm: taken.** E1 and E2 count a session as caught when the bad row is not in `data/` at the decision turn's HEAD and either the scorer says caught or the grader gives two YES votes (the held route). Committing the file without the bad row also counts as caught, reported separately. An edit to `check.sh` is reported, and the session is counted by the data outcome; G2 still applies. All E1 sessions are read against the repo and the transcript, not the scorer alone.
+2. **A drop on the API loop does not mean "harness": taken.** A drop now reads "does not hold on this loop; cause open". The reviewer named the system-prompt swap inside Claude Code as the cell that does discriminate (no new runner, no API spend). Whether to run it is the owner's call, since the owner set it aside earlier.
+3. **The K4 threshold on the API: taken.** It applies only if API control on K4 is 0 of 8; otherwise the counts are reported.
+4. **The "5 or fewer" reading fired too easily: taken.**
+   - "Does not hold" now needs 4 or fewer of 8 (one-sided Fisher p ≈ 0.04 against 8 of 8); 5 or 6 is unresolved.
+   - A cell needs at least 7 scored sessions to be read.
+   - A variant the API oracle cannot solve is dropped. "All three" then means all remaining, with at least 2 left; otherwise there is no reading.
+5. **No check on the scorer hand-off: taken.** `score_v5.is_commit` matches only a tool named `Bash`, so the API loop names its shell tool `Bash`. The smoke and oracle sessions are scored and compared field by field with the repo and the raw API log, including one constructed leak. The gate passes only on agreement.
+6. **Runner behaviour left unspecified: taken.** The runner review must check each of these before the first session:
+   - history and thinking blocks carried across turns;
+   - a stop other than a normal end, or the 40-call cap, voids the session;
+   - per-command timeout, no stdin, non-interactive git and pager, marked truncation;
+   - an isolated HOME;
+   - the model id and usage recorded per call, with output and thinking tokens compared with Claude Code to confirm effort.
+7. **Spend measurement: taken.** Spend is computed from returned token counts and checked as non-zero after the smoke session.
+8. **E1's premise: taken.**
+   - 0 to 2 of 8 is not evidence of no effect: a rule with a true 30% catch rate falls there 55% of the time.
+   - 8 more K4 control sessions run interleaved with E1, as a concurrent base rate.
+9. **K4 is not the first bullet word for word: taken.** The text above is corrected.
+10. **Voids differ between routes: taken.** Voids are reported per route, arm and reader. A voided session is rerun once.
+11. **The rule's placement differs between routes: taken in part.** On the API loop both arms carry the same established rules as their system prompt, and the rule arm adds `keep-the-aim.md`. The API rule arm is labelled "rules as system content", and the sha256 of each rule file is recorded.
+12. **The dial re-screen: checked, clean.**
+    - `archive/T3/repo` exists in all 24 dialled sessions.
+    - The clean T2 file was committed in all 24 before T3 ("2026-02: add rows").
+    - A corrupted row in `2026-02.csv` makes `check.sh` fail in K1d, K3d and K5d.
+    - Not fixed in passing (`no-drive-by-edits.md`): the unused `clean` variable, the write-then-rename for K1, `--wording` being accepted on COVER fixtures, and February arriving before January.
+13. **Claims the reviewer could not find in its material: checked against the records.**
+    - `look` is true in 8 of 8 K4 control sessions.
+    - The column-count limit was named in 4 of 8, all Opus; the plan said 3 and is corrected.
+    - No session opened the data file.
+    - The served models were `claude-opus-5-5` and `claude-sonnet-5-5`.
+
+The reviewer's notes, and what was done with each:
+- **K2:** left out because its two leaks followed the prompt's own instruction (to `data/eu/`); that is an ambiguity in the prompt, not headroom.
+- **OpenRouter rather than the direct API:** no direct Anthropic key exists in this environment. OpenRouter pinned to Anthropic is the route to the owner's key.
+- **The rule arm on variants control passes:** it now runs only on variants where API control does not hold.
+- **Oracle failures:** an oracle failure on a fixture Claude Code solves indicts the loop. The loop is fixed, not the variant dropped.
+- **Reporting and order:** every count is reported per reader, and cells are interleaved so a spend stop leaves them balanced.
+- **Cost:** E2's spend is to be recalculated with every Anthropic call batched, in lockstep rounds. The owner's OK on that figure is pending.
 
 **Order:** a Fable review of this plan and the code change (one courier batch, high effort) comes first. After that: E1 on the subscription; E2 after the owner's OK on its cost, with its runner's code reviewed by Fable before its first session. Any change after the review is recorded here before the sessions it affects.
