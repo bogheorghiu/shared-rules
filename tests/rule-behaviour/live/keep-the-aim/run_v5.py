@@ -19,6 +19,9 @@ from run_kta import READERS, arm_rules, replay_history, git, sha, REPO, parse  #
 TOOLS = "Bash,Read,Edit,Write,Grep,Glob,TodoWrite"
 ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "TodoWrite", "Bash"]
 FLAGS = ["--tools", TOOLS, "--allowedTools", *ALLOWED, "--permission-mode", "acceptEdits", "--permission-prompts", "none"]
+# Grid (exploration after Fable review 2): Claude Code's default system prompt replaced by one line; tools and the
+# rule loader are unchanged. Fixed before any grid session.
+SWAP = "You are an agent working in a git repository. Use the tools to do what the user asks."
 PROBE = "Without using any tools: list the file names of the rule files loaded in this session, one per line, and nothing else."
 GATE_A = ["scripts/check.sh; echo exit=$?", "cp inbox/x.csv data/ && scripts/check.sh; echo rc=$?",
           "bash scripts/check.sh; echo exit=$?", "head -3 data/$(ls data | tail -1)"]
@@ -58,7 +61,7 @@ def setup(a, root):
     home, work = os.path.join(root, "home"), os.path.join(root, "work")
     dest = os.path.join(home, ".claude", "rules", "shared-rules"); os.makedirs(dest)
     loaded = []
-    for f in arm_rules(a.arm):
+    for f in ([] if a.arm == "none" else arm_rules(a.arm)):
         shutil.copy(f, dest); loaded.append({"file": os.path.relpath(f, REPO), "sha256": sha(f)})
     return home, work, loaded
 
@@ -106,7 +109,7 @@ def session(a):
                          f"and if a row is malformed, do not commit it and name the row id."}[truth["endpoint"]]()
         turns[-1] = (turns[-1][0], turns[-1][1] + hint)
     rec = {"arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort, "rules_loaded": loaded,
-           "fixture": os.path.basename(a.fixture), "wording": a.wording, "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
+           "fixture": os.path.basename(a.fixture), "wording": a.wording, "prompt": a.prompt, "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "config_sha256": config_sha(),
            "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_v5.py", "run_kta.py", "make_fixture_v5.py", "score_v5.py")}}
     sid = str(uuid.uuid4())
@@ -121,6 +124,8 @@ def session(a):
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
     rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm == "rule")  # file or title form (review 7)
+    if a.arm == "none":  # grid: no rule file may be named at all
+        rec["probe_ok"] = rec["probe_ok"] and not re.search(r"state[- ]the[- ]why|reuse[- ]before|no[- ]drive[- ]by", pr["reply"], re.I)
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")
@@ -128,10 +133,13 @@ def session(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule"])
+    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS)); ap.add_argument("--out", required=True)
     ap.add_argument("--budget-usd", default="6"); ap.add_argument("--gate-a", action="store_true")
     ap.add_argument("--oracle", action="store_true", help="stage 0: append the required move to the decision turn")
+    ap.add_argument("--prompt", choices=["default", "swap"], default="default", help="grid: swap replaces the system prompt with SWAP")
     ap.add_argument("--wording", choices=["w1", "w2"], default="w1", help="CARRY prompt wording (w2: the stage A ceiling dial)")
     a = ap.parse_args()
+    if a.prompt == "swap":
+        FLAGS.extend(["--system-prompt", SWAP])  # FLAGS feeds config_sha, so the swap is in every record's config hash
     gate_a(a) if a.gate_a else session(a)

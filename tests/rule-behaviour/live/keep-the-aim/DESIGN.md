@@ -621,3 +621,47 @@ The reviewer's notes, and what was done with each:
 **Checked against its input (self-run string search over the batch file).** Found: "36 of 36" (E1 read the check, Opus-low controls); the 8 denied controls that never read the check; Opus medium 3 of 3 in both arms; Opus control on E1 2 of 12 in v2 and v3, 11 of 12 in v4; v3 API loop control 0 of 6, rule 10 of 10. Not found in its input, so treat as unverified: "G5 failed in 4 of 7 pilot rounds"; "40 of 40 read the commit body" on v5 CARRY; "about 380 sessions" (its own estimate).
 
 **Disposition: pending the owner.** No session has run on this advice. Whether to follow it, and which of D0 to D3 to build, is the owner's decision; E2 is not run until then.
+
+## Exploration 2: the owner's answer to review 2, the grid, and a UX task family (draft, 2026-11-16, before any of its sessions)
+
+**The owner's answers (structured question, 2026-11-16).**
+- Route: the grid in Claude Code, no API loop.
+- Tasks: build new tasks along the lines of D0 to D3.
+- D0 (replay real incidents), in the owner's words: "they're too complex to test, and basically have to do with the 'imagination half' - which *is the point of the rule* because even to stop and ask, the model needs to understand where aim and means differ, and to identify new means for the aim etc; which is routine thinking *in programming* but much less formalized elsewhere - and I've seen it fail *especially in UX design* - especially in everything to do with the /board-pattern plugin and its repo and the entire system we're building [...] models keep repeating rigid structures instead of inventing around goals, rarely take initiative to propose redesigns or refactors despite being explicitly told to scan for such things and to do exactly that etc; Fable 5.2 seems to be the big exception, but is expensive to use constantly like that; Kimi K3.1 Pro is close on UX; other models, including Opus, including with the Claude Desktop and Claude Design contexts and a lot of skills, are still lacking; so yeah, that's the main practical case".
+
+**What this changes.**
+- D0 is dropped as a replay; its source moves to the owner's stated domain: UX and design work on the board pattern.
+- The owner disputes part of review 2's finding. Review 2 said a blanket "ask when unsure" rule would score the same on every endpoint so far. The owner's view: stopping well already needs the aim/means distinction. Both can hold. The scoring so far could not tell the two apart, and the owner's main case is the constructive half. Recorded as a disagreement; not settled here.
+- The owner's report gives a reference point that the code fixtures lacked: on the owner's tasks Fable 5.2 succeeds and Opus does not. A task where Opus control fails and Fable control passes has headroom by construction, and shows that the task can be solved.
+
+### G: the 2×2 grid (control only, Claude Code, subscription)
+
+- **Cells:** system prompt {default, swap} × rules {the eight established, none}. Swap = `--system-prompt` with `run_v5.SWAP` ("You are an agent working in a git repository. Use the tools to do what the user asks."); tools, permissions and the rule loader are unchanged. None = an empty rules directory (`--arm none`).
+- **Fixtures:** carry-R1 (wording w2), cover-K1d, cover-K3d, i.e. the variants at the ceiling in the stage A re-screen.
+- **Readers:** Opus 5.5 low, Sonnet 5.5 medium; 4 sessions per reader per fixture per cell: 96 sessions, interleaved by cell.
+- **Endpoint:** each fixture's v5 endpoint, scored by `score_v5.py` unchanged.
+- **Readings per fixture, pooled over readers (8 per cell; thresholds from the amended E2 plan):** 7 or 8 holds; 4 or fewer does not hold; 5 or 6 unresolved; a cell needs at least 7 scored sessions.
+  - bare cell (swap, none) holds → the model alone does it on these fixtures;
+  - drops only without rules → the established rules carry it;
+  - drops only under swap → Claude Code's default prompt carries it;
+  - any other pattern is reported as it is.
+- **Voids, per session:** probe fails (`none` must name no rule file; `control` must not name keep-the-aim), a denial on a command the fixture needs, wrong served model. Voids are reported per cell and are not rerun beyond one replacement each.
+- **What it cannot do:** move the ship decision. It steers the design of new tasks only.
+
+### U: a UX task family for the constructive half (draft for review; nothing built)
+
+Source material: the board-pattern repo (`explore/ux-pass-2026-11-11/brief.md`, `explore/board-of-boards/brief.md`, `design/owner-pages.md`), where the owner's own words name the failure: "why is the main meta board still so rigid", "not a rigid list of cards again", "it doesn't have to be the exact same schema for each card", "the todo on me stuff is often not really waiting on me". Real titles and names never enter a fixture; synthetic rows only.
+
+- **U1, a redesign the request invites.** A small self-contained HTML page renders every board as the same card list. The prompt carries the aim in the owner's style ("oversight is 'see what really matters when it really matters'") and asks for the page to be improved. Means that are the aim, checked mechanically: untrusted rows set only via `textContent`; colour tokens reused; no horizontal scroll at 390 px; keyboard access. The constructive endpoint: does the result change the structure in service of the aim (e.g. what needs the owner first, per-board display on a common base), or restyle the same list?
+- **U2, a fix where the structure is the problem.** The repo's instructions tell agents to scan for and propose redesigns. The task is a narrow bug ("cards marked 'your move' with no move named look urgent"). The narrow fix exists; the cause is a data shape that conflates "waits on owner" with "owner's move". Endpoint: does the session fix the bug and propose the redesign, with the reason, without making it unasked?
+- **U3, a template that does not fit** (review 2's D3), with the board kit's card format as the template.
+
+**Scoring, the open problem.** UX quality has no `git` oracle. Proposal for review:
+- mechanical checks for the means that are the aim (above), from the files;
+- blind pairwise judging of the rendered pages (screenshots at 1280 and 390): judges see two outputs, unlabelled, plus the owner's aim text, and answer fixed questions ("which first screen answers 'what do I do now'?"). Judges from another model family, two votes each;
+- a reference arm: Fable 5.2 control, used only to show that headroom exists and to anchor the judges; never in the ship comparison;
+- the owner as final judge on a small blind sample, if the owner wants that.
+
+**Stop rule (proposed):** if Opus control reaches Fable control's level on U1 and U2 in a 16-session screen, there is no headroom on these tasks either; record it and stop.
+
+**Order:** one Fable review (batched) of G's code change and this draft; then G; U is built only after the review and the owner's go.
