@@ -1320,3 +1320,11 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
 Known-risk check (v2-d3 vs the owner card "pay the skip deposit"): no run dropped or changed it (0 of 20). Mirror baseline: 4 of 4 right on every case (no needless change seen).
 
 What this clears: the downstream instrument separates the original protocol from the two independent repairs inside the default clause, with the narrow repair still failing there. What it does not cover: v3–v6 (no d-cases built), and no hinted oracle subject session has yet been scored on the d-cases (the stage-0 oracle was scored on the old h-cases).
+
+## W1 oracle on the d-cases (pre-registered 2026-11-17, before any run; owner: "Oracle, then stage A")
+
+**Why no new subject session.** The hinted Opus oracle from stage 0 (`oracle-w1-v1-control-opus-medium-20261117T035350-c36093`, gates all pass) never saw the hidden cases, so its committed protocol can be scored on the d-cases as it stands. One subject session saved; nothing about the subject changes.
+
+**Runs.** Its work tree as the subject, `hidden_d/v1` (freeze `14557602cfbb2f88`), setup A (literal), 5 cases × 2 runs = 10 Sonnet medium downstream runs, deployed pack, `control` arm.
+
+**Bar (the blind repairs' bar scaled to 10):** passes iff ≥ 9 of 10 right and both d6 runs right. Fails → the task is not shown solvable on the d-cases: back to design, owner adjudicates; no stage A registration.
