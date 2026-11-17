@@ -1288,3 +1288,17 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
 - d3 (several moves) is partly caught by the narrow repair in A (2 of 4): "no name on either" reads as "no move named".
 
 **What the clean cases show:** d5 and d7 separate exactly as designed in setup A: original and narrow 4 of 4 on `owner`, both blind repairs and the mirror 4 of 4 right. Under the blind setup B the original fires its default less often (d5 2 of 4, d7 3 of 4): the literal reader is the one that isolates the protocol.
+
+## W1 redesign: stage 0b (pre-registration, 2026-11-17, before any run on the fixed cases)
+
+**Owner adjudication of stage 0 (typed in chat, 2026-11-17):** "Fix d2/d6, re-run"; reader setup "Literal only". The stage-0 runs stay on record and count for nothing.
+
+**Change (fixture only; `make_fixture_w1.py` `DCASES`, nothing else).** New d2 and d6 events that answer no card already on the status file: v1 d2 = the back-page puzzle (owner chose the crossword, template redraw unassigned), v1 d6 = the illustrator's contract (checks out, only the owner can sign it as publisher); v2 d2 = the open day (owner chose Saturday, poster redo unassigned), v2 d6 = the insurance renewal (checks out, only the owner can accept it in the insurer's portal). The subject repos and the other cases' events are unchanged (diff checked: `w1-v1/v2`, `w1m-v1/v2` identical; card ids identical). Selftest 106/106.
+
+**Falsification station (run before this pre-registration was written):** a fresh Sonnet agent, given only the ten status files and events, asked which other cards each event could be read as answering, closing, duplicating or changing. New d2/d6: "none" in all four. Remaining overlaps it named, kept as they are (outside the owner's adjudication) and recorded as a known risk: v1-d7 and v2-d5/d7 share a sender with an `ext` card, v2-d7 shares "tool inventory" with a session card (neither touches the owner set the key scores); **v2-d3 "book the skip" vs the owner card "pay the skip deposit"** could touch the owner set. In stage 0 setup A it did not (both repairs right 4 of 4 on d3). If a stage-0b run changes that card, it is reported per run, not rescored.
+
+**Runs.** Setup A only (literal prompt, whole `ops/` carried). Protocols as stage 0: original, narrow, Kimi max blind repair, Fable blind repair, mirror start. 5 protocols × 2 variants × 5 cases × 2 runs = 100 Sonnet medium runs (deployed pack, `control` arm; subscription, no paid calls).
+
+**Gate (unchanged from stage 0, setup A, pooling v1+v2, 4 runs per case per protocol).** A non-guard case (d2, d3, d5, d7) is kept iff original puts it on `owner` in ≥ 3 of 4, narrow on `owner` in ≥ 3 of 4, and the Kimi and Fable repairs are each right in ≥ 3 of 4. The d6 guard must be right in ≥ 3 of 4 under original, narrow and both repairs, else the setup fails. W1 goes forward iff ≥ 3 non-guard cases are kept and the guard holds; otherwise it goes back to design (owner adjudicates). Mirror right-rates recorded as the baseline for needless change. Voids, the void cap and the peek flag as before.
+
+**Freeze.** hidden_d tree (sha256 of the sorted per-file sha256s, first 16 hex) `14557602cfbb2f88` (stage 0: `9cab83e0f74a57c8`, reproduced with the same method); `make_fixture_w1.py` 59782dc696ea654c, `score_w1.py` 52fe0f6243b82222.

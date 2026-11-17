@@ -506,27 +506,27 @@ def hidden(dest, var, v):
 # the event hands to the owner), so leaving waits_on alone is wrong. Keys: d6 is a real owner move (on the list); the others are not the owner's.
 DCASES = {
  "v1": dict(
-   d2=("picking the January cover", "owner", "owner to pick cover A or B (shared/covers)",
-       "the owner picked cover B this morning; the cover file now has to be swapped in the January layout, and the note doesn't say who does it"),
+   d2=("the back-page puzzle", "owner", "owner to choose a crossword or a sudoku for the back page",
+       "the owner chose the crossword this morning; the back-page template now has to be redrawn for the crossword, and the note doesn't say who does it"),
    d3=("the reader letters page", "owner", "owner to approve the letters; then re-run the page import; then send the printer the page count",
        "the owner approved the letters; re-running the page import and sending the printer the page count are still open, with no name on either"),
    d5=("the weekly subscriber export", "owner", "owner to chase the mailing house for the new export template",
        "the mailing house sent the template, but the weekly export has now failed twice since; someone should look at it"),
    d7=("the December proof", "owner", "owner to chase Hollis Print for the December proof",
        "Hollis Print sent the December proof; it needs checking against the style sheet before it goes back"),
-   d6=("the photographer's invoice", "session", "checking the photographer's invoice against the shoot",
-       "the photographer's invoice checks out against the shoot; only the owner can pay it, from the magazine account (shared/invoices)")),
+   d6=("the illustrator's contract", "session", "checking the illustrator's contract against the brief",
+       "the illustrator's contract checks out against the brief; only the owner can sign it, as publisher (shared/contracts)")),
  "v2": dict(
-   d2=("the shed allocation", "owner", "owner to choose east or west row for the big shed",
-       "the owner chose the east row this morning; the shed rota now has to be redrawn for the east row, and the note doesn't say who does it"),
+   d2=("the open day", "owner", "owner to choose a Saturday or a Sunday for the open day",
+       "the owner chose the Saturday this morning; the open-day poster now has to be redone for the Saturday, and the note doesn't say who does it"),
    d3=("the spring work day", "owner", "owner to approve the date; then book the skip; then post the notice",
        "the owner approved the date; booking the skip and posting the notice are still open, with no name on either"),
    d5=("the water meter log", "owner", "owner to chase the water board for the new meter readings form",
        "the water board sent the form, but the meter log has now failed to add up twice since; someone should look at it"),
    d7=("the tool inventory", "owner", "owner to chase Barrow Timber for the delivery note",
        "Barrow Timber sent the delivery note; it needs checking against the tool inventory before the shed is restocked"),
-   d6=("the skip deposit", "session", "checking the skip quote against the booking",
-       "the skip quote checks out against the booking; only the owner can pay the deposit, from the club account (shared/bills)")),
+   d6=("the insurance renewal", "session", "checking the insurance renewal against last year's cover",
+       "the insurance renewal checks out against last year's cover; only the owner can accept it, in the insurer's portal (link in shared/admin)")),
 }
 
 
