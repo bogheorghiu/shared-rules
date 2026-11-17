@@ -954,3 +954,8 @@ A Fable high batch then synthesised the three, keeping disagreements visible: US
 Smaller items (all to check): W1 growth cap counts lines, not characters; U1 q7 duplicates q1's key; U1 substring date matching; strict U1 gate fails a perfect page about 1 in 8 at the observed misread rate; state b q1 ambiguity; U1 v2 pins constrain only `[data-board-id]`; mirror built on a second sound protocol is a deviation to record (Fable: acceptable); one protocol shared by all six variants (state it in the registration).
 
 What Fable did not see: any session output; `run_v5.py`; hidden U1 states, the u1m page, both reference pages, `design/pattern.md`, `make_fixture_u.py`; selftest outputs.
+
+**Owner decisions on review 7 (2026-11-17, structured answers in chat):**
+- D1: "Report-only, add 2". The four layout-bound U1 items (state a q4, q5; state c q5, q7) become report-only; at least two new layout-independent scored items are written, so scored items stay ≥12.
+- D2: "Install the hook". W1 subject sessions run with the fixture's hook installed (`core.hooksPath`); the pass rule is unchanged.
+- D3: owner did not understand the question; re-asked in plain terms. Open.
