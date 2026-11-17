@@ -1344,3 +1344,5 @@ What this clears: the downstream instrument separates the original protocol from
 **Departure, recorded now:** v3–v6 anchors were to be built "before stage A is registered" (stage-0 plan). Owner chose "Oracle, then stage A" with v3–v6 unbuilt; v3–v6 stay held back and get their own stage 0 before any session uses them.
 
 **Cost.** 12 Opus sessions and 120 downstream Sonnet runs, all on the subscription; no paid API call.
+
+**Stage A registered (2026-11-17, before any stage-A session).** Owner asked about a Fable control arm, answered "no preference"; the recommended option is taken: **no Fable arm** (the hinted oracle already shows the task solvable, 10 of 10). Stop bands read Opus alone as written above. Subjects run from the stage-0b fixture tree (`w1-v1/v2`, `w1m-v1/v2` byte-identical to stage 0's). Session order: all 12 launched together, 6 at a time; each subject's downstream batch starts after its session ends.
