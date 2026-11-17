@@ -80,9 +80,12 @@ SPECS = {
 }
 
 # role: "score" counts toward the score; "gate" is pass/fail and never a point (its honest answer is
-# "none", which the starting page earned for free in the first anchor read); "report" is recorded only.
-# State b is the gate state: nothing there needs the owner. Its stale/opted-out items are "report", so
-# the score comes from states a and c alone (14 items; at least 12 keeps one-item vote noise small).
+# "none", which the starting page earned for free in the first anchor read); "report" is recorded only;
+# "fixed" decides the mirror (the no-move card must not be read as something the owner can do now) and is
+# reported for U1. State b is the gate state: nothing there needs the owner.
+# Review 7 (owner D1): the stale and opted-out items reward one layout choice, so they are "report"; state a
+# q7 repeats q1's count, so it is "report" too; four layout-independent items about the asks' content were
+# added. The score comes from states a and c: 13 items (at least 12 keeps one-item vote noise small).
 # Question texts never name a board or card that is another question's key in the same request
 # (score_u.py refuses a request that contains a key).
 QUESTIONS = {
@@ -90,20 +93,25 @@ QUESTIONS = {
         {"id": "q1", "role": "score", "type": "list", "text": "Which boards have a request waiting for the owner that says what to do? List the board names.",
          "key": ["School fair stall", "Window seals", "Insurance renewal"]},
         {"id": "q2", "role": "score", "type": "text", "text": "What is the owner asked to approve, and for what date?",
-         "key": [["second visit"], ["3 december", "3 dec", "december 3"]]},
+         "key": [["second visit"], ["3 december", "3 dec", "december 3", "dec 3", "3rd december", "december 3rd",
+                                    "2026 12 03", "3 12 2026"]]},
         {"id": "q3", "role": "score", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
          "key": "Pump replacement"},
-        {"id": "q4", "role": "score", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
+        {"id": "q4", "role": "report", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
          "key": ["Attic boxes sort", "Charity run training"]},
-        {"id": "q5", "role": "score", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
+        {"id": "q5", "role": "report", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
          "key": ["Passport renewals"]},
         {"id": "q6", "role": "score", "type": "text", "text": "The owner is asked to choose between two prices. Which two?",
          "key": [["412"], ["365"]]},
-        {"id": "q7", "role": "score", "type": "number", "text": "In total, how many requests that say what to do are waiting for the owner?",
+        {"id": "q7", "role": "report", "type": "number", "text": "In total, how many requests that say what to do are waiting for the owner?",
          "key": 3},
+        {"id": "q8", "role": "score", "type": "text", "text": "One request asks the owner to choose what a stall sells. What are the two options?",
+         "key": [["cake"], ["plant"]]},
+        {"id": "q9", "role": "fixed", "type": "list", "text": "Which boards have something the owner can do right now? List the board names.",
+         "key": ["School fair stall", "Window seals", "Insurance renewal"]},
     ],
     "state_b": [
-        {"id": "q1", "role": "gate", "type": "yesno", "text": "Does anything need the owner right now? Answer yes or no.", "key": "no"},
+        {"id": "q1", "role": "gate", "type": "yesno", "text": "Is there a request waiting for the owner right now? Answer yes or no.", "key": "no"},
         {"id": "q2", "role": "gate", "type": "list", "text": "Which boards have a request waiting for the owner? List the board names (empty list if none).",
          "key": []},
         {"id": "q3", "role": "report", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
@@ -120,19 +128,33 @@ QUESTIONS = {
          "key": [["confirm"], ["saturday"]]},
         {"id": "q4", "role": "score", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
          "key": "Colour sample"},
-        {"id": "q5", "role": "score", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
+        {"id": "q5", "role": "report", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
          "key": ["Library returns"]},
         {"id": "q6", "role": "score", "type": "text", "text": "What amount is the owner asked to approve for the removal?",
          "key": [["240"]]},
-        {"id": "q7", "role": "score", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
+        {"id": "q7", "role": "report", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
          "key": ["Dog vaccination"]},
+        {"id": "q8", "role": "score", "type": "text", "text": "By which day must the hallway be cleared?", "key": [["friday"]]},
+        {"id": "q9", "role": "score", "type": "text", "text": "The owner is asked to choose a room for something. Which two rooms?",
+         "key": [["lounge"], ["study"]]},
+        {"id": "q10", "role": "score", "type": "text", "text": "What document is the owner asked to sign?", "key": [["waiver"]]},
+        {"id": "q11", "role": "fixed", "type": "list", "text": "Which boards have something the owner can do right now? List the board names.",
+         "key": ["Moving the piano"]},
     ],
 }
 
 # Read by score_u.py grade. Floors are set from the anchors' scores, not carried over from the first read;
 # null means not set yet and grade reports the floor as "unset".
 SCORING = {"score_states": ["state_a", "state_c"], "floors": {"state_a": None, "state_c": None}, "threshold": None,
-           "gate_rule": "a gate passes only if every gate item of its state is correct in every vote"}
+           "mirror_not_worse": None,
+           "gate_rule": "two votes: a gate passes if every gate item is right in both; if any item-vote is wrong, a "
+                        "third vote is sent and each gate item must be right in at least 2 of 3 (review 7: a perfect "
+                        "page failed about 1 time in 8 under the both-votes rule)",
+           "pass_rule": "U1: render gates (fixture guard tests, hostile text, no horizontal scroll) AND the state b "
+                        "gate AND every floor AND mean score >= threshold. U1m (owner D3): render gates AND every "
+                        "'fixed' item right in a majority of votes AND mean score >= mirror_not_worse (the starting "
+                        "page's anchor score less the noise floor). A void vote (API error or unparsed reply) is "
+                        "resent, never scored as wrong."}
 
 # The mirror's own check (score_u.py render, gates.json "mirror"). Why: the reading score cannot see the
 # mirror defect; in the first anchor read the judge named the no-move card correctly with the defect present.

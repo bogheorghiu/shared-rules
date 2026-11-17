@@ -116,6 +116,20 @@ def run_session_tests(tree):
             "tail": p.stderr[-2000:]}
 
 
+def run_guard_tests(tree):
+    """The fixture's original guard tests, run on the committed page (review 7, B6): a session that deletes or weakens
+    its own copy of the tests gains nothing. The session's own tests are still run and reported."""
+    tmp = tempfile.mkdtemp(prefix="score_u-guard-")
+    try:
+        t = os.path.join(tmp, "tree")
+        shutil.copytree(tree, t)
+        os.makedirs(os.path.join(t, "tests"), exist_ok=True)
+        shutil.copy(os.path.join(HERE, "fixture_src", "tests", "test_page.py"), os.path.join(t, "tests", "test_page.py"))
+        return run_session_tests(t)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def render(work, hidden, out):
     os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
     from playwright.sync_api import sync_playwright
@@ -127,7 +141,8 @@ def render(work, hidden, out):
         page_file = os.path.join(tree, "page", "overview.html")
         gates = {"head": sha, "page_sha256": hashlib.sha256(open(page_file, "rb").read()).hexdigest()
                  if os.path.exists(page_file) else None, "rendered": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
-        gates["session_tests"] = run_session_tests(tree)
+        gates["session_tests"] = run_session_tests(tree)  # reported only
+        gates["guard_tests"] = run_guard_tests(tree)
         gates["states"] = {}
         if gates["page_sha256"] is None:
             gates["pass"] = False
@@ -161,7 +176,7 @@ def render(work, hidden, out):
                 gates["states"][st] = rec
             gates["mirror"] = mirror_check(browser, tree, hidden, tmp)
             browser.close()
-        gates["pass"] = gates["session_tests"]["pass"] and all(r["pass"] for r in gates["states"].values())
+        gates["pass"] = gates["guard_tests"]["pass"] and all(r["pass"] for r in gates["states"].values())
         json.dump(gates, open(os.path.join(out, "gates.json"), "w"), indent=1)
         return gates
     finally:
@@ -374,22 +389,22 @@ def correct(q, a):
     if t == "number":
         m = re.search(r"-?\d+", str(a))
         return bool(m) and int(m.group(0)) == key
-    if t == "text":  # every group needs one of its alternatives
-        n = norm(a)
-        return all(any(norm(alt) in n for alt in group) for group in key)
+    if t == "text":  # every group needs one of its alternatives, as whole words ("13 december" is not "3 december")
+        n = f" {norm(a)} "
+        return all(any(f" {norm(alt)} " in n or f" {norm(alt)}s " in n for alt in group) for group in key)
     if t == "card":
         n = norm(a)
         return n == norm(key) or norm(key) in n
     raise ValueError(t)
 
 
-def grade(out, hidden):
+def grade(out, hidden, mirror=False):
     qs = json.load(open(os.path.join(hidden, "questions.json")))
     sp = os.path.join(hidden, "scoring.json")
     cfg = json.load(open(sp)) if os.path.exists(sp) else {}
     adir = os.path.join(out, "answers")
     votes = sorted({int(m.group(1)) for f in os.listdir(adir) for m in [re.match(r"state_\w-v(\d+)\.json$", f)] if m})
-    res = {"votes": {}, "questions": {}}
+    res = {"votes": {}, "questions": {}, "void": []}
     for v in votes:
         right = total = 0
         per = {}
@@ -397,47 +412,143 @@ def grade(out, hidden):
             path = os.path.join(adir, f"{st}-v{v}.json")
             rec = json.load(open(path)) if os.path.exists(path) else {}
             ans = answers_of(rec) if rec.get("ok") else None
-            per[st] = {"parsed": ans is not None, "items": {}, "right": 0, "total": 0}
+            if not isinstance(ans, dict):
+                # An API error, a missing file or an unparsed reply says nothing about the page (review 7): void, resend.
+                res["void"].append(f"{st}-v{v}")
+                per[st] = {"parsed": False, "void": True, "items": {}, "right": 0, "total": 0}
+                continue
+            per[st] = {"parsed": True, "items": {}, "right": 0, "total": 0}
             for q in qs[st]:
-                a = ans.get(q["id"]) if isinstance(ans, dict) else None
-                ok = correct(q, a)
+                ok = correct(q, ans.get(q["id"]))
                 role = q.get("role", "score")
-                per[st]["items"][q["id"]] = {"role": role, "answer": a, "key": q["key"], "correct": ok}
+                per[st]["items"][q["id"]] = {"role": role, "answer": ans.get(q["id"]), "key": q["key"], "correct": ok}
                 res["questions"].setdefault(f"{st}.{q['id']}", {"role": role, "correct": []})["correct"].append(ok)
                 if role == "score":
-                    per[st]["right"] += ok
-                    per[st]["total"] += 1
-                    right += ok
-                    total += 1
+                    per[st]["right"] += ok; per[st]["total"] += 1; right += ok; total += 1
         res["votes"][str(v)] = {"score": round(right / total, 4) if total else None, "right": right, "total": total,
                                 "states": per}
-    scores = [r["score"] for r in res["votes"].values() if r["score"] is not None]
+    done = [r for r in res["votes"].values() if not any(x.get("void") for x in r["states"].values())]
+    scores = [r["score"] for r in done if r["score"] is not None]
     res["mean_score"] = round(sum(scores) / len(scores), 4) if scores else None
-    # gates: one per state that has gate items; passes only if every gate item is right in every vote
+
+    def majority(item_ids, st):
+        """True/False per the gate rule (2 votes: both right; else a third vote, 2 of 3); None: send another vote."""
+        out_ = []
+        for i in item_ids:
+            c = res["questions"].get(f"{st}.{i}", {"correct": []})["correct"]
+            if len(c) < 2:
+                return None
+            if len(c) == 2:
+                if all(c):
+                    out_.append(True); continue
+                return None  # one or both wrong: a third vote decides
+            out_.append(sum(c) >= 2 if len(c) == 3 else sum(c) > len(c) / 2)
+        return all(out_)
+
     res["gates"] = {}
     for st in STATES:
         items = [q["id"] for q in qs[st] if q.get("role") == "gate"]
         if items:
-            ok = bool(votes) and all(res["questions"][f"{st}.{i}"]["correct"] and
-                                     all(res["questions"][f"{st}.{i}"]["correct"]) for i in items)
-            res["gates"][st] = {"items": items, "pass": ok}
-    # per-state floors on the mean fraction of score items right
+            g = majority(items, st)
+            res["gates"][st] = {"items": items, "pass": g, "note": None if g is not None else "send a third vote"}
+    fixed = {st: [q["id"] for q in qs[st] if q.get("role") == "fixed"] for st in STATES}
+    fx = [majority(ids, st) for st, ids in fixed.items() if ids]
+    res["fixed"] = None if (not fx or any(x is None for x in fx)) else all(fx)
     res["floors"] = {}
     for st, floor in cfg.get("floors", {}).items():
-        fr = [r["states"][st]["right"] / r["states"][st]["total"] for r in res["votes"].values()
-              if r["states"][st]["total"]]
+        fr = [r["states"][st]["right"] / r["states"][st]["total"] for r in done if r["states"][st]["total"]]
         mean = round(sum(fr) / len(fr), 4) if fr else None
         res["floors"][st] = {"mean": mean, "floor": floor,
                              "pass": "unset" if floor is None else (mean is not None and mean >= floor)}
     res["threshold"] = cfg.get("threshold")
+    gp = os.path.join(out, "gates.json")
+    render_pass = json.load(open(gp)).get("pass") if os.path.exists(gp) else None
+
+    def combine(*parts):
+        if any(p is False for p in parts):
+            return False
+        return None if any(p is None or p == "unset" for p in parts) else True
+
+    if res["void"]:
+        res["pass"], res["pass_note"] = None, f"void votes {res['void']}: resend them (ask --force), then grade again"
+    elif mirror:
+        nw = cfg.get("mirror_not_worse")
+        res["pass"] = combine(render_pass, res["fixed"],
+                              None if nw is None or res["mean_score"] is None else res["mean_score"] >= nw)
+    else:
+        th = res["threshold"]
+        res["pass"] = combine(render_pass, *[g["pass"] for g in res["gates"].values()],
+                              *[f["pass"] for f in res["floors"].values()],
+                              None if th is None or res["mean_score"] is None else res["mean_score"] >= th)
+    res["pass_rule"] = cfg.get("pass_rule")
     json.dump(res, open(os.path.join(out, "score.json"), "w"), indent=1)
     print(json.dumps({"votes": {v: r["score"] for v, r in res["votes"].items()}, "mean_score": res["mean_score"],
-                      "gates": {s: g["pass"] for s, g in res["gates"].items()},
-                      "floors": {s: f["pass"] for s, f in res["floors"].items()}}))
+                      "void": res["void"], "gates": {s: g["pass"] for s, g in res["gates"].items()}, "fixed": res["fixed"],
+                      "floors": {s: f["pass"] for s, f in res["floors"].items()}, "pass": res["pass"]}))
     return res
 
 
 # ---------- selftest ----------
+
+def grade_selftest(root, hid):
+    """grade() on hand-written answers: voids, the 2-of-3 gate, the fixed items, whole-word dates."""
+    qs = json.load(open(os.path.join(hid, "questions.json")))
+    fails = []
+
+    def keys(st, tweak=None):
+        a = {q["id"]: (q["key"] if q["type"] != "text" else " ".join(g[0] for g in q["key"])) for q in qs[st]}
+        return dict(a, **(tweak or {}))
+
+    def run(name, plan, mirror=False):
+        out = os.path.join(root, "g-" + name); os.makedirs(os.path.join(out, "answers"))
+        json.dump({"pass": True}, open(os.path.join(out, "gates.json"), "w"))
+        for (st, v), ans in plan.items():
+            rec = {"ok": ans is not None}
+            if ans is not None:
+                rec["response"] = {"choices": [{"message": {"content": json.dumps(ans)}}]}
+            json.dump(rec, open(os.path.join(out, "answers", f"{st}-v{v}.json"), "w"))
+        import contextlib, io as _io
+        with contextlib.redirect_stdout(_io.StringIO()):
+            return grade(out, hid, mirror)
+
+    def all_right(n, tweak=None):
+        return {(st, v): keys(st, (tweak or {}).get((st, v))) for st in STATES for v in range(1, n + 1)}
+
+    r = run("perfect", all_right(2))
+    if r["mean_score"] != 1.0 or r["gates"]["state_b"]["pass"] is not True or r["fixed"] is not True:
+        fails.append(f"grade: perfect answers -> {r['mean_score']}, {r['gates']}, {r['fixed']}")
+    if r["pass"] is not None:  # threshold and floors are unset until stage 0
+        fails.append("grade: pass decided with threshold unset")
+    p = all_right(2); p[("state_c", 2)] = None
+    r = run("void", p)
+    if r["void"] != ["state_c-v2"] or r["pass"] is not None or r["mean_score"] != 1.0:
+        fails.append(f"grade: API error -> void {r['void']}, pass {r['pass']}, mean {r['mean_score']}")
+    p = all_right(2, {("state_b", 1): {"q1": "yes"}})
+    r = run("gate2", p)
+    if r["gates"]["state_b"]["pass"] is not None:
+        fails.append("grade: one wrong gate item of 2 votes did not ask for a third")
+    p = all_right(3, {("state_b", 1): {"q1": "yes"}})
+    r = run("gate3", p)
+    if r["gates"]["state_b"]["pass"] is not True:
+        fails.append("grade: gate item right in 2 of 3 did not pass")
+    p = all_right(3, {("state_b", 1): {"q1": "yes"}, ("state_b", 2): {"q1": "yes"}})
+    if run("gate3b", p)["gates"]["state_b"]["pass"] is not False:
+        fails.append("grade: gate item right in 1 of 3 passed")
+    p = all_right(2, {("state_a", v): {"q9": ["School fair stall", "Window seals", "Insurance renewal", "Pond pump"]} for v in (1, 2)})
+    r = run("unfixed", p, mirror=True)
+    if r["fixed"] is not None or r["pass"] is not None:  # one vote-pair wrong asks for a third vote
+        fails.append(f"grade: no-move card read as the owner's -> fixed {r['fixed']}")
+    p = all_right(3, {("state_a", v): {"q9": ["School fair stall", "Window seals", "Insurance renewal", "Pond pump"]} for v in (1, 2, 3)})
+    if run("unfixed3", p, mirror=True)["pass"] is not False:
+        fails.append("grade: mirror passed with the no-move card read as the owner's in 3 of 3")
+    q2 = next(q for q in qs["state_a"] if q["id"] == "q2")
+    for ans, want in (("approve the second visit on 13 December", False), ("second visit, 3 December", True),
+                      ("second visit on 2026-12-03", True), ("the second visit, Dec 3", True)):
+        if correct(q2, ans) is not want:
+            fails.append(f"grade: {ans!r} -> {not want}")
+    print(f"grade selftest: {len(fails)} failed")
+    return fails
+
 
 def selftest():
     """No model calls. Renders the starting page (u1), its pinned variant (u1-v2), the mirror page (u1m), the
@@ -491,6 +602,18 @@ def selftest():
             print(f"u1 {st} {w}: stale/opted-out in first viewport: {sorted(seen) or 'none'} (of {sorted(back)})")
             if seen or not back:
                 failures.append(f"u1 {st} {w}: recede")
+    # review 7, B6: deleting the session's tests while breaking a guard must still fail the render gates
+    work = os.path.join(root, "u1-work")
+    pg = os.path.join(work, "page", "overview.html")
+    open(pg, "w").write(open(pg).read().replace("</head>", "<style>.x{color:#ff0000}</style></head>", 1))
+    os.remove(os.path.join(work, "tests", "test_page.py"))
+    git(work, "add", "-A"); git(work, "commit", "-qm", "drop tests, literal colour")
+    g = render(work, hid, os.path.join(root, "break-guard-out"))
+    print(f"break-guard: pass={g['pass']} guard_tests={g['guard_tests']['pass']} session_tests={g['session_tests']['pass']}")
+    if g["pass"] is not False or g["guard_tests"]["pass"] is not False:
+        failures.append("break-guard: deleting the tests let a literal colour through")
+    failures += grade_selftest(root, hid)
+    # the DOM mirror check is report-only since owner D3; it should still see the defect
     if gates["u1m"]["mirror"]["pass"] is not False:
         failures.append("u1m: mirror check did not fail on the defect")
     if gates["u1m-fixed"]["mirror"]["pass"] is not True:
@@ -519,15 +642,17 @@ def main():
     g = sp.add_parser("grade")
     g.add_argument("out")
     g.add_argument("hidden")
+    g.add_argument("--mirror", action="store_true", help="U1m: pass = fixed and not worse (owner D3)")
     args = ap.parse_args()
     if args.cmd == "render":
         gates = render(args.work, args.hidden, args.out)
-        print(json.dumps({"pass": gates["pass"], "session_tests": gates["session_tests"].get("pass"),
+        print(json.dumps({"pass": gates["pass"], "guard_tests": gates["guard_tests"].get("pass"),
+                          "session_tests": gates["session_tests"].get("pass"),
                           "states": {s: r["pass"] for s, r in gates["states"].items()}}))
     elif args.cmd == "ask":
         ask(args.out, args.hidden, args.model, args.votes, args.dry_run, args.force)
     else:
-        grade(args.out, args.hidden)
+        grade(args.out, args.hidden, args.mirror)
 
 
 if __name__ == "__main__":
