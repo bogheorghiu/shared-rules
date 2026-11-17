@@ -18,7 +18,11 @@ file says where things stand and what comes next. It does not repeat the record.
   before every gating test.
 - **Budget (owner, 2026-11-17, replaces earlier instructions):** the BYOK API budget is almost gone and the owner
   can't buy more now. **Fable batched calls only for the really important steps**: a review of the rule, or a
-  review that gates a stage. **No reasoning or effort parameter on any Fable call** (owner, 2026-11-17).
+  review that gates a stage. **No reasoning or effort parameter on any Fable call** (owner, 2026-11-17), or
+  effort low where budget is tight. Clarified by the owner the same day: designing and testing a test like this
+  one does need a Fable-class model; the only one seen to come close is Kimi K3.1 Pro at max reasoning. So
+  critical design and review points that cannot be skipped still go to batched BYOK Fable, even at low effort;
+  Kimi K3.1 Pro at max is the fallback for design work, and DeepSeek is for attack and critique.
   Otherwise use DeepSeek (`deepseek/deepseek-v4.1-flash-1017`) and Kimi (`moonshotai/kimi-k3.1-pro`) through
   OpenRouter; they cost cents. Where Claude is needed, use Opus, Sonnet or Haiku as subagents or new sessions,
   which run on the subscription. Report each paid call's cost to the owner.
