@@ -55,7 +55,7 @@ file says where things stand and what comes next. It does not repeat the record.
   - `*/references/fable_contaminated/`: not blind, never an anchor.
   - `w1/references/repair_session.md` and `u1/references/overview_good_fixed.html`, `overview_principles.html`:
     Opus-written high anchors.
-- **Paid so far this round:** about USD 8.05 (BYOK USD 7.98: review 8 USD 0.86 included; Kimi W1 reference USD 0.066).
+- **Paid so far this round:** about USD 8.05: Fable BYOK USD 7.98 (review 8, USD 0.86, included) and Kimi on OpenRouter USD 0.066 (the W1 reference).
 
 ## In flight
 
