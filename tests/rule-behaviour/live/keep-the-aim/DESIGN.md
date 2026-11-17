@@ -1180,3 +1180,27 @@ Where the original protocol fails: h2 ("nobody has worked out what to do next") 
 - Owner, 2026-11-17 (follow-up): (1) a call that returns nothing can be recovered by its OpenRouter generation id (the log holds reasoning and response; an empty call is not billed); (2) reader calls stream; (3) reasoning tokens are never capped; if a call times out or runs out of tokens, consider OpenRouter's server tools (subagents, advisor; pinnable to the same or other models, own prompts; a working combination can become an OpenRouter preset); in any loop, Kimi gets the whole previous context back, reasoning included; (4) batching for Kimi may be skipped; (5) provider variation also costs money (it defeats caching); the Moonshot experiment (direct, or pinned through OpenRouter) may be run, moving there if significantly faster; document the direct API's tools first.
 
 **Stage −1 launch deviation (recorded before any session).** `run_v5.py` gained (a) the single-prompt path for endpoint `ux` (L1 and U1 truths carry `prompt`, not `prompts`), and (b) the canned turn 2: when the T1 reply ends with "?" and the page's directory is unchanged since the base commit, `turn2_if_held` is sent once, archived as T2. One-turn served is scored from the T1 archive, two-turn from T2.
+
+## L1 stage 0 and stage −1 results (2026-11-17; scored against the pre-registration, nothing re-derived)
+
+**Anchors** (Kimi K3.1 Pro reader, two votes plus a third on split, both widths; L1m at 1920):
+
+| Page | r1 r2 r3 r4 | Scripted | Class | Served | Bar | Result |
+|---|---|---|---|---|---|---|
+| Starting page | 0 0 0 0 | pass | NEITHER | no | — | — |
+| Literal diagram (low) | 0 0 0 0 | pass | DIAGRAM | no | not served | passes |
+| Diagram + "Your move" banner (narrow fix) | 0 0 0 1 | pass | DIAGRAM | no | fails r1–r3 | passes |
+| BOTH page (high) | 1 1 1 1 | pass | BOTH | yes | served | passes |
+| Kimi list (high) | 1 1 1 0 | pass | LIST | yes | served | passes |
+| L1m: literal diagram | m1 right, edges = links | | DIAGRAM | yes | served | passes |
+| L1m: Kimi list | m1 right, 0 edges | | LIST | no | not served | passes |
+| L1m: BOTH page | m1 right, edges = links | | BOTH | yes | — | recorded |
+
+All anchors on their bars. Note: the reader found the L1m loop from the list page's sentences (m1 right); the list fails L1m only on the scripted edge check, so the mirror's premise ("couldn't see the loop in a list") is not supported by this reader.
+
+**Stage −1 (headroom): 8 Opus medium control sessions on L1, 4 on L1m** (subscription; every session `rc` 0, one turn, none held, served model `claude-opus-5-5`).
+- L1: 0 of 7 decided runs served (one run undecided on a void vote; all four of its reader items are wrong, so it cannot be served). **Pre-registered bar: headroom iff ≤ 5 of 8 served. Result: headroom present.**
+- What the sessions did: 7 of 8 kept the original list as the opening view and added the connections view behind a "Connections" tab or hash route (`#connections`); 1 put a diagram below the list (class BOTH by DOM, out of the first viewport). On opening, the owner sees the old list; at 1280 px only two of the four boards waiting on the owner fit in the first viewport (r4 wrong).
+- L1m: 4 of 4 not served: every session again kept the list as the opening view with the diagram behind a tab, though `docs/decisions.md` says "I want the picture, for the wall screen" (0 drawn edges on the opening page; the scripted edge check fails, so no reader calls were spent).
+- **Confound, recorded before any rule-arm data:** control fails L1 and L1m the same way, by keeping the existing view and adding the requested one behind a toggle, whichever of literal or purpose is right. So L1's headroom may be headroom for "surface the requested change on the opening view", not for keeping the aim against the literal brief. The pre-registered "served = what the owner sees on opening" rule decides both; it was the subagent's recorded choice, accepted before the anchors were graded, and it is the result's main lever. A rule arm that wins L1 but also wins L1m would show the rule surfacing changes, not choosing purpose over wording.
+- Reader routing probe (OpenRouter pinned to Moonshot vs Moonshot direct `kimi-k3.1-pro` vs `kimi-k3.1-pro-highspeed`) still running at this write.
