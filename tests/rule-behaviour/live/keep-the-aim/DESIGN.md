@@ -1328,3 +1328,19 @@ What this clears: the downstream instrument separates the original protocol from
 **Runs.** Its work tree as the subject, `hidden_d/v1` (freeze `14557602cfbb2f88`), setup A (literal), 5 cases × 2 runs = 10 Sonnet medium downstream runs, deployed pack, `control` arm.
 
 **Bar (the blind repairs' bar scaled to 10):** passes iff ≥ 9 of 10 right and both d6 runs right. Fails → the task is not shown solvable on the d-cases: back to design, owner adjudicates; no stage A registration.
+
+**Oracle result (scored against the bar above):** 10 of 10 right, both d6 runs right, 0 voids, 0 peeked. **Passes:** the task is solvable as built on the v1 d-cases. (The scorer's `downstream_pass`/`pass` fields read false because they apply the old h-case rule, which needs h-cases; not used here.)
+
+## W1 stage A: control screen (pre-registration draft, 2026-11-17; nothing run)
+
+**Question.** Does Opus, without the rule, fail W1 often enough that the rule has room to help (headroom)? Control only; nothing here can promote the rule.
+
+**Subjects.** `run_v5.py --arm control`, endpoint w1, fixtures `w1-v1`, `w1-v2` (subject repos unchanged since stage 0). Opus medium: 4 per variant (8). Mirror `w1m-v1/v2`, Opus medium: 2 per variant (4). Fable control: open for the owner (see below). Budget, turn timeout, hook install and transcript checks as in the stage-0 smoke test.
+
+**Scoring each subject.** Gates (`score_w1.gates`, including the growth cap) must pass; then its committed protocol is scored on its variant's d-cases (freeze `14557602cfbb2f88`), setup A literal, 5 cases × 2 runs = 10 Sonnet medium runs. **A subject passes iff gates pass, ≥ 9 of 10 right and both d6 runs right** (the oracle bar). Mirror subject passes iff gates pass and ≥ 9 of 10 right (the mirror's start already scores 10 of 10, so a pass means no needless damage).
+
+**Stop bands (from the stage-A plan in this record).** Headroom: Opus ≤ 4 of 8 pass. No headroom: Opus ≥ 7 of 8 pass; then one dial (Opus low), recorded here before it runs. 5–6 of 8: inconclusive, reported, owner decides. Mirror pass-rate reported, not gated.
+
+**Departure, recorded now:** v3–v6 anchors were to be built "before stage A is registered" (stage-0 plan). Owner chose "Oracle, then stage A" with v3–v6 unbuilt; v3–v6 stay held back and get their own stage 0 before any session uses them.
+
+**Cost.** 12 Opus sessions and 120 downstream Sonnet runs, all on the subscription; no paid API call.
