@@ -1302,3 +1302,21 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
 **Gate (unchanged from stage 0, setup A, pooling v1+v2, 4 runs per case per protocol).** A non-guard case (d2, d3, d5, d7) is kept iff original puts it on `owner` in ≥ 3 of 4, narrow on `owner` in ≥ 3 of 4, and the Kimi and Fable repairs are each right in ≥ 3 of 4. The d6 guard must be right in ≥ 3 of 4 under original, narrow and both repairs, else the setup fails. W1 goes forward iff ≥ 3 non-guard cases are kept and the guard holds; otherwise it goes back to design (owner adjudicates). Mirror right-rates recorded as the baseline for needless change. Voids, the void cap and the peek flag as before.
 
 **Freeze.** hidden_d tree (sha256 of the sorted per-file sha256s, first 16 hex) `14557602cfbb2f88` (stage 0: `9cab83e0f74a57c8`, reproduced with the same method); `make_fixture_w1.py` 59782dc696ea654c, `score_w1.py` 52fe0f6243b82222.
+
+## W1 redesign: stage 0b results (2026-11-17; scored against the stage-0b pre-registration, nothing re-derived)
+
+100 runs, 0 voids, 0 peeked. Setup A (literal), v1+v2 pooled, 4 runs per case: "own" = card left on `owner`, "r" = owner set equals the key.
+
+| Protocol | d2 own/r | d3 own/r | d5 own/r | d7 own/r | d6 (guard) r |
+|---|---|---|---|---|---|
+| original | 4/0 | 4/0 | 4/0 | 4/0 | 4 |
+| narrow | 4/0 | 3/1 | 3/1 | 4/0 | 4 |
+| Kimi repair | 0/4 | 0/4 | 0/4 | 0/4 | 4 |
+| Fable repair | 0/4 | 0/4 | 0/4 | 0/4 | 4 |
+| mirror start | 0/4 | 0/4 | 0/4 | 0/4 | 4 |
+
+**Gate verdict: passes.** All four non-guard cases kept (original 4 of 4 on `owner` each; narrow ≥ 3 of 4 each; both blind repairs 4 of 4 right each); the d6 guard holds 4 of 4 under every protocol. W1 goes forward on v1 and v2.
+
+Known-risk check (v2-d3 vs the owner card "pay the skip deposit"): no run dropped or changed it (0 of 20). Mirror baseline: 4 of 4 right on every case (no needless change seen).
+
+What this clears: the downstream instrument separates the original protocol from the two independent repairs inside the default clause, with the narrow repair still failing there. What it does not cover: v3–v6 (no d-cases built), and no hinted oracle subject session has yet been scored on the d-cases (the stage-0 oracle was scored on the old h-cases).
