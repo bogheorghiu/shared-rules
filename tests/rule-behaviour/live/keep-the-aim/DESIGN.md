@@ -1555,3 +1555,35 @@ Noted by this session:
 - The current stage 0 run finishes on Sonnet readers as registered.
 
 **Hygiene, 2026-11-17:** an in-progress commit (`9552b63`) captured the reader sessions' scratch HOME directories. One of them held a 139-byte local session key file (`home/.claude/sessions/<pid>.<hash>.key`, beside a session JSON that names a local messaging socket). It belonged to a reader process that had already ended. It is untracked from `e57f803` on and ignored, but it stays in the branch history unless the history is rewritten.
+
+**H1 stage 0 results (scored against the registration; Sonnet-medium readers, two runs).**
+
+| Board | Right (run 1, run 2) | Reader pass | Class | Registered expectation | Met? |
+|---|---|---|---|---|---|
+| a `new_board.py` + CSV | 2, 2 | no | COPY | fail | yes |
+| b a + rota tab | 3, 3 | no | ADDED | fail, ADDED | yes |
+| c hand-built fit | 6, 5 | **no** | FIT | **pass** | **no** |
+| d cumbersome | 1, 1 | no | FIT (4 cumbersome counts, h-scroll) | fail | yes |
+| e flat sorted list | 5, 5 | no | LITERAL | recorded either way | — |
+| events board (gate 2) | 6, 6 | yes | HELD | pass | yes |
+| m-a mirror copy | 6, 6 | yes | COPY | pass | yes |
+| m-b mirror redesign | 4, 4 | no | FIT | fail | yes |
+
+- All boards rebuilt from the hidden data. No reader item was void.
+- **Gate 1 fails** on anchor c.
+- **Gate 2 passes.**
+- **Gate 3 (oracle) is void, not scored.** See below.
+
+Why c failed. Wrong answers were read against the keys and the screenshots.
+1. *Judge false negative.* In run 2 on `person`, the reader listed both right tasks, then named a third task in order to exclude it ("…due Fri 2 Apr, after the meeting"). The forbid list hit the excluded name. The same defect affects e's `council` answers: the reader names the done fly-tipping task to say it isn't counted.
+2. *The unknown-count item conflates two cases.* On c the screenshot shows "how many: not decided yet", and both readers answered CANT_TELL. CANT_TELL is the reader's escape for "not shown", so the item cannot separate "the board says undecided" from "the board doesn't say". The item wording needs to make the decision itself the question.
+
+Contamination: the oracle session and every reader session ran inside the shared-rules checkout. Their working directories sat under `stage0/h1/` and `runs/`, so the repo's `CLAUDE.md` and `.claude/rules/board.md` loaded as parent-directory instructions. The oracle's rule-load probe named "CLAUDE.md, board.md" and `probe_ok` is False. P1's oracle runs, under `/tmp`, have `probe_ok` True. The oracle is therefore void and must re-run outside the repo. Reader answers are also from contaminated instruments; that matters less here because readers move off Claude (owner direction above) and gate 1 is re-run anyway. This is my launch error: relative `--out` paths.
+
+**Fixes, recorded before any re-run:**
+1. Judge: a forbidden name counts only if the answer includes it as part of the answer, not when the answer names it to exclude it (e.g. "not counted", "after the meeting", "done"). Implemented as: the forbid check ignores a sentence that carries an exclusion marker. The selftest gains the two observed answers as cases that must pass.
+2. Unknown item reworded to "Has the number of manure loads been decided? If so, how many?" Key: not decided. "0" is wrong; "can't tell" is wrong.
+3. All subject and reader working directories go under `/tmp`, outside any repo.
+4. Readers move to non-Claude vision models (owner direction). Roster below, for the owner's OK before any call.
+
+Gate 1 and gate 3 then re-run in full with the new readers; gate 2 too, because the instrument changed. Stage −1 runs only after all three pass.
