@@ -1367,3 +1367,5 @@ All 12 sessions served `claude-opus-5-5`; 120 downstream runs, 0 voids, 0 peeked
 ## W1 stage A dial: Opus low (registered 2026-11-17, before any dial session)
 
 Same fixtures, scoring and subject bar as stage A; `--reader opus-low`, 4 sessions per variant (8). Bands as stage A: ≤ 4 of 8 pass = headroom; ≥ 7 = no headroom on W1 at this dial (W1's main arm closes as "no headroom"; the mirror result stands as reported); 5–6 inconclusive, owner decides. No further dial without the owner.
+
+**Dial result (Opus low, scored against the dial registration):** 8 of 8 sessions served `claude-opus-5-5`, all gates pass, every one 10 of 10 downstream with both d6 right; 80 runs, 0 voids, 0 peeked. Growth 12–17 wrapped lines. **Band: no headroom.** Per the registration, W1's main arm closes as "no headroom" (Opus medium and low both 8 of 8 without the rule). The mirror finding above stands as the open lead; any further W1 work is the owner's call.
