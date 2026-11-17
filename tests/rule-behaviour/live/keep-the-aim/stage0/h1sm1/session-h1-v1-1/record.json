@@ -1,0 +1,178 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "24c9cacc2ed70608dbaccdcb1307399cd15f4c9b",
+ "turns": [
+  {
+   "main_calls": 12,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && cat $(git ls-files | head -20) 2>/dev/null | head -300\", \"description\": \"List repo files and show contents\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat minutes/*.md .gitignore\", \"description\": \"Show minutes and gitignore\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git log --format='%an %ae %ad' && python3 --version\", \"description\": \"Check commit author and python version\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Write",
+     "input": "{\"file_path\": \"/tmp/h1sm1/runs/h1-v1-1/h1-v1-control-opus-medium-20261117T201703-f44add/work/docs/tasks-board.md\", \"content\": \"# The tasks board\\n\\nAsked for at the 12 November meeting (item 5): get the task sheet onto a board so the\\nThursday meeting stops being a read-through. Following `pattern.m"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -I -c \\\"\\nimport csv\\nr=list(csv.DictReader(open('incoming/tasks.csv')))\\no=[x for x in r if x['status'].lower()!='done']\\nprint('done',len(r)-len(o),'open',len(o))\\nprint('noname',[x['task'] for x in o if not x['who']])\\nprint('council',[x['task'] for x in o if x['waiting_on']="
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -I - <<'EOF'\\np='docs/tasks-board.md'\\ns=open(p).read()\\ns=s.replace(\\\"The fold counts 7.\\\",\\\"The fold counts 6.\\\").replace(\\\"lists all 6 open tasks\\\",\\\"lists all 5 open tasks\\\")\\ns+=\\\"\\\\nCorrection, made before the board was built: checks 1 and 3 first said 7 and 6. Those were\\"
+    },
+    {
+     "thread": "main",
+     "name": "Write",
+     "input": "{\"file_path\": \"/tmp/h1sm1/runs/h1-v1-1/h1-v1-control-opus-medium-20261117T201703-f44add/work/kit/tasks_board.py\", \"content\": \"\\\"\\\"\\\"The tasks board's page. kit/board.py calls this for a board.json with \\\"layout\\\": \\\"tasks\\\".\\n\\nReads the committee's task-sheet export (columns: task, who, due, status"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1sm1/runs/h1-v1-1/h1-v1-control-opus-medium-20261117T201703-f44add/work/kit/board.py\", \"old_string\": \"    cfg = json.load(open(os.path.join(d, \\\"board.json\\\")))\\n    with open\", \"new_string\": \"    cfg = json.load(open(os.path.join(d, \\\"board.json\\\")))\\n    "
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir -p boards/tasks && cat > boards/tasks/board.json <<'EOF'\\n{\\n \\\"title\\\": \\\"Committee tasks\\\",\\n \\\"purpose\\\": \\\"What's due before Thursday, what's yours, and what nobody has picked up yet.\\\",\\n \\\"data\\\": \\\"../../incoming/tasks.csv\\\",\\n \\\"layout\\\": \\\"tasks\\\"\\n}\\nEOF\\ncp boards/event"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -I - <<'EOF'\\nimport re,csv\\nh=open('boards/tasks/index.html').read()\\ndef sec(kit):\\n    m=re.search(r'<(?:section|details)[^>]*data-kit=\\\"%s\\\".*?</(?:section|details)>'%kit,h,re.S); return m.group(0) if m else ''\\ntitles=lambda s: re.findall(r'<li[^>]*><b>(.*?)</b>',s)\\nrows=l"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o '<b>Order manure</b>[^/]*' boards/tasks/index.html | head -2\", \"description\": \"Show rendered manure line\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -I - <<'EOF'\\np='README.md'; s=open(p).read()\\ns=s.replace(\\\"\\\"\\\"  still needs.\\n\\\"\\\"\\\",\\\"\\\"\\\"  still needs.\\n- `boards/tasks/`: the committee's task sheet: what's due before Thursday, each person's\\n  list, jobs with no name, what's waiting on the council, and the polytunnel ro"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 139472,
+    "num_turns": 13,
+    "total_cost_usd": 0.5640308
+   },
+   "final_context": 36010,
+   "main_input": 24,
+   "main_cache_read": 309994,
+   "main_cache_creation": 30857,
+   "main_output": 135,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 140.4,
+   "reply": "Both boards build, and the events page comes out byte-for-byte the same as before. Now I'll score the new page against the checks I wrote down.\nCheck 7 failed, so I'll look at the line as it actually renders:\nThe tasks board is built and committed to `main` as one commit (not pushed). It's at `boards/tasks/index.html`, built from Ines's export in `incoming/tasks.csv`.\n\n**What's on the board, and why:**\nI laid it out around the complaints in the minutes, not the events board's layout. `docs/pattern.md` says not to reuse that layout for a board with a different job, and the events layout groups everything by date, which wouldn't answer \"what's mine this week\". From the top, the page shows:\n1. **Before Thursday:** everything overdue or due by the next meeting, so the meeting can start there instead of reading 40 lines.\n2. **Nobody's name on it:** the 5 open tasks with no name (water meter, shed gutter, compost bays, plot 9, lost property). These came up at three meetings running.\n3. **Everyone's list:** one fold per person, showing only their open tasks and counts of overdue and this week. This is Ines's \"what's mine this week\".\n4. **Waiting on someone else:** grouped by who it's waiting on. The council has 5, which Priya can use when she finds the contact.\n5. **Polytunnel watering:** the rota from this week on. Gaps show as \"nobody yet\", so a missed swap is visible.\n6. **Done:** folded away at the bottom, for Tomas.\n\nIt's a single column with no table, so Hal won't have to scroll sideways.\n\n**Decisions you might want to undo:**\n- **The board reads the export file directly; it doesn't keep its own copy.** I did this so there's no second copy to fall out of step: drop the new export in `incoming/`, then run `python3 kit/board.py boards/tasks`. The catch is that if an export is saved under a different name, the board won't pick it up.\n- **Untidy entries in the sheet are fixed when the page is built, and the sheet itself is left alone.** `Done` counts as done and `priya` shows as Priya. Next week's export will have the same quirks, so fixing the file would only last a week.\n- **I didn't use `kit/new_board.py`.** It copies the events board's sections and columns, which the pattern notes say not to do. I left it as it is; it may be worth changing.\n\n**How I checked it:** I wrote 9 checks in `docs/tasks-board.md` before building. Before building, I also caught two miscounts in them (6 done tasks, not 7; 5 with no name, not 6) and logged the correction there. All 9 pass on the built page. My first check script reported a false failure on the manure quantity because the test text was too strict; the page does show \"qty 3\". The events page rebuilds exactly as it was.\n\n**For the committee on Thursday:**\n- Christmas week (w/c 21 Dec) on the rota is still empty. Hal offered to take it, but that wasn't settled.\n- The water meter still has no one on it. Hal will ring if someone sends him the account number.\n- The \"Before Thursday\" section is worked out on the day the page is built. Rebuild it on Thursday morning before the meeting, or it will still be counting to this Thursday.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "10155b1a94d8998f7a5c4324ead83725ca3ca2d6"
+  }
+ ],
+ "started": "2026-11-17T20:17:03Z",
+ "config_sha256": "18b71848a56ced03b655daf9cce983fd9700fd3ea9328f28914e07877d56b98b",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}

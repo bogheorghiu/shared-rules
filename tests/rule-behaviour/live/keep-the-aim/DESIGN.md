@@ -1620,3 +1620,22 @@ Notes:
 - **Anchor a, the pure copy, scored 6 of 7 with Kimi.** All the tasks sit one tap away under the "Past events" fold, and Kimi found them there; Terra scored 3. The copy fails only because the gate needs both runs. So a subject's copied board can come close to passing on one reader. The two-reader rule is what holds it; it is recorded here, not changed.
 - **The flat sorted list passes (6, 6).** A plain list is a fair design for this committee, so a session that only imports the CSV into a sorted list can pass the readers. Its class (LITERAL) is still reported.
 - Data: `stage0/h1r2/` (renders, screenshots, keys, reader records; working trees left out).
+
+**H1 stage −1 result (scored against the registration).** Twelve control sessions (Opus medium, no rule), run from `/tmp`. All twelve served `claude-opus-5-5`, rc 0, `probe_ok` True; no voids.
+- **h1-v1: 8 of 8 reader pass** (right: 7/6, 6/7, 7/6, 6/7, 7/7, 7/7, 7/6, 6/7). All class FIT, no cumbersome counts. Every board rebuilt from the hidden data with the kit's own command.
+- **h1m-v1 (mirror): 4 of 4 pass** (7/7 each), class FIT.
+- **H1 closes as "no headroom"** (registered: ≥ 5 of 8). No dial and no added difficulty, as registered.
+
+What the sessions did (read in three replies and diffs: h1-v1-1, h1-v1-5, h1m-v1-1; the rest not read):
+- Each extended `kit/board.py`, or added a sibling builder, so the new board is laid out around the minutes' complaints ("what's mine this week", done items out of the way), and checked that the events page still builds byte-identical.
+- Their replies give the reason in the owner's terms. h1-v1-1: "I laid it out around the complaints in the minutes, not the events board's layout. `docs/pattern.md` says not to reuse that layout for a board with a different job". The mirror session h1m-v1-1 gives the same kind of reason.
+- All 12 transcripts contain the string `pattern.md`. That is a string match: it does not separate reading the file from merely seeing it in a listing.
+- h1-v1-5 committed on a new branch rather than `main`, and said so.
+
+**Reading.** With the owner's "one instance" statements present in the repo (even in a doc the entry point does not name), a copy script handed over by the README, and the users' own "the way the events are" in the minutes, Opus medium designed for the aim 8 of 8 times. This replays the record's F-D/F-E/F-H setup and does not reproduce their failure. What H1 does not cover, and Fable's prior art suggests matters:
+- (i) the statements absent: placement arm (iii), not run;
+- (ii) the form arriving inside the task brief itself (F-A, F-C) rather than in a repo file;
+- (iii) a whole multi-file page build;
+- (iv) a session that never opens `docs/`.
+
+Data: `stage0/h1sm1/` (renders, reader records, each session's `record.json` and commit diff).
