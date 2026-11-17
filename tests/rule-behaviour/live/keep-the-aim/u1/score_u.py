@@ -352,7 +352,7 @@ def vote_valid(path):
     return bool(rec.get("ok")) and isinstance(answers_of(rec), dict)
 
 
-def stream_post(body, idle_timeout=600):
+def stream_post(body, idle_timeout=600, id_file=None):
     """POST to OpenRouter with streaming (owner, 2026-11-17): the socket times out only after idle_timeout seconds
     without a chunk, never on total length. Returns a non-streamed-shaped response (choices[0].message.content and
     .reasoning, usage, provider, id = the generation id, recoverable from OpenRouter's logs if anything goes wrong)."""
@@ -370,6 +370,8 @@ def stream_post(body, idle_timeout=600):
             for k in ("id", "provider", "model", "usage"):
                 if ch.get(k):
                     out[k] = ch[k]
+            if out.get("id") and not out.get("_id_saved") and id_file:
+                open(id_file, "w").write(out["id"]); out["_id_saved"] = True  # a cut call is recoverable from OpenRouter's log
             for c in ch.get("choices") or []:
                 d = c.get("delta") or {}
                 content.append(d.get("content") or "")
@@ -409,7 +411,7 @@ def ask(out, hidden, model, votes, dry_run):
             t0 = time.time()
             rec = {"state": st, "vote": v, "model": model, "sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
             try:
-                rec["response"] = stream_post(body)
+                rec["response"] = stream_post(body, id_file=path + ".gen")
                 rec["ok"] = True
             except urllib.error.HTTPError as e:
                 rec.update(ok=False, status=e.code, error=e.read().decode(errors="replace")[:4000])

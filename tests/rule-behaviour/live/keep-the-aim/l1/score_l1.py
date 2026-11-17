@@ -313,7 +313,7 @@ def send(body, path, meta):
     t0 = time.time()
     rec = dict(meta, sent=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     try:
-        rec["response"] = stream_post(body)
+        rec["response"] = stream_post(body, id_file=path + ".gen")
         rec["ok"] = True
     except urllib.error.HTTPError as e:
         rec.update(ok=False, status=e.code, error=e.read().decode(errors="replace")[:4000])
