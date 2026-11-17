@@ -1261,3 +1261,4 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
 - Mirror start: right-rate per kept case recorded (baseline for needless change).
 - Voids, the void cap and the peek flag as before. Freeze: hidden_d tree hash recorded below; no file changes after the first run without a recorded deviation.
 - Freeze: hidden_d tree sha256-of-sha256s `9cab83e0f74a57c8`; `make_fixture_w1.py` a1f196925d114193, `score_w1.py` 52fe0f6243b82222.
+- Owner, 2026-11-17 (clarification): "Anthropic" credit gone means the API (BYOK); Fable may still be used as a subagent here if really needed, ideally at low effort. Replaces "Fable subagents off" above.

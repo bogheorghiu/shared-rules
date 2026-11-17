@@ -29,7 +29,7 @@ file says where things stand and what comes next. It does not repeat the record.
 - **Explaining to the owner:** complex explanations go through a Sonnet subagent humanizer, then a fact-by-fact
   check against the brief. Lead with the verdict; plain words; batch decisions into one AskUserQuestion.
 - **Security:** strip identifiers (`<owner>`) before sending material to outside models. Never paste secrets.
-  Fable: batched BYOK calls for reviews that gate a stage; since 2026-11-17 (owner: the Anthropic API budget is spent) Fable subagents are allowed sparingly where warranted. Make the most of Kimi and other third-party runs.
+  Fable: batched BYOK calls for reviews that gate a stage; since 2026-11-17 (owner: the Anthropic API budget is spent) Fable subagents are allowed sparingly where really needed, ideally at effort low (owner, 2026-11-17: the Anthropic API and OpenRouter credit are gone). Third-party models now on their own APIs: Kimi via api.moonshot.ai (page reads allowed down to USD 5, then ask), DeepSeek via api.deepseek.com; poll balances (`/v1/users/me/balance`, `/user/balance`) and ask if either drops below 10 otherwise.
 
 ## State now
 
