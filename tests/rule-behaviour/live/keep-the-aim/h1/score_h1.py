@@ -60,9 +60,11 @@ CMD_START = re.compile(r"^(python3?|sh|bash|make|node|\./)\b")
 CMD_SKIP = re.compile(r"[<>…]|\.\.\.|new_board|--title|\bgit\b|\bpip\b|\brm\b|\bcurl\b|\bwget\b|\bsudo\b")
 NOBODY = re.compile(r"\b(nobody|no one|no-one|noone|unassigned|not assigned|unclaimed|no owner|no name|up for grabs|"
                     r"not (yet )?(picked up|claimed|taken)|nobody'?s name|without (a name|anyone|an owner))\b", re.I)
-UNKNOWN = re.compile(r"(unknown|undecided|not (yet )?(been )?(decided|known|recorded|set|given|specified|stated|filled|listed|"
+UNKNOWN = re.compile(r"(^\s*no\b|unknown|undecided|not (yet )?(been )?(decided|known|recorded|set|given|specified|stated|filled|listed|"
                      r"settled|agreed|confirmed)|no (number|quantity|amount|figure|count)|blank|\?|\btb[cd]\b|to be "
                      r"(decided|confirmed)|unclear|open question|left empty|isn'?t (given|shown|stated))", re.I)
+EXCLUDE = re.compile(r"(not count|haven'?t counted|not counting|\bexclud|doesn'?t count|isn'?t (due|included|counted)|"
+                     r"marked done|already done|is done|it'?s done|after the meeting|not before the meeting|not due|leave out|left out)", re.I)
 YES = re.compile(r"\b(yes|done|sorted|ready|complete[d]?|taken care of)\b", re.I)
 NO = re.compile(r"\b(no|not (yet )?(done|sorted|ready)|still to do|outstanding)\b", re.I)
 SHOT = re.compile(r"t(\d)-(\d\d)-s(\d+)(?:\.png)?")
@@ -505,7 +507,8 @@ def judge(item, ans):
     k = item["kind"]
     if k == "names":
         pat = lambda t: r"\b" + re.escape(t).replace(r"\ ", r"\s+")
-        return all(re.search(pat(t), ans, re.I) for t in item["require"]) and not any(re.search(pat(t), ans, re.I) for t in item["forbid"])
+        kept = " ".join(c for c in re.split(r"(?<=[.;])\s+|\n", ans) if not EXCLUDE.search(c))  # a name brought up to exclude it is not part of the answer
+        return all(re.search(pat(t), ans, re.I) for t in item["require"]) and not any(re.search(pat(t), kept, re.I) for t in item["forbid"])
     if k == "nobody":
         return bool(NOBODY.search(ans))
     if k == "unknown":
@@ -591,6 +594,97 @@ def readers(out, run, reader="sonnet-medium", dry=False, budget="2"):
         answers[it["id"]] = p["reply"]
         print(f"{out} run{run} {it['id']}: rc={p['rc']} models={p['models_main']} void={v}", flush=True)
     res = score_run(keys, answers) | {"void": voids, "dry_run": dry}
+    json.dump(res, open(os.path.join(rdir, "score.json"), "w"), indent=1)
+    print(json.dumps({"out": out, "run": run, "right": res["right"], "of": res["of"], "void": voids}))
+    return res
+
+
+API_PROMPT = """You are looking at screenshots of a web page, as a member of an allotment committee sees it on their phone.
+The screenshots follow, each after a line naming it. Each name says how many taps from opening the page it took
+(t0 = as opened, t1 = after one tap, t2 = after two taps; the line says what was tapped) and which screen down the
+page it is (s1 = the top, s2 = after scrolling one screen, and so on).
+
+{context}
+
+Question: {q}
+
+Answer from what the screenshots show, nothing else. If they don't show the answer, say CANT_TELL.
+Reply in exactly this form, two lines:
+ANSWER: <your answer, or CANT_TELL>
+SCREENSHOT: <the file name(s) you used, comma-separated>
+"""
+
+
+def api_reader_body(model, prompt, shots, max_images=48):
+    """One OpenRouter chat request: the prompt, then each screenshot after its index line. ZDR enforced per request.
+    Some providers cap images per request (Azure GPT: 50, seen 2026-11-17), so above max_images two consecutive screens
+    of one state go side by side in one image, labelled left and right; every reader of a board gets the same input."""
+    import base64, io as _io
+    from PIL import Image
+    lines = [l for l in open(os.path.join(shots, "index.txt"), encoding="utf-8").read().splitlines() if l.split() and l.split()[0].endswith(".png")]
+    groups = [[l] for l in lines]
+    if len(groups) > max_images:
+        groups, cur = [], []
+        for l in lines:
+            if cur and (len(cur) == 2 or cur[0].split()[0].rsplit("-s", 1)[0] != l.split()[0].rsplit("-s", 1)[0]):
+                groups.append(cur); cur = []
+            cur.append(l)
+        groups.append(cur)
+    content = [{"type": "text", "text": prompt}]
+    for g in groups:
+        if len(g) == 1:
+            data = open(os.path.join(shots, g[0].split()[0]), "rb").read(); label = g[0]
+        else:
+            ims = [Image.open(os.path.join(shots, l.split()[0])).convert("RGB") for l in g]
+            gap = 16; canvas = Image.new("RGB", (sum(i.width for i in ims) + gap, max(i.height for i in ims)), "white")
+            canvas.paste(ims[0], (0, 0)); canvas.paste(ims[1], (ims[0].width + gap, 0))
+            buf = _io.BytesIO(); canvas.save(buf, "PNG"); data = buf.getvalue()
+            label = f"Two screenshots side by side. Left: {g[0]}  |  Right: {g[1]}"
+        content.append({"type": "text", "text": label})
+        content.append({"type": "image_url", "image_url": {"url": "data:image/png;base64," + base64.b64encode(data).decode()}})
+    return {"model": model, "messages": [{"role": "user", "content": content}], "max_tokens": 4000,
+            "provider": {"zdr": True, "data_collection": "deny"}, "reasoning": {"effort": "low"}}
+
+
+def readers_api(out, run, model, dry=False):
+    """Off-Claude readers (owner, 2026-11-17): one OpenRouter call per item, screenshots only, nothing else."""
+    sys.path.insert(0, os.path.join(LIVE, "u1"))
+    from score_u import stream_post  # noqa: E402  (reuse, not copies)
+    rend = json.load(open(os.path.join(out, "render.json")))
+    keys = json.load(open(os.path.join(out, "keys.json")))
+    rdir = os.path.join(out, "readers", f"run{run}")
+    os.makedirs(rdir, exist_ok=True)
+    if not rend["rebuild_ok"]:
+        res = score_run(keys, {}) | {"void": [], "note": "rebuild failed: reader fail without a reader session", "reader": model}
+        json.dump(res, open(os.path.join(rdir, "score.json"), "w"), indent=1)
+        print(json.dumps({"out": out, "run": run, "right": 0, "note": res["note"]}))
+        return res
+    answers, voids = {}, []
+    for it in keys["items"]:
+        root = os.path.join(rdir, it["id"]); os.makedirs(root, exist_ok=True)
+        rp = os.path.join(root, "record.json")
+        old = json.load(open(rp)) if os.path.exists(rp) else None
+        if old and old.get("model_requested") == model and old.get("reply") and not dry:
+            answers[it["id"]] = old["reply"]
+            continue
+        body = api_reader_body(model, API_PROMPT.format(context=keys["context"], q=it["q"]), os.path.join(out, "shots"))
+        if dry:
+            n_img = sum(1 for c in body["messages"][0]["content"] if c["type"] == "image_url")
+            print(f"DRY {out} run{run} {it['id']}: {model}, {n_img} images, provider={body['provider']}")
+            voids.append({"id": it["id"], "why": "dry run"}); continue
+        rec = {"item": it["id"], "run": run, "reader": "openrouter", "model_requested": model, "provider_req": body["provider"]}
+        try:
+            r = stream_post(body, id_file=os.path.join(root, "generation_id.txt"))
+            rec |= {"reply": r["choices"][0]["message"]["content"], "served_model": r.get("model"), "provider": r.get("provider"),
+                    "generation_id": r.get("id"), "usage": r.get("usage"), "finish_reason": r.get("finish_reason")}
+        except Exception as e:  # noqa: BLE001  a failed call is a void item, re-run next time
+            rec |= {"reply": "", "error": str(e)[:2000]}
+        json.dump(rec, open(rp, "w"), indent=1)
+        if not rec["reply"]:
+            voids.append({"id": it["id"], "why": rec.get("error", "empty reply")})
+        answers[it["id"]] = rec["reply"]
+        print(f"{out} run{run} {it['id']}: {rec.get('served_model')} {rec.get('provider')} void={not rec['reply']}", flush=True)
+    res = score_run(keys, answers) | {"void": voids, "dry_run": dry, "reader": model}
     json.dump(res, open(os.path.join(rdir, "score.json"), "w"), indent=1)
     print(json.dumps({"out": out, "run": run, "right": res["right"], "of": res["of"], "void": voids}))
     return res
@@ -714,6 +808,10 @@ def selftest():
         expect("judge: planted wrong answers fail", [J("water", "Tomas"), J("overdue", "ditch, rotavator, hedge, insurance, water bill"),
                                                      J("nobody", "Hal"), J("unknown", "0"), J("unknown", "CANT_TELL"),
                                                      J("two_rows", "Josef"), J("council", "the water meter")], [False] * 7)
+        expect("judge: a name brought up to exclude it does not count (stage 0)", [
+            J("person", "Priya needs to book the skip and send round the minutes. Her third task, drafting the open day leaflet, is due Fri 2 Apr, after the meeting."),
+            J("council", "Yes: the gate lock and the water meter. The fly-tipping also says waiting on council, but it is marked done, so I haven't counted it."),
+            J("unknown", "No, not decided yet."), J("person", "skip, minutes, leaflet")], [True, True, True, False])
         ek = {i["id"]: i for i in json.load(open(os.path.join(hid, "h1-v1", "events.items.json")))["items"]}
         expect("judge: dates and yes/no", [judge(ek["when"], "Sat 15 May 2027"), judge(ek["when"], "8 May"),
                                            judge(ek["done"], "Yes, done"), judge(ek["done"], "No, not done")], [True, False, True, False])
@@ -832,7 +930,10 @@ if __name__ == "__main__":
         r = render(a.subject, a.hidden_csv, a.out)
         print(json.dumps({k: r[k] for k in ("page", "rebuild_ok", "rebuild_by", "rebuild_source", "class", "counts", "caps_hit")}, indent=1))
     elif a.cmd == "readers":
-        readers(a.out, a.run, a.reader, a.dry_run, a.budget_usd)
+        if a.reader.startswith("or:"):
+            readers_api(a.out, a.run, a.reader[3:], a.dry_run)
+        else:
+            readers(a.out, a.run, a.reader, a.dry_run, a.budget_usd)
     elif a.cmd == "gates":
         print(json.dumps(gates(a.outs), indent=1))
     elif a.cmd == "classify":

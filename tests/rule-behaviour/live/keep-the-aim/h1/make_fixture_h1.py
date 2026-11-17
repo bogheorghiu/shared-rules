@@ -603,7 +603,7 @@ def task_items(rows):
          "require": [stem(t) for t in council], "forbid": [stem(t) for t in council_done]},
         {"id": "nobody", "q": "Who is going to repaint the noticeboard?", "kind": "nobody",
          "key": "nobody" if board and not board[0]["who"] else board[0]["who"]},
-        {"id": "unknown", "q": "How many loads of manure are being ordered?", "kind": "unknown",
+        {"id": "unknown", "q": "Has the number of manure loads been decided? If so, how many?", "kind": "unknown",
          "key": "unknown" if manure and not manure[0]["qty"] else manure[0]["qty"]},
         {"id": "two_rows", "q": "Who is strimming the paths?", "kind": "names", "require": strim, "forbid": []},
     ]

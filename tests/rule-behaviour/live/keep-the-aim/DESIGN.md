@@ -1587,3 +1587,13 @@ Contamination: the oracle session and every reader session ran inside the shared
 4. Readers move to non-Claude vision models (owner direction). Roster below, for the owner's OK before any call.
 
 Gate 1 and gate 3 then re-run in full with the new readers; gate 2 too, because the instrument changed. Stage −1 runs only after all three pass.
+
+**H1 stage 0, round 2: instrument as re-registered before any round-2 data (owner chose readers 2026-11-17: "Kimi + GPT-6.1 Terra").**
+- Readers: run 1 Kimi K3.1 Pro (`moonshotai/kimi-k3.1-pro`), run 2 GPT-6.1 Terra (`openai/gpt-6.1-terra`). Both via OpenRouter with per-request `provider: {zdr: true, data_collection: deny}` and reasoning effort low. One call per item, screenshots only, the same prompt wording as before minus the folder instructions (`API_PROMPT`).
+  - Above 48 screenshots, two consecutive screens of one state go side by side in one image, labelled left and right, for both readers alike. Why: Azure's GPT endpoint refuses more than 50 images; seen on the first probe.
+  - Probe calls (one item, board c, old keys; not scored): Kimi answered "Wren" (served by Wafer, $0.0097); Terra answered "Wren" (served by Azure, 39 images, $0.039).
+- A reader item is void if the call fails or returns an empty reply; void items re-run. The reader pass rule is unchanged: ≥ 6 of 7 in both runs.
+- Judge fix 1 (forbid ignores excluding clauses) is in `score_h1.py`. Fix 2 (the reworded manure item) is in `make_fixture_h1.py`. The fixtures are regenerated to `/tmp/h1-fixtures-r2`: only the hidden items files change.
+- All outputs are built under `/tmp/h1r2`, then the renders and reader records are copied into `stage0/h1r2/`.
+- Gate 3: the oracle re-runs with Opus medium (Claude: the subject) from `/tmp/h1r2/runs`, with the same hint, scored by the same two readers.
+- Pass conditions as registered for gates 1–3. If gate 1 fails again on a reader-side defect, it goes to the owner instead of a third round.
