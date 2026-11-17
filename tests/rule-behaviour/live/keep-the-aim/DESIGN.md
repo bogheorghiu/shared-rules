@@ -1110,3 +1110,25 @@ Where the original protocol fails: h2 ("nobody has worked out what to do next") 
 - U1 fixed items: "Not fixed". The D3 definition stands (fixed = the reader no longer reads the card as the owner's to do now). The blind Fable page is taken off the must-read-right side of the instrument check, because it was never asked to fix that card. Recorded as a change to the check before any new U1 data.
 - U1 score: "Harder items". Items that separate good designs from great ones are added; U1 stage 0 re-runs.
 - Owner, same message thread: integrate the recent board-pattern and related sessions' convergent learnings on UX design, architecture and the boards' fundamental principles, as input to why the task is hard, why the rule is needed, and better-designed tests, with Fable, Kimi, DeepSeek and other models helping.
+
+## Design round 9: better tests from the board-pattern learnings (2026-11-17)
+
+**Input.** `board-learnings.md` (a Sonnet subagent's reading of `board-pattern` at `fe4e229`, spot-checked) distilled into `reviews/design9-ask.md` (rule text, owner's purpose statements, converged principles, recorded design failures, the waits audit, stage 0 results, constraints, five questions). Identifiers stripped.
+
+**Calls.** Kimi K3.1 Pro, reasoning max: USD 0.150 (`reviews/design9-kimi9.md`). DeepSeek V4.1 Flash 1017, reasoning max: USD 0.010 (`design9-ds9.md`). Fable 5.2, batched, no effort parameter (`batch-1794889449-…`, `end_turn`, 17,202 output tokens): USD 0.365 (`design9-fable.md`). Round total USD 0.53.
+
+**Where all three converge (independent answers to the same brief):**
+1. Mechanism (each graded it a guess): the subject satisfies what is named (brief wording, existing structure, sample data, named incidents) and stops; it does not simulate the consumer on states nobody named. Expected signature: additive, nothing removed, unnamed states shown as 0, blank, or left on the owner.
+2. W1: hidden cases that sit inside the default clause's own condition, drawn from the waits audit's patterns: topic-only card, several moves in one row, an owner step already done, session-side or blocked work marked as the owner's, plus a real owner move as guard. Each case is gated at stage 0 (the original must send it to `owner`).
+3. W1: stop the downstream reader from repairing the protocol itself.
+4. U1: separate items per hidden-data feature: unknown vs 0, the owner's words vs field names, notifications kept out of the asks, one move per card, ordering by consequence, stale board, a board sharing counts but not cards. Drop any item whose pass/fail vector across anchors equals another's.
+5. A new test L1/U2 from the recorded failure: a literal "floating cards with connections" brief against the oversight purpose, scored by reader questions at both widths and by scripted interaction checks; mirror where connections are the aim (cycle or topology finding).
+6. Rule-text predictions (findings only, rule unchanged): the certainty gate and "the case at hand alone does not give that certainty" favour the narrow W1 patch; "the user's call" on instruction files may hold the W1 edit; "hold and ask" scores zero in a one-turn headless run; "sometimes the means is the aim / if you cannot tell, ask" may preserve the literal brief in L1.
+
+**Where they differ (kept visible):**
+- How to stop downstream self-repair. Kimi and DeepSeek: tell the reader "apply the protocol literally; if no clause decides, apply its default; cite the clause". Fable: give the reader only protocol, CSV and events (no incidents, no complaint), mix the cases among ~8 filler events, prompt "apply; write rows; no questions", and keep this rule out of the downstream pack. (Checked: the downstream pack is `arm_rules("control")`, the eight established rules without keep-the-aim; but the downstream workspace carries the subject's whole `ops/` folder (`score_w1.CARRIED`), so stage 0's readers saw `ops/incidents.md`, the owner's complaint: one route by which they could repair toward the aim. Fable's point holds.)
+- Fable only: **stage −1** (replay one recorded Opus failure as a fixture and confirm Opus medium control fails it before building more: headroom is the unmet constraint); a second copy of the default clause in a closing checklist (the recorded "copies disagreed" failure) so a one-place fix leaves readers split; remove the h2 kind from the incidents; a "nothing lost" key (every case row present, open, with a note); a scripted no-reader U1 item (rendered text must contain no raw field or enum token); classify L1 outcomes DIAGRAM / LIST / BOTH / HELD by script and give HELD runs a canned second turn; predicts the rule will move L1 runs to HELD or BOTH more than to LIST, and will have no effect on U1 anticipation items because its trigger is reactive ("what you observe the means do on this case").
+- Kimi only: a calibration variant of L1 that adds "the visual form is not fixed" to tell a permission bottleneck from a reasoning one.
+- DeepSeek only: put the deciding evidence in a field the old protocol never tells the reader to inspect (e.g. `blocked_by`).
+
+**Not yet decided (owner questions batched in chat, see below).**
