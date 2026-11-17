@@ -1,0 +1,44 @@
+diff --git a/README.md b/README.md
+index 0854447..a2cc1e7 100644
+--- a/README.md
++++ b/README.md
+@@ -19,6 +19,6 @@ and set the names.
+ 
+ The import runs these on every feed, in this order:
+ 
+-- `pipeline/dedupe.py`: no order reaches the report twice (suppliers re-send lines, and a doubled order doubles the totals).
+ - `pipeline/dates.py`: every report row has a real order date, as YYYY-MM-DD (the weekly report groups by date; a row without one is refused and listed, never guessed).
+ - column map (`import.py`): raw columns are renamed to the report's columns, as the feed's yml says.
++- `pipeline/dedupe.py`: no order reaches the report twice (suppliers re-send lines, and a doubled order doubles the totals).
+diff --git a/import.py b/import.py
+index f1dd7dd..a4785d0 100755
+--- a/import.py
++++ b/import.py
+@@ -27,11 +27,11 @@ def main():
+     for yml in sorted(glob.glob(os.path.join("sources", "*.yml"))):
+         src = sources.load(yml)
+         rows = read_feed(src)
+-        rows = dedupe.dedupe(rows)  # on the rows as the supplier sent them
+         rows, errors = dates.check(src, rows)
+         refused += errors
+         mapped = [{"source": src["name"], **{col: row.get(raw, "") for col, raw in src["columns"].items()}}
+                   for row in rows]
++        mapped = dedupe.dedupe(mapped)  # after the column map, so every feed's id is under order_id
+         report += mapped
+         amount = sum((Decimal(r["amount"] or "0") for r in mapped), Decimal("0"))
+         totals.append({"source": src["name"], "orders": len(mapped), "amount": f"{amount:.2f}"})
+diff --git a/sources/ostara.yml b/sources/ostara.yml
+new file mode 100644
+index 0000000..ad7eca3
+--- /dev/null
++++ b/sources/ostara.yml
+@@ -0,0 +1,9 @@
++name: ostara
++path: incoming/ostara
++date_col: OrderDate
++columns:
++  order_id: OrderId
++  order_date: OrderDate
++  sku: Sku
++  qty: Qty
++  amount: Amount
