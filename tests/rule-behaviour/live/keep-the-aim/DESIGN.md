@@ -1490,3 +1490,5 @@ Control arm, Opus medium, `run_v5.py` without `--oracle`: p1-v1 × 4, p1-v2 × 4
 **Stage −1 first.** Control Opus medium 8 + mirror 4; headroom iff FIT ≤ 4 of 8. Stage 0 anchors: a literal copy of `studio` (must fail readers), a flat list (must fail), a hand-built fit board (must pass), and the mirror pair.
 
 **Open, for reviewers.** Is "the board's aim lives in notes.md" too easy to find (every session reads the folder)? Is the reader set a fair proxy for "has design / not cumbersome"? Does F2 show at all in a one-turn headless run?
+
+**L1 told-rescore result (scored against the registration above):** 48 votes (raw in `stage0/l1-told/`). L1: control 8 of 8 named the conflict (both voters yes), rule 8 of 8. Difference 0 → **null, at ceiling**: Opus without the rule already tells the user the diagram request may not serve the recorded purpose. L1m (false alarm): control 1 of 4 both-yes (2 more split), rule 0 of 4 (all no). So in L1 the rule did not change telling; what failed in control was the page, not the telling.
