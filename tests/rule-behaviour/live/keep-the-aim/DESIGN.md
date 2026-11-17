@@ -1104,3 +1104,9 @@ Where the original protocol fails: h2 ("nobody has worked out what to do next") 
 **Stage 0 costs:** Kimi U1 reads USD 1.96 (OpenRouter). W1 downstream (168 Sonnet runs) and the two Opus sessions ran on the subscription. No Fable call.
 
 **Adjudication owed (the owner's, per the pre-registration):** each trip above, and the design route for each.
+
+**Owner adjudication of stage 0 (2026-11-17, structured answers in chat):**
+- W1: "Redesign cases". The hidden cases are rebuilt around the default clause ("if you can't tell whose move it is, it's the owner's"), the one place the original protocol fails at this reader; then W1 stage 0 re-runs.
+- U1 fixed items: "Not fixed". The D3 definition stands (fixed = the reader no longer reads the card as the owner's to do now). The blind Fable page is taken off the must-read-right side of the instrument check, because it was never asked to fix that card. Recorded as a change to the check before any new U1 data.
+- U1 score: "Harder items". Items that separate good designs from great ones are added; U1 stage 0 re-runs.
+- Owner, same message thread: integrate the recent board-pattern and related sessions' convergent learnings on UX design, architecture and the boards' fundamental principles, as input to why the task is hard, why the rule is needed, and better-designed tests, with Fable, Kimi, DeepSeek and other models helping.
