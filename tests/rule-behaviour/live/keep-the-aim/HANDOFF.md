@@ -1,4 +1,4 @@
-# keep-the-aim: handoff (2026-11-17, updated ~04:30 UTC)
+# keep-the-aim: handoff (2026-11-17, updated ~07:30 UTC)
 
 For the next session working on this test. Machine-facing: dense on purpose. The full record is `DESIGN.md`
 in this folder; read it from "## Exploration 2" on (from "## New test designs" if short of context). This
@@ -60,8 +60,7 @@ file says where things stand and what comes next. It does not repeat the record.
 
 ## In flight
 
-Nothing. Fable review 8 is collected (`reviews/fable8-review8.md`, USD 0.86) and its findings are fixed and recorded
-(DESIGN, "Fable review 8"). Stage 0 is pre-registered (DESIGN, "Stage 0"), no stage-0 data yet.
+Nothing running. Latest results (DESIGN, from "## Stage 0 results" on): W1 and U1 tripped stage 0 (owner: redesign W1's cases, keep U1's fixed definition, add harder U1 items). Design round 9 (Fable, Kimi, DeepSeek) proposed better tests from the board-pattern learnings (`board-learnings.md`). L1, the recorded floating-cards failure, was built and run: anchors on their bars; control L1 0/8 and L1m 0/4 (keeps the old list on opening, new view behind a tab); rule L1 0/8, L1m 2/4: the pre-registered "surfaces only" reading. Readers: Kimi (OpenRouter; Moonshot direct after the OpenRouter balance ran out, calibrated identical) AND Fable (one independent subagent per screenshot, only where Kimi was right).
 
 ## Next, in order
 

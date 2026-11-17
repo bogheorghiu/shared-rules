@@ -352,11 +352,11 @@ def vote_valid(path):
     return bool(rec.get("ok")) and isinstance(answers_of(rec), dict)
 
 
-def stream_post(body, idle_timeout=600, id_file=None):
+def stream_post(body, idle_timeout=600, id_file=None, url=None):
     """POST to OpenRouter with streaming (owner, 2026-11-17): the socket times out only after idle_timeout seconds
     without a chunk, never on total length. Returns a non-streamed-shaped response (choices[0].message.content and
     .reasoning, usage, provider, id = the generation id, recoverable from OpenRouter's logs if anything goes wrong)."""
-    req = urllib.request.Request(OPENROUTER, data=json.dumps(dict(body, stream=True)).encode(), method="POST",
+    req = urllib.request.Request(url or OPENROUTER, data=json.dumps(dict(body, stream=True)).encode(), method="POST",
                                  headers={"Authorization": "Bearer x", "Content-Type": "application/json"})
     out, content, reasoning = {}, [], []
     with urllib.request.urlopen(req, timeout=idle_timeout) as r:
@@ -373,9 +373,11 @@ def stream_post(body, idle_timeout=600, id_file=None):
             if out.get("id") and not out.get("_id_saved") and id_file:
                 open(id_file, "w").write(out["id"]); out["_id_saved"] = True  # a cut call is recoverable from OpenRouter's log
             for c in ch.get("choices") or []:
+                if c.get("usage"):
+                    out["usage"] = c["usage"]  # Moonshot puts usage on the last choice
                 d = c.get("delta") or {}
                 content.append(d.get("content") or "")
-                reasoning.append(d.get("reasoning") or "")
+                reasoning.append(d.get("reasoning") or d.get("reasoning_content") or "")  # Moonshot: reasoning_content
                 if c.get("finish_reason"):
                     out["finish_reason"] = c["finish_reason"]
     out["choices"] = [{"message": {"content": "".join(content), "reasoning": "".join(reasoning)},

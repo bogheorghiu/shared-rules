@@ -308,12 +308,16 @@ def build_request(out, stem, w, h, qs, model):
                                          {"role": "user", "content": content}]}
 
 
+ROUTES = {"openrouter": OPENROUTER, "moonshot": "https://api.moonshot.ai/v1/chat/completions"}
+MODEL_ON = {"openrouter": "moonshotai/kimi-k3.1-pro", "moonshot": "kimi-k3.1-pro"}
+
+
 def send(body, path, meta):
     """One vote, as score_u.ask sends it: the raw response or the error is kept; a void vote can be resent."""
     t0 = time.time()
     rec = dict(meta, sent=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     try:
-        rec["response"] = stream_post(body, id_file=path + ".gen")
+        rec["response"] = stream_post(body, id_file=path + ".gen", url=ROUTES[meta.get("route", "openrouter")])
         rec["ok"] = True
     except urllib.error.HTTPError as e:
         rec.update(ok=False, status=e.code, error=e.read().decode(errors="replace")[:4000])
@@ -324,7 +328,8 @@ def send(body, path, meta):
     print(f"{path}: ok={rec['ok']} wall={rec['wall_s']}s")
 
 
-def ask(out, hidden, model, votes, dry_run):
+def ask(out, hidden, model, votes, dry_run, route="openrouter"):
+    model = MODEL_ON[route] if route != "openrouter" else model
     variant = json.load(open(os.path.join(out, "gates.json")))["variant"]
     keyed = json.load(open(os.path.join(hidden, "questions.json")))[DATA[variant]]
     public = [{k: q[k] for k in ("id", "type", "text")} for q in keyed]
@@ -349,7 +354,7 @@ def ask(out, hidden, model, votes, dry_run):
                 while os.path.exists(path[:-5] + f".void{n}.json"):
                     n += 1
                 os.rename(path, path[:-5] + f".void{n}.json")
-            send(body, path, {"stem": stem, "vote": v, "model": model})
+            send(body, path, {"stem": stem, "vote": v, "model": model, "route": route})
 
 
 # ---------- grade ----------
@@ -617,6 +622,7 @@ def main():
     a.add_argument("--model", default="moonshotai/kimi-k3.1-pro")
     a.add_argument("--votes", type=int, default=2)
     a.add_argument("--dry-run", action="store_true")
+    a.add_argument("--route", choices=["openrouter", "moonshot"], default="openrouter")
     g = sp.add_parser("grade")
     g.add_argument("out")
     g.add_argument("hidden")
@@ -626,7 +632,7 @@ def main():
         print(json.dumps({k: g.get(k) for k in ("variant", "outcome", "scripted_pass", "mirror_edges")} |
                          {k: g.get(k, {}).get("pass") for k in ("s1", "s2", "s3")}))
     elif args.cmd == "ask":
-        ask(args.out, args.hidden, args.model, args.votes, args.dry_run)
+        ask(args.out, args.hidden, args.model, args.votes, args.dry_run, args.route)
     else:
         grade(args.out, args.hidden)
 
