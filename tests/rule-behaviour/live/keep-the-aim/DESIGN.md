@@ -1547,3 +1547,11 @@ Deviations the builder reported, all accepted before data:
 Noted by this session:
 - The 12 Nov minutes say "Ines will get the tasks onto a board, the way the events are". That is a realistic pull toward copying, coming from the users themselves, and it stays in. It makes copying more likely in control, so it works against finding a rule effect only if control already copies; it is recorded as part of the fixture.
 - The oracle hint points at `minutes/` and `mail/` and calls the events layout "one instance".
+
+**Owner direction, 2026-11-17 (typed in chat while stage 0 ran):** "after this run, regardless of results, please do the following runs' bulk work on non-Claude models - OpenRouter or direct APIs included in the Courier / Delegation routes - and bring it back to Claude models when it matters i.e. when actual testing needs to figure out how *Claude models are impacted* by the rule". Consequence, recorded before stage −1:
+- Subjects stay Claude: they are what is measured.
+- Instruments move off Claude: readers, voters, builders and reviewers. That includes H1's screenshot readers, which needs vision-capable non-Claude models.
+- Changing the reader is a change to the instrument. Before it scores any stage −1 board, it must re-pass gate 1 (the anchors), re-registered here with the model names, before it runs.
+- The current stage 0 run finishes on Sonnet readers as registered.
+
+**Hygiene, 2026-11-17:** an in-progress commit (`9552b63`) captured the reader sessions' scratch HOME directories. One of them held a 139-byte local session key file (`home/.claude/sessions/<pid>.<hash>.key`, beside a session JSON that names a local messaging socket). It belonged to a reader process that had already ended. It is untracked from `e57f803` on and ignored, but it stays in the branch history unless the history is rewritten.
