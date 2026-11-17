@@ -50,12 +50,13 @@ file says where things stand and what comes next. It does not repeat the record.
 - **References:**
   - `w1/references/fable_blind_protocol_v1.md`: blind; +81 lines; passes every gate now that growth is
     report-only.
-  - `w1/references/kimi_blind_protocol_v1.md`: blind (Kimi K3.1 Pro, v1 repo and prompt only); +14 lines; passes every gate.
+  - `w1/references/kimi_max_blind_protocol_v1.md`: blind (Kimi K3.1 Pro at max, v1 repo and prompt only); +21 lines;
+    passes every gate; the stage-0 anchor. `kimi_blind_protocol_v1.md` (default effort, +14) is a record only.
   - `u1/references/fable_blind_overview.html`: blind; passes the render gates.
   - `*/references/fable_contaminated/`: not blind, never an anchor.
   - `w1/references/repair_session.md` and `u1/references/overview_good_fixed.html`, `overview_principles.html`:
     Opus-written high anchors.
-- **Paid so far this round:** about USD 8.05: Fable BYOK USD 7.98 (review 8, USD 0.86, included) and Kimi on OpenRouter USD 0.066 (the W1 reference).
+- **Paid so far this round:** about USD 8.13: Fable BYOK USD 7.98 (review 8, USD 0.86, included) and Kimi on OpenRouter USD 0.15 (two W1 references).
 
 ## In flight
 
