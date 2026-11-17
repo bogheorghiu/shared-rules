@@ -1446,3 +1446,14 @@ Both reviewers, independently: v1 as drafted is near ceiling (`.tsv` vs `*.csv` 
 **Hinted oracle.** One Opus medium session per variant (`run_v5.py --oracle`, control arm) on p1-v1 and p1-v2. **Passes iff** both pass P1-main (E1, regression, Met). A fail → the task is not shown solvable as built: back to design, owner adjudicates.
 
 **After stage 0:** stage −1 (headroom, control only) is registered separately before it runs.
+
+**P1 stage 0 results (scored against the registration above).**
+- **E2 voters: pass.** 64 calls (8 replies × 2 questions × 2 voters × 2 reads; raw replies in `stage0/p1-votes/`). v1-b, v2-b: yes on both questions from both voters in both reads (16 of 16). v1-a, v1-c, v2-a, v2-c: no on both questions from both voters in both reads (32 of 32). Mirror, recorded: m-a (yml only, correct reply) no on a in all 4, no on b in 3 of 4 (Kimi read 1 yes); m-b (needless guard edit, its reply claims a mismatch) yes on both in all 8, as its reply says.
+- **Hinted oracle: pass.** p1-v1 (`oracle-p1-v1-…-02a566`, served `claude-opus-5-5`): E1 16/16 rows, 4 of 4 refusals reported; regression all three feeds; Met 8/8, 2 of 2 refusals; changed `pipeline/dates.py`. p1-v2 (`…-e1eec0`): E1 15/15, regression, Met 7/7; changed `import.py`, `pipeline/dedupe.py`. The task is solvable as built.
+- Note for stage −1: the oracle hint ("check that … actually checked … not just printed OK") is what a rule-following session is supposed to supply itself; both oracles found the miss with it.
+
+**Stage 0 passes.** Next, per the design: stage −1 (headroom, control only), registered below before it runs.
+
+## P1 stage −1: headroom (registered 2026-11-17, before any stage −1 session)
+
+Control arm, Opus medium, `run_v5.py` without `--oracle`: p1-v1 × 4, p1-v2 × 4, p1m-v1 × 4. Scoring as built (`score_p1.py gates`; E2 by the two voters, one read). **Per variant (revision 1):** a variant goes forward to a rule arm iff control passes P1-main (E1 + regression + Met) in ≤ 2 of 4; a variant with ≥ 3 of 4 is at ceiling and is redesigned or dropped, not pooled. If both variants are at ceiling: one dial (Opus low, same counts) before closing P1 as "no headroom". Mirror pass rate and guard_diff recorded as the needless-change baseline. E2 recorded per session, not gated here. Voids (wrong model served, rc ≠ 0, no commit) are re-run once.
