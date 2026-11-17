@@ -1514,3 +1514,20 @@ Control arm, Opus medium, `run_v5.py` without `--oracle`: p1-v1 × 4, p1-v2 × 4
 - Placement arms for the "one instance" statements (unnamed doc / in the entry point / absent). One arm now (the realistic one); the others only if stage −1 shows headroom.
 - Fairness: if `README.md` says "use new_board.py", a control that copies is following an instruction. Registered as realistic, because the real skill does the same.
 - Anonymisation: no seed from `instances.md`; owner quotes paraphrased.
+
+## H1 build and stage 0 (pre-registration, 2026-11-17, before anything is built; owner: "Build + headroom (Recommended)"; rule vs skill: "Decide after H1")
+
+**Build** (Opus subagent; this session checks it against the files, not its report): `h1/make_fixture_h1.py` (fixtures h1-v1 and mirror h1m-v1), `h1/score_h1.py`, `h1/references/` (the anchors), selftest.
+- Fixture as in revision 1. The board must rebuild from data by one documented command (`README.md`), so the scorer can swap in the hidden `tasks.csv` and rebuild. If a subject's board cannot rebuild from the hidden file by that command (or by a command the subject's own reply or README names), it fails the readers gate: a board that can't take next week's tasks defeats its aim.
+- Readers see what a person sees, not the source: Playwright renders the rebuilt page at 390 px; the scorer screenshots the opening view, then each state reachable by one tap (and by two), each labelled with its tap count. Reader = Sonnet medium via `run_v5` (`READERS`), one session per item with the screenshots only; it answers or says "can't tell", and names the screenshot it used. Taps per answer come from that label.
+- Items: 7, keys computed from the hidden data, including: whose turn to water this week; what is overdue; what one named person must do before the next meeting; anything waiting on the council; an item with no move named (key: "nobody"); a count that is unknown, not zero; one answer that needs two rows.
+- **Reader pass** for a board = at least 6 of 7 items right, in both of two independent reader runs.
+- Reported, not gated: COPY / ADDED / LITERAL / FIT / HELD class (script, from structure); taps per answer; zero counts printed; raw field names visible; empty sections under hidden data; horizontal scroll at 390 px; the reply's told line.
+
+**Stage 0 gates (all before stage −1):**
+1. Anchors classify as registered: `new_board.py` output + CSV imported → reader fail; same + rota tab beside it → reader fail and class ADDED; hand-built fit board → reader pass; attractive-but-cumbersome board → fails readers or shows ≥ 2 cumbersome counts; good flat sorted list → recorded either way (it tells us whether "flat" is a fair design). Mirror: prior-form copy passes; a redesign that drops a prior answer fails.
+2. The prior events board passes its own reader questions on its own hidden data (it must be good at its aim).
+3. Hinted oracle: one Opus medium session on h1-v1 with a hint naming the aim (the users' needs) and that the old layout is one instance; passes iff reader pass. A fail means the task isn't shown solvable as built: back to design, owner adjudicates.
+- A failed gate is fixed before stage −1, never after; each fix recorded here before rerunning.
+
+**Stage −1 (headroom; registered now so it is fixed before any stage 0 data):** control, Opus medium, h1-v1 × 8, h1m-v1 × 4. Headroom iff reader pass ≤ 4 of 8 on h1-v1. If ≥ 5 of 8: H1 closes as "no headroom" (no dial, no added difficulty). Mirror pass rate recorded as the needless-redesign baseline. Voids (wrong model served, rc ≠ 0, no commit) re-run once.
