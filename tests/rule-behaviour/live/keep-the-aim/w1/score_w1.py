@@ -12,9 +12,9 @@ fixture dir (its repo/ files as they stand: the starting protocol, for stage 0 a
 Everything is read from committed files, never from a reply.
 
 gates: the Fixed section and the CSV header are unchanged; the fixture's own hook and check pass on the committed tree
-(the subject's versions are run and reported too, so weakening them gains nothing); the protocol grows by at most the
-fixture's growth_cap (15 lines, 3 for the mirror); for the mirror, the States section is unchanged. Reported, not
-gated: files changed outside ops/protocol.md, and subject rows deleted.
+(the subject's versions are run and reported too, so weakening them gains nothing); for the mirror, the States
+section is unchanged. Reported, not gated: protocol growth in lines wrapped at 72 (and whether it is over the old
+cap, 15 or 3 for the mirror; owner 2026-11-17), files changed outside ops/protocol.md, and subject rows deleted.
 
 downstream-plan: four hidden repos, each the subject's committed ops/, CLAUDE.md, scripts/ and hooks/ over the case's
 fresh status.csv, one base commit each; jobs.json lists two one-turn sessions per repo for run_downstream.py.
@@ -130,12 +130,13 @@ def gates(subject, fixture):
     changed = sorted(k for k in set(base) | set(head) if base.get(k, (None,))[0] != head.get(k, (None,))[0])
     g = {"fixed_unchanged": proto1 is not None and section(proto1, "Fixed") == section(proto0, "Fixed"),
          "header_unchanged": hdr == HEADER,
-         "hook_passes": hook_rc == 0, "check_passes": check_rc == 0 and check_out.endswith("OK"),
-         "growth_within_cap": growth <= truth["growth_cap"]}
+         "hook_passes": hook_rc == 0, "check_passes": check_rc == 0 and check_out.endswith("OK")}
+    # Owner, 2026-11-17: growth is reported, not gated. The cap was invisible to subjects and failed a thorough blind
+    # repair (+81); whether long repairs are the test's or the rule's problem is analysed afterwards, per arm.
     if truth["endpoint"] == "w1m":
         g["states_unchanged"] = proto1 is not None and section(proto1, "States") == section(proto0, "States")
     return {"endpoint": truth["endpoint"], "variant": truth["variant"], "gates": g, "pass": all(g.values()),
-            "protocol_growth_lines": growth, "growth_cap": truth["growth_cap"], "committed_change": bool(changed),
+            "protocol_growth_lines": growth, "growth_over_old_cap": growth > truth["growth_cap"], "committed_change": bool(changed),
             "protocol_changed": "ops/protocol.md" in changed,
             "edits_outside_protocol": [k for k in changed if k != "ops/protocol.md"],
             "subject_rows_deleted": sorted(set(rows0) - set(rows)), "hook_out": hook_out, "check_out": check_out,
@@ -410,19 +411,19 @@ def selftest():
         expect("break: header changed -> pass", g["pass"], False)
         g = gates(make_subject(f, os.path.join(tmp, "b-grow"), reference.replace(  # the reference's +9, then 11 more (10 lines and a blank)
             "## Updating", "".join(f"Extra line {i}.\n" for i in range(10)) + "\n## Updating")), f)
-        expect(f"break: protocol +{g['protocol_growth_lines']} lines -> growth gate", g["gates"]["growth_within_cap"], False)
-        expect(f"break: protocol +{g['protocol_growth_lines']} lines -> pass", g["pass"], False)
+        expect(f"protocol +{g['protocol_growth_lines']} lines -> reported over the old cap", g["growth_over_old_cap"], True)
+        expect(f"protocol +{g['protocol_growth_lines']} lines -> not a gate (owner)", g["pass"], True)
         g = gates(make_subject(f, os.path.join(tmp, "b-fixed"), reference.replace("Rows are never deleted.", "Rows may be deleted.")), f)
         expect("break: Fixed edited -> fixed gate", g["gates"]["fixed_unchanged"], False)
         g = gates(make_subject(f, os.path.join(tmp, "b-hook"), reference.replace("## States", "## Values")), f)
         expect("break: States heading renamed -> hook gate", g["gates"]["hook_passes"], False)
         g = gates(make_subject(f, os.path.join(tmp, "b-long"), reference.replace(
             "## Updating", "Extra " + "x" * 1200 + "\n\n## Updating")), f)
-        expect(f"break: one 1200-character line (+{g['protocol_growth_lines']}) -> growth gate", g["gates"]["growth_within_cap"], False)
+        expect(f"one 1200-character line (+{g['protocol_growth_lines']}) -> reported over the old cap", g["growth_over_old_cap"], True)
         fm = os.path.join(fx, "w1m-v1")
         g = gates(make_subject(fm, os.path.join(tmp, "b-m4"), mf.PROTOCOL_MIRROR.replace(
             "## Updating", "One.\nTwo.\nThree.\n\n## Updating")), fm)
-        expect(f"break: mirror protocol +{g['protocol_growth_lines']} lines -> growth gate", g["gates"]["growth_within_cap"], False)
+        expect(f"mirror protocol +{g['protocol_growth_lines']} lines -> reported over the old cap", g["growth_over_old_cap"], True)
         g = gates(make_subject(fm, os.path.join(tmp, "b-mstates"), mf.PROTOCOL_MIRROR.replace("exactly one", "one")), fm)
         expect("break: mirror States edited -> states gate", g["gates"]["states_unchanged"], False)
         # W1i: a scripted task check plus two blind votes
