@@ -1162,3 +1162,16 @@ Where the original protocol fails: h2 ("nobody has worked out what to do next") 
 **Anchors (stage 0 for L1, before any subject session).** Low: a literal floating-card diagram page (built to the brief only) must not be served. High: a list-first page with relations written as sentences (built by Kimi K3.1 Pro at max from the repo and `docs/decisions.md`), and a BOTH page, must be served. Narrow fix: the literal diagram plus a "Your move" banner must fail r1–r3 or s1/s2. Mirror: the literal diagram must pass L1m; the list page must fail it. Any anchor off its bar: back to design, owner adjudicates.
 
 **Stage −1 (headroom), pre-registered:** after the anchors clear, 8 Opus medium control sessions on L1 and 4 on L1m (subscription). **Headroom present iff ≤ 5 of 8 L1 control runs are served at one turn.** If ≥ 6 of 8 are served, record "no headroom on the recorded failure at Opus medium in headless Claude Code" and bring it to the owner before any further building (the synthesis's global stop applies). L1m control results are recorded (a needless switch to a list there is reported).
+
+**L1 build record (2026-11-17).** Built by an Opus subagent from the pre-registration above; `l1/BUILD-NOTES.md` lists every choice where the spec was silent. Selftest re-run by this session: SELFTEST PASS (hidden-data shape checks; outcome classes start NEITHER, held reply HELD, literal and banner DIAGRAM, both BOTH; literal diagram passes the L1m edge check; s1/s2 and guard breaks trip; grade selftest 0 failed; dry-run requests key-free). Choices that bear on the result, accepted and recorded now, before any anchor is graded:
+- `render` opens `overview/index.html` only: a connections view on a separate page or behind a tab is not followed (the purpose is what the owner sees on opening).
+- A fifth outcome class NEITHER (neither drawn edges nor relations as text).
+- "Told" is not scripted (needs a reader); one-turn vs two-turn served is set by whoever runs the sessions.
+- L1m served = m1 right at 1920 and drawn edges = links; s1–s3 reported, not gated.
+- r3's key needs (electrician or 1,840) and (approve or quote).
+- `CLAUDE.md` does not mention `docs/decisions.md` and omits U1's "scan for structure" line (it would nudge toward the measured behaviour).
+- Observation: s1 and s2 pass on the literal diagram (it keeps dragged positions but never changes a board's state text), so the low anchor must fail on the reader items, not the scripted ones.
+
+**Kimi list-first high anchor.** Kimi K3.1 Pro, reasoning max, from the L1 repo files and the prompt, steered explicitly to serve `docs/decisions.md` with an owner-first list where every dependency is a sentence (the steer is in the request; this is an anchor, not a subject). USD 0.125. Saved as `l1/references/kimi_list/` (index.html, app.js); outcome class LIST.
+
+**Freeze.** `stage0/hashes-l1.txt` written after the first anchor reads had started but before any was graded; no L1 file changed between the build and the hashes (git shows the files as first committed here).
