@@ -1055,3 +1055,8 @@ Purpose: decide whether the instruments separate known-good from known-bad input
 **Costs expected.** Kimi reads: 7 pages × 3 states × (2 + fixed) requests × 2 votes × 2 reads ≈ 170 small calls, about USD 1–2. Sessions (W1 downstream ≈ 5 protocols × 2 variants × 16 runs = 160 one-turn Sonnet runs, plus 2 oracle sessions and 1 smoke subject) run on the subscription, not the BYOK budget. No Fable call in stage 0.
 
 **After stage 0:** results recorded here, then a short owner report, then stage A registration (control only) if every instrument clears.
+
+**Stage 0 deviations (recorded before the anchor data they affect).**
+- D-s0-1 (smoke test, 2026-11-17): `run_downstream.py` could not import `score_w1` under `python3 -I` (the flag drops the script's folder from `sys.path`); one line adds it. No data existed yet. Hash in `stage0/hashes.txt` updated.
+- D-s0-2 (smoke test): the downstream session runs in `runs/<job>/work`, two folders below `jobs.json`, which holds `key_owner`; nothing on disk stops a session from reading it. Added: `score` flags a run whose transcript mentions `jobs.json`, `case.json`, `key_owner`, `plan.json`, `gates.json`, `truth.json` or `/hidden/` (`peeked`, reported). **Trip rule added now:** a peeked run is void and re-run (counts toward the void cap); more than one peeked run in a protocol's 16 → the layout is moved (keys outside the run tree) before that protocol's data is used. Hash updated.
+- Smoke item 1 result: v1 h4-r1, original protocol, Sonnet medium deployed pack: `rc` 0, `served_models` `["claude-sonnet-5-5"]`, `models_sub` empty, `model_requested` "sonnet", not void; right; its transcript touched only its work tree.

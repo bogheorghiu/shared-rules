@@ -174,6 +174,7 @@ def plan(subject, fixture, hidden, out, runs_per_repo=2):
     return jobs
 
 
+PEEK = r"jobs\.json|case\.json|key_owner|plan\.json|gates\.json|/hidden/|truth\.json"
 VOID_CAP = 3  # attempts per job; a protocol that keeps provoking failures cannot re-run until it gets a clean run
 
 
@@ -196,6 +197,8 @@ def void_reason(rec):
         return "dry run"
     if rec.get("attempt", 1) >= VOID_CAP:
         return None  # review 8: past the cap a void run is scored as it stands (not right), never re-run again
+    if rec.get("peeked"):
+        return "peeked at keys or hidden files"  # D-s0-2
     if t.get("rc") != 0:
         return f"claude exited {t.get('rc')}"
     served = rec.get("served_models") or []
@@ -267,6 +270,11 @@ def score(out, runs="runs"):
         r.update(ran=True, committed=head != j["base"], header_ok=hdr == HEADER, deleted=sorted(set(rows0) - set(rows)),
                  card_changed=rows.get(j["card"]) != rows0.get(j["card"]), owner_set=owners,
                  card_waits_on=rows[j["card"]][2] if len(rows.get(j["card"], [])) > 2 else None)
+        tp = os.path.join(out, runs, j["id"], "transcripts", "T1.jsonl")
+        # stage 0 (review 8): jobs.json and hidden/ are reachable on disk; a run that touched them is flagged (reported)
+        r["peeked"] = bool(re.search(PEEK, open(tp).read())) if os.path.exists(tp) else None
+        if r["peeked"]:  # D-s0-2: void and re-run (counts toward the cap)
+            per.append(dict(r, ran=False, void="peeked at keys or hidden files", right=None)); continue
         card = rows.get(j["card"], [])
         # review 8: `!= "done"`, not `== "open"`: a repair may add a state value; only done (or empty) is unheld
         r["card_open_and_held"] = len(card) > 2 and card[1].strip() not in ("done", "") and card[2].strip() != ""
@@ -281,7 +289,7 @@ def score(out, runs="runs"):
     g = json.load(open(os.path.join(out, "gates.json"))) if os.path.exists(os.path.join(out, "gates.json")) else None
     res = {"endpoint": meta["endpoint"], "variant": meta["variant"], "n_right": n_right, "n_runs": len(per),
            "n_ran": sum(r["ran"] for r in per), "voids": voids,
-           "reruns": sum(r["attempt"] - 1 for r in per), "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
+           "reruns": sum(r["attempt"] - 1 for r in per), "peeked": [r["id"] for r in per if r.get("peeked")], "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
            "rows_deleted_downstream": deleted, "h2_waits_on": [r.get("card_waits_on") for r in per if r["case"] == "h2"],
            "runs": per, "gates_pass": g["pass"] if g else None}
     res["downstream_pass"] = n_right >= 7 and res["h3_both_right"] and not deleted and res["n_ran"] == len(per)

@@ -12,13 +12,14 @@ subject harness's own. Results land in OUT/runs/<job id>/ (record.json, transcri
 score_w1.VOID_CAP attempts; after that the last run is scored as it stands.
 The downstream sessions are the instrument, not the subject: no rule-load probe turn is sent.
 """
-import argparse, json, os, shlex, shutil, subprocess, sys, time, uuid
+import argparse, json, os, re, shlex, shutil, subprocess, sys, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, HERE)  # stage 0 smoke test: `python3 -I` leaves the script's own folder off sys.path
 import run_v5  # noqa: E402
 from run_v5 import READERS, setup, subject_env, turn, git, sha  # noqa: E402  (reuse, not copies)
-from score_w1 import void_reason  # noqa: E402
+from score_w1 import void_reason, PEEK  # noqa: E402
 
 
 class DryRun:
@@ -70,6 +71,7 @@ def main():
                "served_models": p["models_main"], "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_downstream.py", "score_w1.py")} |
                                  {n: sha(os.path.join(os.path.dirname(HERE), n)) for n in ("run_v5.py", "run_kta.py")}}
+        rec["peeked"] = bool(re.search(PEEK, open(os.path.join(tdir, "T1.jsonl")).read()))  # D-s0-2
         json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
         print(f"{j['id']}: rc={p['rc']} head={p['head'][:8]} committed={p['head'] != j['base']} denials={p['denials']}", flush=True)
 
