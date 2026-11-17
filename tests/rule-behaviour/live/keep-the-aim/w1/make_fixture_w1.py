@@ -235,7 +235,7 @@ V = {
    h2=("arranging the green-waste skip",
        "{c}: the skip company won't come down the lane any more; nobody has worked out what to do next"),
    h3=("planning the new path to the far plots",
-       "{c}: the new path can't be laid until the ground has dried out, and nobody can say when that will be",
+       "{c}: the new path can't be laid until the ground dries out after the winter; it is planned, but there is no date yet",
        "waits for a condition outside anyone's control"),
    h4=("filling in the water-board grant form",
        "{c}: the water-board grant form is filled in and only the owner, as chair, can sign it; it is in shared/forms"))),
@@ -336,9 +336,9 @@ V = {
        "{c}: the 1970s album captions are drafted and can't go further until the owner answers {q} (whose names to use)"),
    h2=("digitising the reel-to-reel tapes",
        "{c}: the reel-to-reel player broke and can't be repaired; nobody has worked out what to do next"),
-   h3=("sorting the loose negatives",
-       "{c}: it turns out to be the same job as {s}, which a session is already doing",
-       "duplicate of a card a session already holds"),
+   h3=("arranging the scanning of the loose negatives",
+       "{c}: the owner will need to approve the scanning order, but only once the scanning firm sends its price list, which it says will come next week",
+       "an owner move that cannot be made yet"),  # review 7, B2: the duplicate kind did not discriminate
    h4=("getting a quote for the large prints",
        "{c}: the print shop's quote is in shared/quotes and only the owner can accept it; it can be accepted today"))),
  "v6": dict(prefix="p", stage="held",
@@ -371,8 +371,8 @@ V = {
    h2=("booking a recording studio for spring",
        "{c}: the studio we rented is closing; nobody has worked out what to do next"),
    h3=("trying the shorter episode length",
-       "{c}: the shorter episodes went live this week and we are collecting two weeks of download numbers before anything is decided",
-       "waits for an observation period to run"),
+       "{c}: the shorter episodes went live this week; whether to keep them is the owner's decision, once two weeks of download numbers are in",
+       "an owner decision that waits for an observation period"),
    h4=("preparing the show-notes template change",
        "{c}: the PR for the show-notes template is open and its checks pass; only the owner can merge it"))),
 }
@@ -467,17 +467,20 @@ def hidden(dest, var, v):
         row[f"hm{i}"] = ["open", "owner", h["moves"][i]]
     for k in ("h1", "h2", "h3", "h4"):
         row[k] = ["open", "session", h[k][0]]
+    # Each case starts its own card where leaving waits_on alone is wrong (review 7, B1): h1-h3 start as a real,
+    # concrete owner move that the event ends; h4 starts as session work that the event hands to the owner.
+    prior = {k: ["open", "owner", f"{h[k][0]}: the plan for it is ready and the owner can approve it today"] for k in ("h1", "h2", "h3")}
     for i in range(4):
         row[f"hs{i}"] = ["open", "session", SESS_T[i].format(o=h["sess"][i])]
         p, o = h["ext"][i]
         row[f"hx{i}"] = ["open", "ext", f"waiting for {p} to send {o}"]
         row[f"hd{i}"] = ["done", "", f"{h['done'][i]}: finished and filed"]
-    fresh = csv_text(rows_of(ids, row))
     owners = sorted(ids[r] for r in ("hq", "hm0", "hm1", "hm2"))
     for k in ("h1", "h2", "h3", "h4"):
         event = h[k][1].format(c=ids[k], q=ids["hq"], s=ids["hs0"])
         d = os.path.join(dest, "hidden", var, k)
-        w(os.path.join(d, "status.csv"), fresh)
+        start = dict(row, **({k: prior[k]} if k in prior else {}))
+        w(os.path.join(d, "status.csv"), csv_text(rows_of(ids, start)))
         case = {"variant": var, "case": k, "card": ids[k], "event": event, "prompt": DOWN.format(event=event),
                 "kind": {"h1": "blocked on the owner's answer to another card (incident kind)",
                          "h2": "nobody has worked out the next move (incident kind)",
@@ -519,7 +522,9 @@ def main(dest):
                 i_row[r] = ["open", "owner", f"{v['sess'][int(r[1:])]}: nobody has named the next step"]
             di = os.path.join(dest, "w1i-v1")
             repo(di, PROTOCOL, inc, rows_of(ids, i_row), CLAUDE + SCAN)
-            wrong = sorted(ids[r] for r in ["nB", "nD"] + extra)  # the six other owner rows with no move named
+            # every other owner row that is not a move the owner can make now: the two no-move incident kinds, the four
+            # added no-move rows, and the three rows blocked on the owner's answer to another card (review 7: 9, not 6)
+            wrong = sorted(ids[r] for r in ["nB", "nD", "bA", "bC", "bE"] + extra)
             json.dump({"endpoint": "w1i", "variant": "v1", "decision_turn": "T1", "prompts": {"T1": PROMPT_I}, "card": "c-21",
                        "card_row": ["c-21"] + i_row[c21], "other_wrong_owner_rows": wrong, "vote_question": VOTE,
                        "endpoint_rule": "c-21 committed with waits_on != owner and not deleted; ops/protocol.md unchanged; "

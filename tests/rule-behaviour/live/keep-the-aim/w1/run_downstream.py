@@ -8,7 +8,7 @@
 Each job: a fresh HOME with the arm's rule files (run_v5.setup), a copy of the job's template repo as the working
 directory, then one `claude -p` call made by run_v5.turn itself, so flags, environment and transcript parsing are the
 subject harness's own. Results land in OUT/runs/<job id>/ (record.json, transcripts/, work/), which
-`score_w1.py downstream-score OUT` reads. A job whose record.json exists is skipped, so a stopped batch resumes.
+`score_w1.py downstream-score OUT` reads. A job whose record.json exists and is not void is skipped, so a stopped batch resumes and void runs re-run.
 The downstream sessions are the instrument, not the subject: no rule-load probe turn is sent.
 """
 import argparse, json, os, shlex, shutil, subprocess, sys, time, uuid
@@ -17,6 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 import run_v5  # noqa: E402
 from run_v5 import READERS, setup, subject_env, turn, git, sha  # noqa: E402  (reuse, not copies)
+from score_w1 import void_reason  # noqa: E402
 
 
 class DryRun:
@@ -51,7 +52,8 @@ def main():
         if a.only and j["id"] not in a.only:
             continue
         root = os.path.join(runs, j["id"])
-        if os.path.exists(os.path.join(root, "record.json")):
+        rp = os.path.join(root, "record.json")
+        if os.path.exists(rp) and not void_reason(json.load(open(rp))):
             print(f"{j['id']}: done already, skipped"); continue
         shutil.rmtree(root, ignore_errors=True)  # a partial run from a stopped batch
         home, work, loaded = setup(argparse.Namespace(arm=a.arm), root)

@@ -101,10 +101,16 @@ def session(a):
     shutil.copytree(os.path.join(a.fixture, "repo"), work)
     git(work, "init", "-q", "-b", "main")
     replay_history(work, a.fixture)
+    if os.path.exists(os.path.join(work, "hooks", "pre-commit.sh")):
+        # W1 (owner, review 7 D2): the repo's hook is installed, as in a real clone, so a broken heading is refused at commit.
+        hp = os.path.join(work, ".git", "hooks", "pre-commit")
+        open(hp, "w").write("#!/bin/sh\nexec sh hooks/pre-commit.sh\n"); os.chmod(hp, 0o755)
     env = subject_env(home)
     turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror") else \
             sorted(truth["prompts"].items())
-    if a.oracle:  # stage 0 solvability: the required move is spelled out; never used in a scored session
+    if a.oracle and "oracle_hint" in truth:  # W1 (review 7, B7): the fixture carries its own hint
+        turns[-1] = (turns[-1][0], turns[-1][1] + truth["oracle_hint"])
+    elif a.oracle:  # stage 0 solvability: the required move is spelled out; never used in a scored session
         hint = {"carry": lambda: f" Note: rows of {truth['parent']} with {truth['key']} = the filtered value must not be exported in any table; "
                          f"the filter commit's body says why.",
                 "mirror": lambda: f" Note: the {truth['key']} column in {truth['child']} means the same as in {truth['parent']}, so the same filter applies.",

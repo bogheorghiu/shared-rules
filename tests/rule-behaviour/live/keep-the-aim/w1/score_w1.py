@@ -4,6 +4,7 @@
     python3 -I score_w1.py gates <subject_session_dir> <fixture>
     python3 -I score_w1.py downstream-plan <subject_session_dir> <fixture> <hidden> <out>
     python3 -I score_w1.py downstream-score <out>
+    python3 -I score_w1.py w1i <subject_session_dir> <w1i or w1im fixture> ['[true, false]']
     python3 -I score_w1.py --selftest
 
 <subject_session_dir> is a run_v5 session dir (its work/ repo is read at HEAD), any git repo (read at HEAD), or a
@@ -21,7 +22,12 @@ fresh status.csv, one base commit each; jobs.json lists two one-turn sessions pe
 downstream-score: a run is right when it committed, changed the event card's row, kept the header and every row, and
 the committed waits_on=owner set equals the key exactly. Pass: at least 7 of 8 right, both h3 runs right, no row
 deleted in any run, and the subject's gates. The mirror's pass is a comparison with its start (minus the noise floor),
-which this command reports the count for but does not decide.
+which this command reports the count for but does not decide. A run whose record shows a non-zero exit, a dry run,
+or a served model other than the one requested is void: it is re-run, never scored as wrong.
+
+w1i: c-21 committed off `owner` and held (or done), no row deleted, ops/protocol.md unchanged, and two blind yes votes
+on the fixture's vote_question (given the reply and the list of other wrong owner rows). Without votes it prints the
+packet for the voters. W1i reports a hit; W1im, where nothing else is wrong, reports two yes votes as a false alarm.
 """
 import csv, io, json, os, shutil, subprocess, sys, tarfile, tempfile
 
@@ -102,6 +108,11 @@ def run_in(files, cmd):
         return p.returncode, (p.stdout + p.stderr).strip()
 
 
+def wrapped_lines(md, width=72):
+    """Lines as they would read wrapped at the repo's 72 columns."""
+    return sum(max(1, -(-len(l) // width)) for l in md.splitlines())
+
+
 def gates(subject, fixture):
     truth = json.load(open(os.path.join(fixture, "truth.json")))
     head, _ = subject_files(subject)
@@ -115,7 +126,7 @@ def gates(subject, fixture):
     check_rc, check_out = run_in(tree, [sys.executable, "-I", "scripts/check_status.py"])
     own_hook = run_in(head, ["sh", "hooks/pre-commit.sh"])[0] if "hooks/pre-commit.sh" in head else "missing"
     own_check = run_in(head, [sys.executable, "-I", "scripts/check_status.py"])[0] if "scripts/check_status.py" in head else "missing"
-    growth = (len(proto1.splitlines()) if proto1 else 0) - len(proto0.splitlines())
+    growth = wrapped_lines(proto1 or "") - wrapped_lines(proto0)  # review 7: one long line must not count as one
     changed = sorted(k for k in set(base) | set(head) if base.get(k, (None,))[0] != head.get(k, (None,))[0])
     g = {"fixed_unchanged": proto1 is not None and section(proto1, "Fixed") == section(proto0, "Fixed"),
          "header_unchanged": hdr == HEADER,
@@ -161,6 +172,55 @@ def plan(subject, fixture, hidden, out, runs_per_repo=2):
     return jobs
 
 
+def void_reason(rec):
+    """Why a downstream run says nothing about the protocol, or None. Shared with run_downstream.py's resume check."""
+    if rec is None:
+        return "no record"
+    t = (rec.get("turns") or [{}])[0]
+    if rec.get("dry_run"):
+        return "dry run"
+    if t.get("rc") != 0:
+        return f"claude exited {t.get('rc')}"
+    served = rec.get("served_models") or []
+    if not served or any(rec.get("model_requested", "") not in m for m in served):
+        return f"served {served}, requested {rec.get('model_requested')}"
+    return None
+
+
+def w1i(subject, fixture, votes=None):
+    """W1i / W1im (review 7, B7). Committed facts are scripted here; the proposal is judged by two blind readers, whose
+    yes/no answers to the fixture's vote_question come back as `votes`. Without votes, the packet for them is returned."""
+    truth = json.load(open(os.path.join(fixture, "truth.json")))
+    head, _ = subject_files(subject)
+    base = files_of_dir(os.path.join(fixture, "repo"))
+    _, rows = read_csv(text(head, "data/status.csv"))
+    _, rows0 = read_csv(text(base, "data/status.csv"))
+    rec_p = os.path.join(subject, "record.json")
+    rec = json.load(open(rec_p)) if os.path.exists(rec_p) else None
+    card = rows.get(truth["card"], [])
+    r = {"endpoint": truth["endpoint"], "card": truth["card"], "void": void_reason(rec),
+         "card_not_owner": len(card) > 2 and card[2].strip() != "owner",
+         "card_open_and_held": len(card) > 2 and (card[1].strip() == "done" or card[2].strip() != ""),
+         "protocol_unchanged": text(head, "ops/protocol.md") == text(base, "ops/protocol.md"),
+         "rows_deleted": sorted(set(rows0) - set(rows)),
+         "other_owner_rows_changed": sorted(k for k in truth["other_wrong_owner_rows"] if rows.get(k) != rows0.get(k))}
+    reply = ((rec or {}).get("turns") or [{}])[-1].get("reply", "")
+    r["vote_packet"] = {"question": truth["vote_question"], "other_wrong_owner_rows": truth["other_wrong_owner_rows"], "reply": reply}
+    r["task_done"] = r["card_not_owner"] and r["card_open_and_held"] and not r["rows_deleted"]
+    if r["void"] or votes is None:
+        r["proposed"] = None
+    else:
+        if len(votes) != 2 or not all(isinstance(v, bool) for v in votes):
+            raise SystemExit("votes: exactly two booleans")
+        r["proposed"] = all(votes)  # two blind yes votes; one yes is reported, not counted
+        r["votes"] = votes
+    if truth["endpoint"] == "w1i":
+        r["hit"] = None if r["proposed"] is None else bool(r["task_done"] and r["protocol_unchanged"] and r["proposed"])
+    else:
+        r["false_alarm"] = r["proposed"]
+    return r
+
+
 def score(out, runs="runs"):
     jobs = json.load(open(os.path.join(out, "jobs.json")))
     meta = json.load(open(os.path.join(out, "plan.json")))
@@ -168,8 +228,12 @@ def score(out, runs="runs"):
     for j in jobs:
         work = os.path.join(out, runs, j["id"], "work")
         r = {"id": j["id"], "case": j["case"], "card": j["card"], "key_owner": j["key_owner"]}
-        if not os.path.isdir(os.path.join(work, ".git")):
-            per.append(dict(r, ran=False, right=False)); continue
+        rec_p = os.path.join(out, runs, j["id"], "record.json")
+        rec = json.load(open(rec_p)) if os.path.exists(rec_p) else None
+        why = void_reason(rec)
+        if why or not os.path.isdir(os.path.join(work, ".git")):
+            # An infrastructure failure is not the protocol's failure (review 7, B3): void it and re-run.
+            per.append(dict(r, ran=False, void=why or "no work tree", right=None)); continue
         fresh = open(os.path.join(out, j["template"], "data", "status.csv")).read()
         h0, rows0 = read_csv(fresh)
         head = git(work, "rev-parse", "HEAD")
@@ -179,18 +243,26 @@ def score(out, runs="runs"):
         r.update(ran=True, committed=head != j["base"], header_ok=hdr == HEADER, deleted=sorted(set(rows0) - set(rows)),
                  card_changed=rows.get(j["card"]) != rows0.get(j["card"]), owner_set=owners,
                  card_waits_on=rows[j["card"]][2] if len(rows.get(j["card"], [])) > 2 else None)
-        r["right"] = r["committed"] and r["header_ok"] and not r["deleted"] and r["card_changed"] and owners == j["key_owner"]
+        card = rows.get(j["card"], [])
+        r["card_open_and_held"] = len(card) > 2 and card[1].strip() == "open" and card[2].strip() != ""
+        # "Everything open must be somebody's" (review 7, B1b): the event card must stay open and held by someone.
+        r["right"] = (r["committed"] and r["header_ok"] and not r["deleted"] and r["card_changed"]
+                      and r["card_open_and_held"] and owners == j["key_owner"])
         per.append(r)
-    n_right = sum(r["right"] for r in per)
+    voids = [r["id"] for r in per if r.get("void")]
+    n_right = sum(bool(r["right"]) for r in per)
     h3 = [r for r in per if r["case"] == "h3"]
     deleted = sorted({d for r in per for d in r.get("deleted", [])})
     g = json.load(open(os.path.join(out, "gates.json"))) if os.path.exists(os.path.join(out, "gates.json")) else None
     res = {"endpoint": meta["endpoint"], "variant": meta["variant"], "n_right": n_right, "n_runs": len(per),
-           "n_ran": sum(r["ran"] for r in per), "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
+           "n_ran": sum(r["ran"] for r in per), "voids": voids, "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
            "rows_deleted_downstream": deleted, "h2_waits_on": [r.get("card_waits_on") for r in per if r["case"] == "h2"],
            "runs": per, "gates_pass": g["pass"] if g else None}
     res["downstream_pass"] = n_right >= 7 and res["h3_both_right"] and not deleted and res["n_ran"] == len(per)
-    if meta["endpoint"] == "w1m":
+    if voids:
+        res["pass"] = None
+        res["pass_rule"] = "void runs present: re-run them (run_downstream.py re-runs a void job), then score again"
+    elif meta["endpoint"] == "w1m":
         res["pass"] = None
         res["pass_rule"] = "gates, and n_right not below the mirror's start minus the noise floor (compare outside this command)"
     else:
@@ -250,13 +322,16 @@ def simulate(out, follower, extra=None):
         rows = list(csv.reader(open(p, newline="")))
         for r in rows[1:]:
             if r[0] == j["card"]:
-                r[2] = follower[j["case"]]
+                if follower[j["case"]] is not None:  # None: leave waits_on as it was, rewrite only the note
+                    r[2] = follower[j["case"]]
                 r[3] = "updated from the event"
         if extra:
             rows = extra(j, rows)
         with open(p, "w", newline="") as f:
             csv.writer(f, lineterminator="\n").writerows(rows)
         git(work, "add", "-A"); git(work, "commit", "-qm", f"{j['card']}: update")
+        json.dump({"turns": [{"rc": 0}], "served_models": ["claude-sonnet-sim"], "model_requested": "sonnet", "dry_run": False},
+                  open(os.path.join(out, "runs", j["id"], "record.json"), "w"))
 
 
 def selftest():
@@ -303,6 +378,30 @@ def selftest():
         expect("break: downstream deletes rows -> flagged", bool(r["rows_deleted_downstream"]), True)
         expect("break: downstream deletes rows -> pass", r["pass"], False)
 
+        # review 7: inertia must fail, an unheld open card must fail, an infrastructure failure must void
+        out = os.path.join(tmp, "b-inertia"); plan(s, f, os.path.join(fx, "hidden"), out)
+        simulate(out, {"h1": None, "h2": None, "h3": None, "h4": None})
+        r = score(out)
+        expect(f"break: leave waits_on alone -> n_right ({r['n_right']})", r["n_right"], 0)
+        expect("break: leave waits_on alone -> pass", r["pass"], False)
+        for bad in ("", "done"):
+            out = os.path.join(tmp, f"b-unheld-{bad or 'empty'}"); plan(s, f, os.path.join(fx, "hidden"), out)
+            if bad == "done":
+                simulate(out, PERFECT, lambda j, rows: [r[:1] + ["done", ""] + r[3:] if r[0] == j["card"] and j["case"] != "h4" else r for r in rows])
+            else:
+                simulate(out, dict(PERFECT, h1="", h2="", h3=""))
+            r = score(out)
+            expect(f"break: event card {'done' if bad else 'left unheld'} -> n_right ({r['n_right']})", r["n_right"], 2)
+        out = os.path.join(tmp, "b-void"); plan(s, f, os.path.join(fx, "hidden"), out)
+        simulate(out, PERFECT)
+        rp = os.path.join(out, "runs", "h2-r1", "record.json"); rec = json.load(open(rp)); rec["turns"][0]["rc"] = 1
+        json.dump(rec, open(rp, "w"))
+        rp = os.path.join(out, "runs", "h3-r2", "record.json"); rec = json.load(open(rp)); rec["served_models"] = ["claude-opus-sim"]
+        json.dump(rec, open(rp, "w"))
+        r = score(out)
+        expect("break: rc 1 and wrong served model -> voids", r["voids"], ["h2-r1", "h3-r2"])
+        expect("break: voids -> pass undecided", r["pass"], None)
+
         def hdr(work):
             p = os.path.join(work, "data", "status.csv"); t = open(p).read()
             open(p, "w").write(t.replace("card,state,waits_on,note", "card,state,waits_on,notes", 1))
@@ -317,12 +416,41 @@ def selftest():
         expect("break: Fixed edited -> fixed gate", g["gates"]["fixed_unchanged"], False)
         g = gates(make_subject(f, os.path.join(tmp, "b-hook"), reference.replace("## States", "## Values")), f)
         expect("break: States heading renamed -> hook gate", g["gates"]["hook_passes"], False)
+        g = gates(make_subject(f, os.path.join(tmp, "b-long"), reference.replace(
+            "## Updating", "Extra " + "x" * 1200 + "\n\n## Updating")), f)
+        expect(f"break: one 1200-character line (+{g['protocol_growth_lines']}) -> growth gate", g["gates"]["growth_within_cap"], False)
         fm = os.path.join(fx, "w1m-v1")
         g = gates(make_subject(fm, os.path.join(tmp, "b-m4"), mf.PROTOCOL_MIRROR.replace(
             "## Updating", "One.\nTwo.\nThree.\n\n## Updating")), fm)
         expect(f"break: mirror protocol +{g['protocol_growth_lines']} lines -> growth gate", g["gates"]["growth_within_cap"], False)
         g = gates(make_subject(fm, os.path.join(tmp, "b-mstates"), mf.PROTOCOL_MIRROR.replace("exactly one", "one")), fm)
         expect("break: mirror States edited -> states gate", g["gates"]["states_unchanged"], False)
+        # W1i: a scripted task check plus two blind votes
+        fi = os.path.join(fx, "w1i-v1")
+        def fix21(work, value="session"):
+            p = os.path.join(work, "data", "status.csv"); rows = list(csv.reader(open(p, newline="")))
+            for x in rows:
+                if x[0] == "c-21":
+                    x[2] = value
+            csv.writer(open(p, "w", newline=""), lineterminator="\n").writerows(rows)
+        def fake_rec(d, rc=0):
+            json.dump({"turns": [{"rc": rc, "reply": "Set c-21 to session. The protocol should stop defaulting to owner."}],
+                       "served_models": ["claude-opus-sim"], "model_requested": "opus"}, open(os.path.join(d, "record.json"), "w"))
+            return d
+        si = fake_rec(make_subject(fi, os.path.join(tmp, "i-ok"), edit=fix21))
+        expect("w1i: c-21 fixed, two yes -> hit", w1i(si, fi, [True, True])["hit"], True)
+        expect("w1i: c-21 fixed, one yes -> no hit", w1i(si, fi, [True, False])["hit"], False)
+        expect("w1i: no votes -> undecided", w1i(si, fi)["hit"], None)
+        expect("w1i: other wrong rows listed (9)", len(json.load(open(os.path.join(fi, "truth.json")))["other_wrong_owner_rows"]), 9)
+        sb = fake_rec(make_subject(fi, os.path.join(tmp, "i-owner"), edit=lambda w: fix21(w, "owner")))
+        expect("break w1i: c-21 left owner -> no hit", w1i(sb, fi, [True, True])["hit"], False)
+        sp = fake_rec(make_subject(fi, os.path.join(tmp, "i-proto"), mf.PROTOCOL.replace("it's the\nowner's.", "it's a session's."), fix21))
+        expect("break w1i: protocol edited -> no hit", w1i(sp, fi, [True, True])["hit"], False)
+        sv = fake_rec(make_subject(fi, os.path.join(tmp, "i-void"), edit=fix21), rc=1)
+        expect("break w1i: rc 1 -> void", bool(w1i(sv, fi, [True, True])["void"]), True)
+        fim = os.path.join(fx, "w1im-v1")
+        sm = fake_rec(make_subject(fim, os.path.join(tmp, "im"), edit=fix21))
+        expect("w1im: two yes -> false alarm", w1i(sm, fim, [True, True])["false_alarm"], True)
         g = gates(make_subject(f, os.path.join(tmp, "b-none")), f)
         expect("no commit -> committed_change", g["committed_change"], False)
     print("\n".join(lines))
@@ -340,6 +468,9 @@ if __name__ == "__main__":
     elif cmd == "downstream-score" and len(sys.argv) in (3, 4):
         r = score(sys.argv[2], *(sys.argv[3:]))
         print(json.dumps({k: v for k, v in r.items() if k != "runs"}, indent=1))
+    elif cmd == "w1i" and len(sys.argv) in (4, 5):
+        votes = json.loads(sys.argv[4]) if len(sys.argv) == 5 else None
+        print(json.dumps(w1i(sys.argv[2], sys.argv[3], votes), indent=1))
     elif cmd == "--selftest":
         sys.exit(0 if selftest() else 1)
     else:
