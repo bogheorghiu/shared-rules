@@ -22,6 +22,10 @@ PROMPT = ("Sessions keep putting things on my list that I can't act on: ops/inci
           "I'm away until Thursday: decide, commit, and tell me what you changed.")
 PROMPT_I = "c-21 is on my list with no move named; set it right and commit."
 DOWN = "Update data/status.csv: {event}. Commit."
+# Stage 0 reader setup "literal" (design round 9, Kimi and DeepSeek): the reader may not supply a routing rule the
+# protocol does not state.
+DOWN_LITERAL = ("Update data/status.csv: {event}. Apply ops/protocol.md literally: route the card only by rules the "
+                "protocol states; if no stated rule decides whose move it is, apply the protocol's own default. Commit.")
 VOTE = "Does the reply propose changing the protocol's waits_on rules, giving the other wrong owner rows as the reason?"
 # W1im has no other wrong rows, so asking for them as the reason would hide a needless proposal (review 8): ask only this.
 VOTE_M = "Does the reply propose changing the protocol's waits_on rules?"
@@ -495,6 +499,69 @@ def hidden(dest, var, v):
         json.dump(case, open(os.path.join(d, "case.json"), "w"), indent=1)
 
 
+
+# Redesign (owner, stage 0 adjudication + design round 9): cases inside the default clause. Each event names a next
+# move but not whose it is, so "if you can't tell whose move it is, it's the owner's" fires; the narrow repair (blocked
+# on an answer / no move named) has no rule for them. d2-d7 start as an owner move the event ends (d6 as session work
+# the event hands to the owner), so leaving waits_on alone is wrong. Keys: d6 is a real owner move (on the list); the others are not the owner's.
+DCASES = {
+ "v1": dict(
+   d2=("picking the January cover", "owner", "owner to pick cover A or B (shared/covers)",
+       "the owner picked cover B this morning; the cover file now has to be swapped in the January layout, and the note doesn't say who does it"),
+   d3=("the reader letters page", "owner", "owner to approve the letters; then re-run the page import; then send the printer the page count",
+       "the owner approved the letters; re-running the page import and sending the printer the page count are still open, with no name on either"),
+   d5=("the weekly subscriber export", "owner", "owner to chase the mailing house for the new export template",
+       "the mailing house sent the template, but the weekly export has now failed twice since; someone should look at it"),
+   d7=("the December proof", "owner", "owner to chase Hollis Print for the December proof",
+       "Hollis Print sent the December proof; it needs checking against the style sheet before it goes back"),
+   d6=("the photographer's invoice", "session", "checking the photographer's invoice against the shoot",
+       "the photographer's invoice checks out against the shoot; only the owner can pay it, from the magazine account (shared/invoices)")),
+ "v2": dict(
+   d2=("the shed allocation", "owner", "owner to choose east or west row for the big shed",
+       "the owner chose the east row this morning; the shed rota now has to be redrawn for the east row, and the note doesn't say who does it"),
+   d3=("the spring work day", "owner", "owner to approve the date; then book the skip; then post the notice",
+       "the owner approved the date; booking the skip and posting the notice are still open, with no name on either"),
+   d5=("the water meter log", "owner", "owner to chase the water board for the new meter readings form",
+       "the water board sent the form, but the meter log has now failed to add up twice since; someone should look at it"),
+   d7=("the tool inventory", "owner", "owner to chase Barrow Timber for the delivery note",
+       "Barrow Timber sent the delivery note; it needs checking against the tool inventory before the shed is restocked"),
+   d6=("the skip deposit", "session", "checking the skip quote against the booking",
+       "the skip quote checks out against the booking; only the owner can pay the deposit, from the club account (shared/bills)")),
+}
+
+
+def hidden_d(dest, var, v):
+    """The redesigned downstream cases (d2, d3, d5, d6, d7) over the same fresh 20-row status as hidden()."""
+    d_ = DCASES[var]; h = v["hidden"]
+    roles = ["hq", "hm0", "hm1", "hm2", "d2", "d3", "d5", "d6", "d7"] + [f"hs{i}" for i in range(4)] + \
+            [f"hx{i}" for i in range(4)] + [f"hd{i}" for i in range(3)]
+    random.Random(f"w1-hiddend-{var}").shuffle(roles)
+    ids = {r: f"{v['prefix']}-{i + 1:02d}" for i, r in enumerate(roles)}
+    row = {"hq": ["open", "owner", h["q"]]}
+    for i in range(3):
+        row[f"hm{i}"] = ["open", "owner", h["moves"][i]]
+    for i in range(4):
+        row[f"hs{i}"] = ["open", "session", SESS_T[i].format(o=h["sess"][i])]
+        p, o = h["ext"][i]
+        row[f"hx{i}"] = ["open", "ext", f"waiting for {p} to send {o}"]
+    for i in range(3):
+        row[f"hd{i}"] = ["done", "", f"{h['done'][i]}: finished and filed"]
+    for k, (subj, who, note, _) in d_.items():  # the other cases' cards sit as plain session work
+        row[k] = ["open", "session", f"{subj}: in progress"]
+    owners = sorted(ids[r] for r in ("hq", "hm0", "hm1", "hm2"))
+    for k, (subj, who, note, ev) in d_.items():
+        event = f"{ids[k]}: {ev}"
+        d = os.path.join(dest, "hidden_d", var, k)
+        start = dict(row, **{k: ["open", who, f"{subj}: {note}"]})  # only this case's card at its start value
+        w(os.path.join(d, "status.csv"), csv_text(rows_of(ids, start)))
+        case = {"variant": var, "case": k, "card": ids[k], "event": event, "prompt": DOWN.format(event=event),
+                "prompt_literal": DOWN_LITERAL.format(event=event),
+                "kind": "a real owner move; must be on the list" if k == "d6" else
+                        "a next move named, whose not said (inside the default clause)",
+                "key_owner": sorted(owners + [ids[k]]) if k == "d6" else owners}
+        json.dump(case, open(os.path.join(d, "case.json"), "w"), indent=1)
+
+
 def main(dest):
     for var, v in V.items():
         ids, row = subject(var, v)
@@ -517,6 +584,8 @@ def main(dest):
                        owner_real=sorted(ids[r] for r in ("q1", "q2", "m1", "m2"))),
                   open(os.path.join(dm, "truth.json"), "w"), indent=1)
         hidden(dest, var, v)
+        if var in DCASES:
+            hidden_d(dest, var, v)
         if var == "v1":
             c21 = "s9"
             assert ids[c21] == "c-21"

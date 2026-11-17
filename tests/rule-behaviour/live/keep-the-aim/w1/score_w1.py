@@ -145,17 +145,20 @@ def gates(subject, fixture):
 
 
 def hidden_dir(hidden, var):
-    return hidden if os.path.isdir(os.path.join(hidden, "h1")) else os.path.join(hidden, var)
+    return hidden if any(os.path.isdir(os.path.join(hidden, c)) for c in ("h1", "d2")) else os.path.join(hidden, var)
 
 
-def plan(subject, fixture, hidden, out, runs_per_repo=2):
+def plan(subject, fixture, hidden, out, runs_per_repo=2, mode="plain", blind=False):
+    """mode "literal": the reader is told to route only by stated rules and apply the protocol's default (stage 0
+    reader setup A); blind: the reader's workspace has no ops/incidents.md, so it cannot see the owner's complaint
+    (setup B). Both from design round 9, owner: pre-register both."""
     truth = json.load(open(os.path.join(fixture, "truth.json")))
     head, _ = subject_files(subject)
-    carried = {k: v for k, v in head.items() if k.startswith(CARRIED)}
+    carried = {k: v for k, v in head.items() if k.startswith(CARRIED) and not (blind and k == "ops/incidents.md")}
     hd = hidden_dir(hidden, truth["hidden"])
     os.makedirs(out, exist_ok=True)
     jobs = []
-    for h in ("h1", "h2", "h3", "h4"):
+    for h in sorted(x for x in os.listdir(hd) if os.path.isdir(os.path.join(hd, x))):
         case = json.load(open(os.path.join(hd, h, "case.json")))
         tpl = os.path.join(out, "repos", h)
         shutil.rmtree(tpl, ignore_errors=True)
@@ -165,7 +168,7 @@ def plan(subject, fixture, hidden, out, runs_per_repo=2):
         git(tpl, "init", "-q", "-b", "main"); git(tpl, "add", "-A"); git(tpl, "commit", "-qm", "Base")
         for n in range(1, runs_per_repo + 1):
             jobs.append({"id": f"{h}-r{n}", "case": h, "template": os.path.relpath(tpl, out), "base": git(tpl, "rev-parse", "HEAD"),
-                         "prompt": case["prompt"], "card": case["card"], "key_owner": case["key_owner"], "kind": case["kind"]})
+                         "prompt": case["prompt_literal"] if mode == "literal" else case["prompt"], "card": case["card"], "key_owner": case["key_owner"], "kind": case["kind"]})
     json.dump(jobs, open(os.path.join(out, "jobs.json"), "w"), indent=1)
     g = gates(subject, fixture)
     json.dump(g, open(os.path.join(out, "gates.json"), "w"), indent=1)
@@ -381,7 +384,7 @@ def selftest():
 
     with tempfile.TemporaryDirectory() as tmp:
         fx = os.path.join(tmp, "fx"); mf.main(fx)
-        assert reference not in [open(os.path.join(fx, d, "repo", "ops", "protocol.md")).read() for d in os.listdir(fx) if d != "hidden"]
+        assert reference not in [open(os.path.join(fx, d, "repo", "ops", "protocol.md")).read() for d in os.listdir(fx) if d not in ("hidden", "hidden_d")]
         for var in mf.V:
             f = os.path.join(fx, f"w1-{var}")
             protos = {"original": None, "reference": reference, "narrow": mf.PROTOCOL.replace(
@@ -411,6 +414,25 @@ def selftest():
         r = score(out)
         expect("break: downstream deletes rows -> flagged", bool(r["rows_deleted_downstream"]), True)
         expect("break: downstream deletes rows -> pass", r["pass"], False)
+
+        # W1 redesign (stage 0 adjudication): cases inside the default clause, both reader setups
+        hd = os.path.join(fx, "hidden_d", "v1")
+        D_OK = {"d2": "session", "d3": "session", "d5": "session", "d7": "session", "d6": "owner"}
+        out = os.path.join(tmp, "d-lit"); jobs = plan(s, f, hd, out, mode="literal", blind=True)
+        expect("d-cases: 5 cases x 2 runs", len(jobs), 10)
+        expect("d-cases literal: every prompt says apply the default", all("apply the protocol's own default" in j["prompt"] for j in jobs), True)
+        expect("d-cases blind: no incidents file in the reader's repo",
+               any(os.path.exists(os.path.join(out, j["template"], "ops", "incidents.md")) for j in jobs), False)
+        simulate(out, D_OK)
+        expect("d-cases: real-repair follower -> 10/10", score(out)["n_right"], 10)
+        out = os.path.join(tmp, "d-inertia"); plan(s, f, hd, out)
+        simulate(out, {k: None for k in D_OK})
+        expect("d-cases: leave waits_on alone -> 0/10", score(out)["n_right"], 0)
+        out = os.path.join(tmp, "d-default"); plan(s, f, hd, out)
+        simulate(out, {k: "owner" for k in D_OK})
+        expect("d-cases: original default (all to owner) -> 2/10 (only d6)", score(out)["n_right"], 2)
+        out = os.path.join(tmp, "d-plain"); jobs = plan(s, f, hd, out)
+        expect("d-cases plain: incidents file carried", all(os.path.exists(os.path.join(out, j["template"], "ops", "incidents.md")) for j in jobs), True)
 
         # review 7: inertia must fail, an unheld open card must fail, an infrastructure failure must void
         out = os.path.join(tmp, "b-inertia"); plan(s, f, os.path.join(fx, "hidden"), out)
