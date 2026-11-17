@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boards overview</title>
+<style>
+  /* Colour tokens. Every colour on this page comes from here; see design/pattern.md. */
+  :root {
+    --bg: #f6f6f3;
+    --surface: #ffffff;
+    --surface-2: #f0f0ec;
+    --border: #dcdcd5;
+    --border-strong: #b9b9b0;
+    --text: #1f1f1c;
+    --text-muted: #66665e;
+    --text-faint: #8a8a80;
+    --accent: #2f5d8a;
+    --accent-text: #ffffff;
+    --link: #2f5d8a;
+    --tag-bg: #ecece6;
+    --tag-text: #4a4a43;
+    --focus: #c2570c;
+    --shadow: 0 1px 2px rgba(31, 31, 28, 0.08);
+    --radius: 6px;
+    --gap: 16px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614;
+      --surface: #1f1f1c;
+      --surface-2: #272724;
+      --border: #34342f;
+      --border-strong: #4a4a43;
+      --text: #ecece6;
+      --text-muted: #a3a39a;
+      --text-faint: #7d7d75;
+      --accent: #7fa8d1;
+      --accent-text: #11202e;
+      --link: #9cbcdc;
+      --tag-bg: #2c2c28;
+      --tag-text: #c9c9c0;
+      --focus: #f0a35e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  a { color: var(--link); }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  header.top h1 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 650;
+  }
+
+  header.top .meta {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .toolbar label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .toolbar input[type="search"] {
+    font: inherit;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    min-width: 0;
+    flex: 1 1 200px;
+    max-width: 320px;
+  }
+
+  .btn {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .btn:hover { background: var(--surface-2); }
+
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .count-line {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 12px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--gap);
+  }
+
+  .board {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .board h2 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .board .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .board .counts span b {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .board .activity {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+  }
+
+  .board ul.cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .board ul.cards li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    overflow-wrap: anywhere;
+  }
+
+  .board ul.cards li:last-child { border-bottom: 0; }
+
+  .board ul.cards li.muted { color: var(--text-faint); }
+
+  .tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    white-space: nowrap;
+  }
+
+  .board .foot {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .board.collapsed ul.cards { display: none; }
+
+  .compact .board { padding: 10px 12px; gap: 4px; }
+  .compact .board ul.cards li { padding: 3px 0; font-size: 13px; }
+
+  .empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+  }
+
+  footer.bottom {
+    margin-top: 32px;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  details.legend {
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+  }
+
+  details.legend summary {
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  details.legend dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    margin: 8px 0 0;
+  }
+
+  details.legend dt { font-weight: 600; color: var(--text); }
+  details.legend dd { margin: 0; }
+
+  @media print {
+    .toolbar, .board .foot, details.legend { display: none; }
+    .board { box-shadow: none; break-inside: avoid; }
+    .board.collapsed ul.cards { display: block; }
+  }
+
+  @media (max-width: 480px) {
+    header.top h1 { font-size: 19px; }
+    .grid { grid-template-columns: 1fr; }
+    .toolbar input[type="search"] { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <h1>Boards overview</h1>
+    <span class="meta" id="meta"></span>
+  </header>
+
+  <div class="toolbar" role="group" aria-label="Board tools">
+    <label for="filter" class="visually-hidden">Filter boards</label>
+    <input type="search" id="filter" placeholder="Filter boards (press /)" autocomplete="off">
+    <button type="button" class="btn" id="expand-all">Expand all</button>
+    <button type="button" class="btn" id="collapse-all">Collapse all</button>
+    <button type="button" class="btn" id="density" aria-pressed="false">Compact</button>
+  </div>
+
+  <p class="count-line" id="count-line"></p>
+
+  <main class="grid" id="boards" aria-live="polite"></main>
+
+  <details class="legend">
+    <summary>What the counts mean</summary>
+    <dl>
+      <dt>open</dt><dd>cards not started</dd>
+      <dt>doing</dt><dd>cards someone is working on</dd>
+      <dt>owner</dt><dd>cards marked for the owner</dd>
+      <dt>questions</dt><dd>open questions on the board</dd>
+    </dl>
+  </details>
+
+  <footer class="bottom">
+    Data: <code>data/boards.js</code>. Card layout follows <code>design/pattern.md</code>.
+  </footer>
+</div>
+
+<script src="../data/boards.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // All text goes through el(): textContent only, never innerHTML.
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  var DATA = window.BOARD_DATA || { boards: [] };
+  var BOARDS = Array.isArray(DATA.boards) ? DATA.boards : [];
+  var COUNT_KEYS = ["open", "doing", "owner", "questions"];
+  var STORE_KEY = "boards-overview:v1";
+
+  function loadPrefs() {
+    try {
+      return JSON.parse(window.localStorage.getItem(STORE_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function savePrefs(prefs) {
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify(prefs));
+    } catch (e) {
+      /* storage blocked: preferences just don't persist */
+    }
+  }
+
+  var prefs = loadPrefs();
+  if (!prefs.collapsed) prefs.collapsed = {};
+
+  function pad(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  // "2026-11-14T18:20:00Z" -> "2026-11-14 18:20 UTC"
+  function fmtDate(iso) {
+    if (!iso) return String(iso);
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()) +
+      " " + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + " UTC";
+  }
+
+  function countsLine(board) {
+    var wrap = el("div", "counts");
+    var counts = board.counts || {};
+    COUNT_KEYS.forEach(function (key) {
+      var span = el("span");
+      span.appendChild(el("b", null, String(counts[key])));
+      span.appendChild(document.createTextNode(" " + key));
+      wrap.appendChild(span);
+    });
+    return wrap;
+  }
+
+  function cardItem(card) {
+    var li = el("li");
+    li.appendChild(el("span", "title", card.title));
+    if (card.state && card.state !== "open") li.appendChild(el("span", "tag", card.state));
+    if (card.owner) li.appendChild(el("span", "tag", "owner"));
+    return li;
+  }
+
+  function renderBoard(board) {
+    var art = el("article", "board");
+    art.setAttribute("data-board-id", board.id);
+    if (prefs.collapsed[board.id]) art.classList.add("collapsed");
+
+    art.appendChild(el("h2", null, board.title));
+    art.appendChild(countsLine(board));
+    art.appendChild(el("div", "activity", "Last activity: " + fmtDate(board.last_activity)));
+
+    var list = el("ul", "cards");
+    if (!board.cards) {
+      list.appendChild(el("li", "muted", "Cards: " + board.cards));
+    } else if (board.cards.length === 0) {
+      list.appendChild(el("li", "muted", "No cards"));
+    } else {
+      board.cards.forEach(function (card) {
+        list.appendChild(cardItem(card));
+      });
+    }
+    art.appendChild(list);
+
+    var foot = el("div", "foot");
+    var toggle = el("button", "btn", art.classList.contains("collapsed") ? "Show cards" : "Hide cards");
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", art.classList.contains("collapsed") ? "false" : "true");
+    toggle.addEventListener("click", function () {
+      setCollapsed(art, board.id, !art.classList.contains("collapsed"));
+    });
+    foot.appendChild(toggle);
+    art.appendChild(foot);
+    return art;
+  }
+
+  function setCollapsed(art, id, collapsed) {
+    art.classList.toggle("collapsed", collapsed);
+    var btn = art.querySelector(".foot .btn");
+    if (btn) {
+      btn.textContent = collapsed ? "Show cards" : "Hide cards";
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    if (collapsed) prefs.collapsed[id] = true; else delete prefs.collapsed[id];
+    savePrefs(prefs);
+  }
+
+  function totalCards() {
+    var n = 0;
+    BOARDS.forEach(function (b) {
+      if (Array.isArray(b.cards)) n += b.cards.length;
+    });
+    return n;
+  }
+
+  function render() {
+    var root = document.getElementById("boards");
+    root.textContent = "";
+    document.getElementById("meta").textContent = "Updated " + fmtDate(DATA.generated);
+    document.getElementById("count-line").textContent =
+      BOARDS.length + " boards, " + totalCards() + " cards";
+
+    if (BOARDS.length === 0) {
+      root.appendChild(el("div", "empty", "No boards registered yet."));
+      return;
+    }
+    // Registry order, one card per board (design/pattern.md).
+    BOARDS.forEach(function (board) {
+      root.appendChild(renderBoard(board));
+    });
+    applyFilter();
+  }
+
+  function applyFilter() {
+    var q = document.getElementById("filter").value.trim().toLowerCase();
+    var shown = 0;
+    document.querySelectorAll("#boards .board").forEach(function (art) {
+      var title = (art.querySelector("h2") || {}).textContent || "";
+      var match = !q || title.toLowerCase().indexOf(q) !== -1;
+      art.hidden = !match;
+      if (match) shown += 1;
+    });
+    if (q) {
+      document.getElementById("count-line").textContent =
+        shown + " of " + BOARDS.length + " boards match “" + q + "”";
+    } else if (BOARDS.length) {
+      document.getElementById("count-line").textContent =
+        BOARDS.length + " boards, " + totalCards() + " cards";
+    }
+  }
+
+  function setDensity(compact) {
+    document.getElementById("app").classList.toggle("compact", compact);
+    var btn = document.getElementById("density");
+    btn.setAttribute("aria-pressed", compact ? "true" : "false");
+    btn.textContent = compact ? "Comfortable" : "Compact";
+    prefs.compact = compact;
+    savePrefs(prefs);
+  }
+
+  function wire() {
+    document.getElementById("filter").addEventListener("input", applyFilter);
+    document.getElementById("expand-all").addEventListener("click", function () {
+      document.querySelectorAll("#boards .board").forEach(function (art) {
+        setCollapsed(art, art.getAttribute("data-board-id"), false);
+      });
+    });
+    document.getElementById("collapse-all").addEventListener("click", function () {
+      document.querySelectorAll("#boards .board").forEach(function (art) {
+        setCollapsed(art, art.getAttribute("data-board-id"), true);
+      });
+    });
+    document.getElementById("density").addEventListener("click", function () {
+      setDensity(!document.getElementById("app").classList.contains("compact"));
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "/" && document.activeElement !== document.getElementById("filter")) {
+        e.preventDefault();
+        document.getElementById("filter").focus();
+      }
+    });
+  }
+
+  wire();
+  if (prefs.compact) setDensity(true);
+  render();
+})();
+</script>
+</body>
+</html>

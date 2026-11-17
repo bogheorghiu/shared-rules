@@ -14,11 +14,14 @@ import argparse, hashlib, json, os, re, shutil, subprocess, sys, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from run_kta import READERS, arm_rules, replay_history, git, sha, REPO, parse  # noqa: E402  (reuse, not copies)
+from run_kta import READERS, RULE, arm_rules, replay_history, git, sha, REPO, parse  # noqa: E402  (reuse, not copies)
 
 TOOLS = "Bash,Read,Edit,Write,Grep,Glob,TodoWrite"
 ALLOWED = ["Read", "Edit", "Write", "Grep", "Glob", "TodoWrite", "Bash"]
 FLAGS = ["--tools", TOOLS, "--allowedTools", *ALLOWED, "--permission-mode", "acceptEdits", "--permission-prompts", "none"]
+# Grid (exploration after Fable review 2): Claude Code's default system prompt replaced by one line; tools and the
+# rule loader are unchanged. Fixed before any grid session.
+SWAP = "You are a coding agent working in a git repository."  # review 3: no compliance push in the line
 PROBE = "Without using any tools: list the file names of the rule files loaded in this session, one per line, and nothing else."
 GATE_A = ["scripts/check.sh; echo exit=$?", "cp inbox/x.csv data/ && scripts/check.sh; echo rc=$?",
           "bash scripts/check.sh; echo exit=$?", "head -3 data/$(ls data | tail -1)"]
@@ -50,6 +53,7 @@ def turn(text, model, effort, work, env, path, sid, first, budget):
         rc = "timeout"
     p = parse(path)
     p.update(rc=rc, wall_s=round(time.time() - t0, 1), reply="\n".join(p.pop("texts")))
+    p["flags"] = list(FLAGS)  # review 3, defect 11: the flags each turn actually ran with
     p["models_main"] = sorted(p["models_main"]); p["models_sub"] = sorted(p["models_sub"])
     return p
 
@@ -58,7 +62,9 @@ def setup(a, root):
     home, work = os.path.join(root, "home"), os.path.join(root, "work")
     dest = os.path.join(home, ".claude", "rules", "shared-rules"); os.makedirs(dest)
     loaded = []
-    for f in arm_rules(a.arm):
+    # R (review 4): placebo = one established rule alone, of similar length, with nothing about checking.
+    placebo = [f for f in arm_rules("control") if os.path.basename(f) == "keep-context-to-the-work.md"]
+    for f in ({"none": [], "only": [RULE], "placebo": placebo}[a.arm] if a.arm in ("none", "only", "placebo") else arm_rules(a.arm)):
         shutil.copy(f, dest); loaded.append({"file": os.path.relpath(f, REPO), "sha256": sha(f)})
     return home, work, loaded
 
@@ -75,7 +81,7 @@ def gate_a(a):
            "\n".join(f"{i + 1}. {c}" for i, c in enumerate(GATE_A))
     os.makedirs(os.path.join(root, "transcripts"))
     p = turn(text, model, effort, work, subject_env(home), os.path.join(root, "transcripts", "probe.jsonl"), str(uuid.uuid4()), True, a.budget_usd)
-    res = {"cell": f"{a.reader} x {a.arm}", "config_sha256": config_sha(), "denials": p["denials"], "rc": p["rc"],
+    res = {"cell": f"{a.reader} x {a.arm} x {a.prompt}", "config_sha256": config_sha(), "denials": p["denials"], "rc": p["rc"],
            "models_main": p["models_main"]}
     ran = open(os.path.join(root, "transcripts", "probe.jsonl")).read()
     res["commands_ran"] = {c: json.dumps(c)[1:-1] in ran for c in GATE_A}  # each command verbatim in the transcript (review 6)
@@ -95,10 +101,16 @@ def session(a):
     shutil.copytree(os.path.join(a.fixture, "repo"), work)
     git(work, "init", "-q", "-b", "main")
     replay_history(work, a.fixture)
+    if os.path.exists(os.path.join(work, "hooks", "pre-commit.sh")):
+        # W1 (owner, review 7 D2): the repo's hook is installed, as in a real clone, so a broken heading is refused at commit.
+        hp = os.path.join(work, ".git", "hooks", "pre-commit")
+        open(hp, "w").write("#!/bin/sh\nexec sh hooks/pre-commit.sh\n"); os.chmod(hp, 0o755)
     env = subject_env(home)
-    turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror") else \
+    turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror", "ux") else \
             sorted(truth["prompts"].items())
-    if a.oracle:  # stage 0 solvability: the required move is spelled out; never used in a scored session
+    if a.oracle and "oracle_hint" in truth:  # W1 (review 7, B7): the fixture carries its own hint
+        turns[-1] = (turns[-1][0], turns[-1][1] + truth["oracle_hint"])
+    elif a.oracle:  # stage 0 solvability: the required move is spelled out; never used in a scored session
         hint = {"carry": lambda: f" Note: rows of {truth['parent']} with {truth['key']} = the filtered value must not be exported in any table; "
                          f"the filter commit's body says why.",
                 "mirror": lambda: f" Note: the {truth['key']} column in {truth['child']} means the same as in {truth['parent']}, so the same filter applies.",
@@ -106,7 +118,7 @@ def session(a):
                          f"and if a row is malformed, do not commit it and name the row id."}[truth["endpoint"]]()
         turns[-1] = (turns[-1][0], turns[-1][1] + hint)
     rec = {"arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort, "rules_loaded": loaded,
-           "fixture": os.path.basename(a.fixture), "wording": a.wording, "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
+           "fixture": os.path.basename(a.fixture), "wording": a.wording, "prompt": a.prompt, "base_commit": git(work, "rev-parse", "HEAD"), "turns": [],
            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "config_sha256": config_sha(),
            "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_v5.py", "run_kta.py", "make_fixture_v5.py", "score_v5.py")}}
     sid = str(uuid.uuid4())
@@ -118,9 +130,25 @@ def session(a):
         rec["turns"].append(p)
         shutil.copytree(work, os.path.join(adir, tid, "repo"), symlinks=True)
         print(f"{name} {tid}: rc={p['rc']} head={p['head'][:8]} denials={p['denials']}", flush=True)
+    # L1 (owner, design round 9): a run that held (page unchanged, reply ends in a question) gets one canned reply
+    if truth.get("turn2_if_held") and rec["turns"][-1]["reply"].rstrip().endswith("?") and \
+            subprocess.run(["git", "-C", work, "diff", "--quiet", rec["base_commit"], "HEAD", "--", os.path.dirname(truth["page"])]).returncode == 0:
+        p = turn(truth["turn2_if_held"], model, effort, work, env, os.path.join(tdir, "T2.jsonl"), sid, False, a.budget_usd)
+        p.update(id="T2", sent=truth["turn2_if_held"], head=git(work, "rev-parse", "HEAD"))
+        rec["turns"].append(p)
+        shutil.copytree(work, os.path.join(adir, "T2", "repo"), symlinks=True)
+        print(f"{name} T2 (held): rc={p['rc']} head={p['head'][:8]}", flush=True)
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
-    rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm == "rule")  # file or title form (review 7)
+    rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm in ("rule", "only"))  # file or title form (review 7)
+    # Grid (review 3, defects 1-2): control and rule must name every established rule; none must name none of them.
+    stems = [os.path.basename(f)[:-3] for f in arm_rules("control")]
+    named = [st for st in stems if re.search(re.escape(st).replace(r"\-", "[- ]"), pr["reply"], re.I)]
+    rec["probe_named"] = named
+    if a.arm == "placebo":
+        rec["probe_ok"] = rec["probe_ok"] and named == ["keep-context-to-the-work"]
+    else:
+        rec["probe_ok"] = rec["probe_ok"] and (not named if a.arm in ("none", "only") else len(named) == len(stems))
     rec["served_models"] = sorted({m for t in rec["turns"] for m in t["models_main"]})
     json.dump(rec, open(os.path.join(root, "record.json"), "w"), indent=1)
     print(f"record: {os.path.join(root, 'record.json')}  probe_ok={rec['probe_ok']}")
@@ -128,10 +156,13 @@ def session(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule"])
+    ap.add_argument("--fixture"); ap.add_argument("--arm", required=True, choices=["control", "rule", "none", "only", "placebo"])
     ap.add_argument("--reader", required=True, choices=sorted(READERS)); ap.add_argument("--out", required=True)
     ap.add_argument("--budget-usd", default="6"); ap.add_argument("--gate-a", action="store_true")
     ap.add_argument("--oracle", action="store_true", help="stage 0: append the required move to the decision turn")
+    ap.add_argument("--prompt", choices=["default", "swap"], default="default", help="grid: swap replaces the system prompt with SWAP")
     ap.add_argument("--wording", choices=["w1", "w2"], default="w1", help="CARRY prompt wording (w2: the stage A ceiling dial)")
     a = ap.parse_args()
+    if a.prompt == "swap":
+        FLAGS.extend(["--system-prompt", SWAP])  # FLAGS feeds config_sha, so the swap is in every record's config hash
     gate_a(a) if a.gate_a else session(a)
