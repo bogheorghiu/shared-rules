@@ -1597,3 +1597,26 @@ Gate 1 and gate 3 then re-run in full with the new readers; gate 2 too, because 
 - All outputs are built under `/tmp/h1r2`, then the renders and reader records are copied into `stage0/h1r2/`.
 - Gate 3: the oracle re-runs with Opus medium (Claude: the subject) from `/tmp/h1r2/runs`, with the same hint, scored by the same two readers.
 - Pass conditions as registered for gates 1–3. If gate 1 fails again on a reader-side defect, it goes to the owner instead of a third round.
+
+**H1 stage 0 round 2 results (scored against the round-2 registration).** Selftest 62 ok, 0 failed.
+
+| Board | Right (Kimi, Terra) | Reader pass | Class | Expected | Met? |
+|---|---|---|---|---|---|
+| a `new_board.py` + CSV | 6, 3 | no | COPY | fail | yes |
+| b a + rota tab | 5, 5 | no | ADDED | fail | yes |
+| c hand-built fit | 7, 6 | yes | FIT | pass | yes |
+| d cumbersome | 2, 2 | no | FIT (4 counts) | fail | yes |
+| e flat sorted list | 6, 6 | yes | LITERAL | either | — |
+| events (gate 2) | 7, 7 | yes | HELD | pass | yes |
+| m-a mirror copy | 7, 7 | yes | COPY | pass | yes |
+| m-b mirror redesign | 6, 5 | no | FIT | fail | yes |
+| oracle (gate 3) | 7, 7 | yes | FIT | pass | yes |
+
+- No void items.
+- The oracle ran outside the repo: `probe_ok` True, all eight pack rules named, served `claude-opus-5-5`.
+- **Gates 1, 2 and 3 pass.** Stage −1 runs as registered.
+
+Notes:
+- **Anchor a, the pure copy, scored 6 of 7 with Kimi.** All the tasks sit one tap away under the "Past events" fold, and Kimi found them there; Terra scored 3. The copy fails only because the gate needs both runs. So a subject's copied board can come close to passing on one reader. The two-reader rule is what holds it; it is recorded here, not changed.
+- **The flat sorted list passes (6, 6).** A plain list is a fair design for this committee, so a session that only imports the CSV into a sorted list can pass the readers. Its class (LITERAL) is still reported.
+- Data: `stage0/h1r2/` (renders, screenshots, keys, reader records; working trees left out).
