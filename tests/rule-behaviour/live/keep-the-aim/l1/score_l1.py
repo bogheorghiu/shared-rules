@@ -27,7 +27,7 @@ import urllib.error, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "fixture_src")
 sys.path[:0] = [os.path.join(os.path.dirname(HERE), "u1")]  # python3 -I leaves script folders off the path
-from score_u import (OPENROUTER, answers_of, correct, head_tree, key_leaks, run_session_tests,  # noqa: E402
+from score_u import (OPENROUTER, stream_post, answers_of, correct, head_tree, key_leaks, run_session_tests,  # noqa: E402
                      vote_valid)
 
 SHOTS = {"L1": [("l1-1280", 1280, 900), ("l1-390", 390, 844)], "L1m": [("l1m-1920", 1920, 1080)]}
@@ -310,13 +310,10 @@ def build_request(out, stem, w, h, qs, model):
 
 def send(body, path, meta):
     """One vote, as score_u.ask sends it: the raw response or the error is kept; a void vote can be resent."""
-    req = urllib.request.Request(OPENROUTER, data=json.dumps(body).encode(), method="POST",
-                                 headers={"Authorization": "Bearer x", "Content-Type": "application/json"})
     t0 = time.time()
     rec = dict(meta, sent=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     try:
-        with urllib.request.urlopen(req, timeout=600) as r:
-            rec["response"] = json.loads(r.read().decode())
+        rec["response"] = stream_post(body)
         rec["ok"] = True
     except urllib.error.HTTPError as e:
         rec.update(ok=False, status=e.code, error=e.read().decode(errors="replace")[:4000])

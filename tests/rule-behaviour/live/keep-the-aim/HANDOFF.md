@@ -29,7 +29,7 @@ file says where things stand and what comes next. It does not repeat the record.
 - **Explaining to the owner:** complex explanations go through a Sonnet subagent humanizer, then a fact-by-fact
   check against the brief. Lead with the verdict; plain words; batch decisions into one AskUserQuestion.
 - **Security:** strip identifiers (`<owner>`) before sending material to outside models. Never paste secrets.
-  Never use Fable as a subagent; Fable only through batched BYOK calls.
+  Fable: batched BYOK calls for reviews that gate a stage; since 2026-11-17 (owner: the Anthropic API budget is spent) Fable subagents are allowed sparingly where warranted. Make the most of Kimi and other third-party runs.
 
 ## State now
 

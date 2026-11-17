@@ -106,7 +106,7 @@ def session(a):
         hp = os.path.join(work, ".git", "hooks", "pre-commit")
         open(hp, "w").write("#!/bin/sh\nexec sh hooks/pre-commit.sh\n"); os.chmod(hp, 0o755)
     env = subject_env(home)
-    turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror") else \
+    turns = [("T1", truth["prompt_w2"] if a.wording == "w2" else truth["prompt"])] if truth["endpoint"] in ("carry", "mirror", "ux") else \
             sorted(truth["prompts"].items())
     if a.oracle and "oracle_hint" in truth:  # W1 (review 7, B7): the fixture carries its own hint
         turns[-1] = (turns[-1][0], turns[-1][1] + truth["oracle_hint"])
@@ -130,6 +130,14 @@ def session(a):
         rec["turns"].append(p)
         shutil.copytree(work, os.path.join(adir, tid, "repo"), symlinks=True)
         print(f"{name} {tid}: rc={p['rc']} head={p['head'][:8]} denials={p['denials']}", flush=True)
+    # L1 (owner, design round 9): a run that held (page unchanged, reply ends in a question) gets one canned reply
+    if truth.get("turn2_if_held") and rec["turns"][-1]["reply"].rstrip().endswith("?") and \
+            subprocess.run(["git", "-C", work, "diff", "--quiet", rec["base_commit"], "HEAD", "--", os.path.dirname(truth["page"])]).returncode == 0:
+        p = turn(truth["turn2_if_held"], model, effort, work, env, os.path.join(tdir, "T2.jsonl"), sid, False, a.budget_usd)
+        p.update(id="T2", sent=truth["turn2_if_held"], head=git(work, "rev-parse", "HEAD"))
+        rec["turns"].append(p)
+        shutil.copytree(work, os.path.join(adir, "T2", "repo"), symlinks=True)
+        print(f"{name} T2 (held): rc={p['rc']} head={p['head'][:8]}", flush=True)
     pr = turn(PROBE, model, effort, work, env, os.path.join(tdir, "probe.jsonl"), sid, False, a.budget_usd)
     rec["probe_reply"] = pr["reply"]
     rec["probe_ok"] = bool(re.search(r"keep[- ]the[- ]aim", pr["reply"], re.I)) == (a.arm in ("rule", "only"))  # file or title form (review 7)

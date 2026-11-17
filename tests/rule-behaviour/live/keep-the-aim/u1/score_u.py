@@ -352,6 +352,35 @@ def vote_valid(path):
     return bool(rec.get("ok")) and isinstance(answers_of(rec), dict)
 
 
+def stream_post(body, idle_timeout=600):
+    """POST to OpenRouter with streaming (owner, 2026-11-17): the socket times out only after idle_timeout seconds
+    without a chunk, never on total length. Returns a non-streamed-shaped response (choices[0].message.content and
+    .reasoning, usage, provider, id = the generation id, recoverable from OpenRouter's logs if anything goes wrong)."""
+    req = urllib.request.Request(OPENROUTER, data=json.dumps(dict(body, stream=True)).encode(), method="POST",
+                                 headers={"Authorization": "Bearer x", "Content-Type": "application/json"})
+    out, content, reasoning = {}, [], []
+    with urllib.request.urlopen(req, timeout=idle_timeout) as r:
+        for raw in r:
+            line = raw.decode(errors="replace").strip()
+            if not line.startswith("data:") or line == "data: [DONE]":
+                continue
+            ch = json.loads(line[5:])
+            if "error" in ch:
+                raise RuntimeError(json.dumps(ch["error"])[:2000])
+            for k in ("id", "provider", "model", "usage"):
+                if ch.get(k):
+                    out[k] = ch[k]
+            for c in ch.get("choices") or []:
+                d = c.get("delta") or {}
+                content.append(d.get("content") or "")
+                reasoning.append(d.get("reasoning") or "")
+                if c.get("finish_reason"):
+                    out["finish_reason"] = c["finish_reason"]
+    out["choices"] = [{"message": {"content": "".join(content), "reasoning": "".join(reasoning)},
+                       "finish_reason": out.get("finish_reason")}]
+    return out
+
+
 def ask(out, hidden, model, votes, dry_run):
     qs = public_questions(hidden)
     keyed = json.load(open(os.path.join(hidden, "questions.json")))
@@ -377,13 +406,10 @@ def ask(out, hidden, model, votes, dry_run):
                 while os.path.exists(path[:-5] + f".void{n}.json"):
                     n += 1
                 os.rename(path, path[:-5] + f".void{n}.json")
-            req = urllib.request.Request(OPENROUTER, data=json.dumps(body).encode(), method="POST",
-                                         headers={"Authorization": "Bearer x", "Content-Type": "application/json"})
             t0 = time.time()
             rec = {"state": st, "vote": v, "model": model, "sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
             try:
-                with urllib.request.urlopen(req, timeout=600) as r:
-                    rec["response"] = json.loads(r.read().decode())
+                rec["response"] = stream_post(body)
                 rec["ok"] = True
             except urllib.error.HTTPError as e:
                 rec.update(ok=False, status=e.code, error=e.read().decode(errors="replace")[:4000])
