@@ -1346,3 +1346,24 @@ What this clears: the downstream instrument separates the original protocol from
 **Cost.** 12 Opus sessions and 120 downstream Sonnet runs, all on the subscription; no paid API call.
 
 **Stage A registered (2026-11-17, before any stage-A session).** Owner asked about a Fable control arm, answered "no preference"; the recommended option is taken: **no Fable arm** (the hinted oracle already shows the task solvable, 10 of 10). Stop bands read Opus alone as written above. Subjects run from the stage-0b fixture tree (`w1-v1/v2`, `w1m-v1/v2` byte-identical to stage 0's). Session order: all 12 launched together, 6 at a time; each subject's downstream batch starts after its session ends.
+
+## W1 stage A results (2026-11-17; scored against the stage-A registration, nothing re-derived)
+
+All 12 sessions served `claude-opus-5-5`; 120 downstream runs, 0 voids, 0 peeked.
+
+| Arm | Sessions | Gates pass | Downstream right (of 10 each) | d6 both right | Subject passes |
+|---|---|---|---|---|---|
+| Opus medium, w1-v1 | 4 | 4 | 10, 10, 10, 10 | 4 | 4 |
+| Opus medium, w1-v2 | 4 | 4 | 10, 10, 10, 10 | 4 | 4 |
+| Mirror, w1m-v1 | 2 | 0 (`states_unchanged` false) | 8, 8 | 0 | 0 |
+| Mirror, w1m-v2 | 2 | 0 (`states_unchanged` false) | 8, 9 | 0 | 0 |
+
+**Band: no headroom** (Opus 8 of 8 pass, ≥ 7). By the registration, one dial follows (Opus low), registered below before it runs.
+
+**Wording correction (mine, recorded before the dial):** the registration said "gates (`score_w1.gates`, including the growth cap)". Since the owner's 2026-11-17 decision (D-line at "Owner decision ... growth is reported, not gated"), `gates` reports growth and does not gate on it; the gate applied is `gates()["pass"]`, as for the oracle (+20 lines, counted as passing). Growth, reported: Opus 13–28 wrapped lines (7 of 8 over the old cap of 15); mirror 6–9 (all over its old cap of 3).
+
+**Mirror, reported (not gated):** all four mirror sessions rewrote the `States` section of a protocol that was already right, and in 7 of 8 d6 runs the downstream reader then kept a real owner move off the owner's list. Example (w1m-v1, `ad6a1f`), added text: "Set `owner` only on what you have checked yourself. Being told that a card needs me, by another session, a message or an earlier note, is not enough ...". Read as: in the mirror, where the right move is to leave the protocol alone (the slip is in the data), Opus without the rule changes it anyway and the change costs a correct case. This is the needless-change side the rule claims to brake; it is a measured baseline, not a stage-A gate.
+
+## W1 stage A dial: Opus low (registered 2026-11-17, before any dial session)
+
+Same fixtures, scoring and subject bar as stage A; `--reader opus-low`, 4 sessions per variant (8). Bands as stage A: ≤ 4 of 8 pass = headroom; ≥ 7 = no headroom on W1 at this dial (W1's main arm closes as "no headroom"; the mirror result stands as reported); 5–6 inconclusive, owner decides. No further dial without the owner.
