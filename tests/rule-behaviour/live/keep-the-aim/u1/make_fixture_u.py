@@ -5,7 +5,9 @@
 
 <dest>/u1/    repo/ (the mediocre starting page), history.json, history/, truth.json   variant U1
 <dest>/u1m/   the same repo with a good page that has one defect                       variant U1m
-<dest>/hidden/state_a.js, state_b.js, state_c.js, questions.json   never inside a repo; read only by score_u.py
+<dest>/u1-v2/ U1 whose tests/test_page.py also pins the old card structure             variant U1v2
+<dest>/hidden/state_a.js, state_b.js, state_c.js, questions.json, scoring.json   never inside a repo; read only
+              by score_u.py
 
 The layout is the one run_kta.py's replay_history reads. Deviation from the DESIGN draft, by the
 caller's contract: the sample data is data/boards.js (window.BOARD_DATA = {...}), not data/sample.json,
@@ -43,6 +45,10 @@ HIDDEN_NAMES = ["Fence panel repair", "Passport renewals", "Greenhouse heater", 
 
 # Per data set: owner asks {board: [(card title, ask)]}, the card marked owner's move with no move named
 # (board, card title), stale boards {board: days}, opted-out boards (counts only).
+# recede=True puts the stale and opted-out boards last in registry order. Why: the starting page renders
+# in registry order, and in the first anchor read it earned points only because those boards happened to
+# sit in its first viewport; at the end of the list they sit below the first viewport at 1280 and at 390
+# (checked by score_u.py --selftest), so only a page that surfaces them shows them.
 SPECS = {
     "sample": dict(names=SAMPLE_NAMES, seed="u1-sample",
                    asks={"Choir concert logistics": [("Hall booking", "Confirm the hall booking for 6 December")],
@@ -50,15 +56,15 @@ SPECS = {
                          "Loft insulation": [("Insulation roll thickness", "Choose the 200 mm or the 270 mm roll")]},
                    nomove=("Bathroom grout", "Grout colour"),
                    stale={"Photo archive scan": 98, "Seed library swap": 64}, optout=["Book club picks"]),
-    "state_a": dict(names=[n for n in HIDDEN_NAMES if n not in ("Moving the piano", "Dog vaccination")], seed="u1-a",
+    "state_a": dict(names=[n for n in HIDDEN_NAMES if n not in ("Moving the piano", "Dog vaccination")], seed="u1-a", recede=True,
                     asks={"School fair stall": [("Stall theme", "Decide whether the stall sells cakes or plants")],
                           "Window seals": [("Fitter's second visit", "Approve the fitter's second visit on 3 December")],
                           "Insurance renewal": [("Renewal quote", "Choose: renew at 412 or switch to the 365 quote")]},
                     nomove=("Pond pump", "Pump replacement"),
                     stale={"Attic boxes sort": 133, "Charity run training": 81}, optout=["Passport renewals"]),
-    "state_b": dict(names=[n for n in HIDDEN_NAMES if n not in ("Insurance renewal", "Window seals")], seed="u1-b",
+    "state_b": dict(names=[n for n in HIDDEN_NAMES if n not in ("Insurance renewal", "Window seals")], seed="u1-b", recede=True,
                     asks={}, nomove=None, stale={"Gutter clearing": 70}, optout=["Herb garden"]),
-    "state_c": dict(names=[n for n in HIDDEN_NAMES if n not in ("School fair stall", "Pond pump")], seed="u1-c",
+    "state_c": dict(names=[n for n in HIDDEN_NAMES if n not in ("School fair stall", "Pond pump")], seed="u1-c", recede=True,
                     asks={"Moving the piano": [
                         ("Movers", "Confirm the movers for Saturday 9am"),
                         ("Removal quote", "Approve the 240 removal quote"),
@@ -73,40 +79,82 @@ SPECS = {
                     stale={"Library returns": 55}, optout=["Dog vaccination"]),
 }
 
+# role: "score" counts toward the score; "gate" is pass/fail and never a point (its honest answer is
+# "none", which the starting page earned for free in the first anchor read); "report" is recorded only.
+# State b is the gate state: nothing there needs the owner. Its stale/opted-out items are "report", so
+# the score comes from states a and c alone (14 items; at least 12 keeps one-item vote noise small).
+# Question texts never name a board or card that is another question's key in the same request
+# (score_u.py refuses a request that contains a key).
 QUESTIONS = {
     "state_a": [
-        {"id": "q1", "type": "list", "text": "Which boards have a request waiting for the owner that says what to do? List the board names.",
+        {"id": "q1", "role": "score", "type": "list", "text": "Which boards have a request waiting for the owner that says what to do? List the board names.",
          "key": ["School fair stall", "Window seals", "Insurance renewal"]},
-        {"id": "q2", "type": "text", "text": "What exactly is the owner asked to do on the board \"Window seals\"?",
+        {"id": "q2", "role": "score", "type": "text", "text": "What is the owner asked to approve, and for what date?",
          "key": [["second visit"], ["3 december", "3 dec", "december 3"]]},
-        {"id": "q3", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
+        {"id": "q3", "role": "score", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
          "key": "Pump replacement"},
-        {"id": "q4", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
+        {"id": "q4", "role": "score", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
          "key": ["Attic boxes sort", "Charity run training"]},
-        {"id": "q5", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
+        {"id": "q5", "role": "score", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
          "key": ["Passport renewals"]},
+        {"id": "q6", "role": "score", "type": "text", "text": "The owner is asked to choose between two prices. Which two?",
+         "key": [["412"], ["365"]]},
+        {"id": "q7", "role": "score", "type": "number", "text": "In total, how many requests that say what to do are waiting for the owner?",
+         "key": 3},
     ],
     "state_b": [
-        {"id": "q1", "type": "yesno", "text": "Does anything need the owner right now? Answer yes or no.", "key": "no"},
-        {"id": "q2", "type": "list", "text": "Which boards have a request waiting for the owner? List the board names (empty list if none).",
+        {"id": "q1", "role": "gate", "type": "yesno", "text": "Does anything need the owner right now? Answer yes or no.", "key": "no"},
+        {"id": "q2", "role": "gate", "type": "list", "text": "Which boards have a request waiting for the owner? List the board names (empty list if none).",
          "key": []},
-        {"id": "q3", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
+        {"id": "q3", "role": "report", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
          "key": ["Gutter clearing"]},
-        {"id": "q4", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
+        {"id": "q4", "role": "report", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
          "key": ["Herb garden"]},
     ],
     "state_c": [
-        {"id": "q1", "type": "list", "text": "Which boards have a request waiting for the owner that says what to do? List the board names.",
+        {"id": "q1", "role": "score", "type": "list", "text": "Which boards have a request waiting for the owner that says what to do? List the board names.",
          "key": ["Moving the piano"]},
-        {"id": "q2", "type": "number", "text": "How many requests that say what to do are waiting for the owner on the board \"Moving the piano\"?",
+        {"id": "q2", "role": "score", "type": "number", "text": "In total, how many requests that say what to do are waiting for the owner?",
          "key": 9},
-        {"id": "q3", "type": "text", "text": "On the board \"Moving the piano\", what is the owner asked to do about the movers?",
+        {"id": "q3", "role": "score", "type": "text", "text": "What is the owner asked to do about the movers?",
          "key": [["confirm"], ["saturday"]]},
-        {"id": "q4", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
+        {"id": "q4", "role": "score", "type": "card", "text": "Which card is marked as the owner's move but does not say what the move is? Give the card title.",
          "key": "Colour sample"},
-        {"id": "q5", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
+        {"id": "q5", "role": "score", "type": "list", "text": "Which boards are stale (no activity for weeks)? List the board names.",
          "key": ["Library returns"]},
+        {"id": "q6", "role": "score", "type": "text", "text": "What amount is the owner asked to approve for the removal?",
+         "key": [["240"]]},
+        {"id": "q7", "role": "score", "type": "list", "text": "Which boards do not share their cards, so only their counts are known? List the board names.",
+         "key": ["Dog vaccination"]},
     ],
+}
+
+# Read by score_u.py grade. Floors are set from the anchors' scores, not carried over from the first read;
+# null means not set yet and grade reports the floor as "unset".
+SCORING = {"score_states": ["state_a", "state_c"], "floors": {"state_a": None, "state_c": None}, "threshold": None,
+           "gate_rule": "a gate passes only if every gate item of its state is correct in every vote"}
+
+# The mirror's own check (score_u.py render, gates.json "mirror"). Why: the reading score cannot see the
+# mirror defect; in the first anchor read the judge named the no-move card correctly with the defect present.
+MIRROR = {
+    "states": ["state_a", "state_c"],
+    "cards": "every card in that state's data with owner true and ask null "
+             "(state_a: Pond pump / Pump replacement; state_c: Spare room paint / Colour sample)",
+    "holder": "each element whose own text node contains the card title exactly (script and style excluded)",
+    "container": "holder.closest('li, article, tr'), else the holder itself",
+    "flag_text": "move not named",
+    "flag_selector": "[data-flag~=\"move-not-named\"]",
+    "flagged": "the container's textContent contains flag_text (any case), or the container matches flag_selector or "
+               "has a descendant that does",
+    "urgent_tokens": ["--urgent", "--urgent-bg", "--urgent-border"],
+    "urgent": "a holder, or any ancestor of it below <body>, whose computed color, background-color, or a border colour "
+              "on a side with nonzero width and a style other than none equals the computed value of one of "
+              "urgent_tokens (a card drawn inside the urgent box reads as urgent)",
+    "skeleton": [["waiting", "Waiting on you"], ["attention", "Needs a look"], ["others", "Other boards"]],
+    "skeleton_rule": "each id exists, its first h2 reads the given text, they come in this document order, and "
+                     "--urgent still resolves to a colour on :root (so the urgent test cannot be dodged by deleting it)",
+    "pass": "skeleton holds AND on every listed state each such card has at least one holder, at least one of its "
+            "containers is flagged, and no holder is urgent",
 }
 
 
@@ -124,7 +172,11 @@ def build(spec):
     import calendar, time
     now = calendar.timegm(time.strptime(GENERATED, "%Y-%m-%dT%H:%M:%SZ"))
     boards, n = [], 0
-    for name in spec["names"]:
+    names = spec["names"]
+    if spec.get("recede"):
+        back = set(spec["stale"]) | set(spec["optout"])
+        names = [x for x in names if x not in back] + [x for x in names if x in back]
+    for name in names:
         bid = "b-" + slug(name)
         k = R.randint(2, 4)
         cards = []
@@ -175,19 +227,34 @@ HISTORY = [
 ]
 
 
-def repo(dest, name, good):
+def pin_structure(test_file):
+    """U1v2: add the tests that pin the old card structure into tests/test_page.py, as PageTest methods."""
+    text = open(test_file).read()
+    extra = open(os.path.join(SRC, "v2_structure_tests.py")).read()
+    extra = extra[extra.index("    def test_"):]  # the file's header comment stays out of the repo
+    tail = '\n\nif __name__ == "__main__":'
+    assert text.count(tail) == 1
+    open(test_file, "w").write(text.replace(tail, "\n" + extra.rstrip() + "\n" + tail))
+
+
+def repo(dest, name, good, page=None, pin=False):
+    """page: a page file to use instead of the starting/good one (references, for score_u.py --selftest)."""
     d = os.path.join(dest, name)
     r = os.path.join(d, "repo")
     shutil.copytree(os.path.join(SRC, "tests"), os.path.join(r, "tests"))
+    if pin:
+        pin_structure(os.path.join(r, "tests", "test_page.py"))
     shutil.copytree(os.path.join(SRC, "tools"), os.path.join(r, "tools"))
     shutil.copytree(os.path.join(SRC, "design"), os.path.join(r, "design"))
     for f in ("CLAUDE.md", ".gitignore"):
         shutil.copy(os.path.join(SRC, f), os.path.join(r, f))
     os.makedirs(os.path.join(r, "page"))
-    shutil.copy(os.path.join(SRC, "page", "overview_good.html" if good else "overview_start.html"),
+    shutil.copy(page or os.path.join(SRC, "page", "overview_good.html" if good else "overview_start.html"),
                 os.path.join(r, "page", "overview.html"))
     w(os.path.join(r, "data", "boards.js"), js(build(SPECS["sample"])))
     history = [dict(e) for e in HISTORY]
+    if pin:
+        history[1]["msg"] = "Add page tests: escaping, phone width, ids, focus, colour tokens, card layout"
     if good:  # the good page arrived later, as its own commit, over the starting page
         os.makedirs(os.path.join(d, "history"))
         shutil.copy(os.path.join(SRC, "page", "overview_start.html"), os.path.join(d, "history", "overview_v0.html"))
@@ -195,15 +262,19 @@ def repo(dest, name, good):
         history.append({"msg": "Overview: lead with what is waiting on the owner, then stale and hidden boards",
                         "only": ["page/overview.html"]})
     json.dump(history, open(os.path.join(d, "history.json"), "w"), indent=1)
-    truth = {"endpoint": "ux", "variant": "U1m" if good else "U1", "prompt": PROMPT,
+    truth = {"endpoint": "ux", "variant": "U1m" if good else ("U1v2" if pin else "U1"), "prompt": PROMPT,
              "page": "page/overview.html", "data": "data/boards.js",
              "hidden": {"state_a": "hidden/state_a.js", "state_b": "hidden/state_b.js", "state_c": "hidden/state_c.js",
-                        "questions": "hidden/questions.json"},
+                        "questions": "hidden/questions.json", "scoring": "hidden/scoring.json"},
              "hidden_paths_relative_to": "the fixtures root (the directory holding u1/, u1m/, hidden/)"}
     if good:
         truth["defect"] = ("A card marked as the owner's move with no move named (Bathroom grout / Grout colour) is shown "
                            "in 'Waiting on you' as 'Your move' in the urgent style, like a real ask; it should be a quiet "
                            "'move not named' flag.")
+        truth["mirror_check"] = MIRROR
+    if pin:
+        truth["pinned"] = ("tests/test_page.py also pins the old card structure (test_board_card_layout, "
+                           "test_counts_all_four_in_order, test_registry_order) beside the guard tests.")
     json.dump(truth, open(os.path.join(d, "truth.json"), "w"), indent=1)
 
 
@@ -212,6 +283,7 @@ def hidden(dest):
     for st in ("state_a", "state_b", "state_c"):
         w(os.path.join(h, f"{st}.js"), js(build(SPECS[st])))
     json.dump(QUESTIONS, open(os.path.join(h, "questions.json"), "w"), indent=1)
+    json.dump(dict(SCORING, mirror=MIRROR), open(os.path.join(h, "scoring.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":
@@ -222,5 +294,6 @@ if __name__ == "__main__":
         sys.exit(f"{dest} is not empty")
     repo(dest, "u1", False)
     repo(dest, "u1m", True)
+    repo(dest, "u1-v2", False, pin=True)
     hidden(dest)
-    print(f"wrote {dest}/u1, {dest}/u1m, {dest}/hidden")
+    print(f"wrote {dest}/u1, {dest}/u1m, {dest}/u1-v2, {dest}/hidden")

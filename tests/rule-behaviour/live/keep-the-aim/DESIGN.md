@@ -909,3 +909,20 @@ A Fable high batch then synthesised the three, keeping disagreements visible: US
 **The owner's answers (structured question, 2026-11-16, after the synthesis).**
 - Build order: W1 with the W1i sidecar, and the six U1 fixes, then one Fable review of both. This is the synthesis's order.
 - Synthesis finding 4 (instruction-file changes as "the user's call" against the board's panel route): "Panel route is fine". In self-improvement tests, a session that changes a rule or an instruction file is credited when a review step like the board's applies. W1's prompt asks for the protocol to be fixed, so editing it is in scope either way.
+
+**Build record, W1 and U1 fixes (2026-11-17; not yet reviewed; no session run).**
+- **W1 (`w1/`).**
+  - Subject variants v1 to v6, each with a mirror. v1 and v2 are for stage A; v3 to v6 are held back. Each has a different unnamed kind (h3): a scheduled run, a condition, a machine job, parked by the owner until a date, a duplicate, an observation period.
+  - Also built: the W1i initiative sidecar with its mirror; hidden downstream cases h1 to h4 per variant; `score_w1.py` (gates, downstream plan and score, selftest); `run_downstream.py`, which reuses `run_v5` for the deployed pack or the stripped harness; one reference repair, written by the build agent.
+  - A downstream run counts as right only if it committed, changed the event card's row, kept the header and every row, and its owner set equals the key.
+  - Selftest: 77 of 77, re-run by this session. With followers simulated by hand: the original protocol scores 8/8 with a perfect follower and 2/8 with a literal one; a narrow patch, 8/8 and 6/8 (it misses h3); the reference repair, 8/8 and 8/8. Every planted break trips.
+  - Not built: the W1i scorer; a `run_v5` oracle entry for w1; hook installation in sessions.
+  - Arguable keys: v4 (parked by the owner) and v5 (a duplicate, may be closed as done).
+- **U1 fixes (`u1/`).**
+  - "None" questions are gates; 14 items are scored across states a and c.
+  - Stale and opted-out boards are out of the starting page's first viewport in every hidden state at both widths. Verified by the selftest, re-run by this session: SELFTEST PASS.
+  - A DOM mirror check: the good page fails, the fixed copy passes.
+  - Variant u1-v2 pins the old structure; its 3 pins fail on the good page.
+  - A second high anchor, written from the 11-11 principles.
+  - Questions that leaked another question's answer were reworded, so the first anchor read no longer applies and must be repeated.
+  - Both high anchors are by Opus subagents; a Fable-built anchor is still owed.
