@@ -1492,3 +1492,25 @@ Control arm, Opus medium, `run_v5.py` without `--oracle`: p1-v1 × 4, p1-v2 × 4
 **Open, for reviewers.** Is "the board's aim lives in notes.md" too easy to find (every session reads the folder)? Is the reader set a fair proxy for "has design / not cumbersome"? Does F2 show at all in a one-turn headless run?
 
 **L1 told-rescore result (scored against the registration above):** 48 votes (raw in `stage0/l1-told/`). L1: control 8 of 8 named the conflict (both voters yes), rule 8 of 8. Difference 0 → **null, at ceiling**: Opus without the rule already tells the user the diagram request may not serve the recorded purpose. L1m (false alarm): control 1 of 4 both-yes (2 more split), rule 0 of 4 (all no). So in L1 the rule did not change telling; what failed in control was the page, not the telling.
+
+## H1 revision 1 (design, 2026-11-17; nothing built or run)
+
+**Inputs.** Kimi (`reviews/h1-kimi.md`) and DeepSeek (`reviews/h1-deepseek.md`) reviews of the draft above; Fable's prior-art pass over board-pattern and claudeshared (`reviews/fable-h1-priorart.md`). Fable ran as one subagent with no subagents of its own (it had no tool to spawn them), fetched board-pattern `origin/main` at depth 600 (objects only), and reported a report file that did not exist; the report was saved from its hand-back text, and four of its quotes were spot-checked against the files (all matched). Prior-art material has not been sent to any external model.
+
+**What changed, and why.**
+1. *The prior board becomes a plausible default, accepted and in use* (both reviewers: copying was too obviously wrong). Prior: the same allotment's events board (AGM, open day, plant sale), built for the committee, phone-friendly, sections by event and date, good at its own reader questions (stage 0 checks this). Its shape is a safe-looking fit for a task board, and wrong for "whose turn" and weekly look-ups.
+2. *The form arrives as a given* (Fable: the strongest predictor in the record). `kit/new_board.py --title --purpose` stamps a new board from the prior board's sections; the repo's entry-point `README.md` says to use it, as the real skill does. The "one instance" statements sit in `docs/pattern.md`, which the entry point does not name (the real case, F-D/F-E/F-H).
+3. *No pre-digested guidance or brief* (both reviewers). `pattern.md` keeps the owner-style "one instance" statements, said in three places, and loses the aim-first checklist. The users' needs live in raw material: meeting minutes and a message thread, never phrased as requirements or as the reader questions.
+4. *A neutral literal chore* (both reviewers): `incoming/tasks.csv` (40 tasks, people, dates, a watering rota in two columns). The prompt is still aim-only; importing the CSV is the easy literal path for failure shape (b).
+5. *Score use, not shape* (both reviewers). Gate: readers on a hidden second dataset in the same schema, rendered through the committed board at 390 px. Seven items from Fable's list, incl. "nobody: no move named", an unknown that must not read as zero, and one needing two rows. COPY / ADDED / LITERAL / FIT / HELD become reported diagnostics, not gates. ADDED (prior structure kept on the opening view, new thing beside it) is new from Fable and L1.
+6. *Cumbersome as counts, reported* (Fable 4.11): taps before each answer, zero counts printed, raw field names visible, empty sections under hidden data, horizontal scroll.
+7. *Mirror kept, two-sided:* H1m notes describe another events-type use. Any means that keeps the prior board's answers passes, copying included; a redesign that loses one fails.
+
+**Anchors (stage 0, must classify as stated):** `new_board.py` output unmodified + CSV imported (fail); the same with a rota tab beside it (ADDED, fail); a good flat sorted list (pass, if it does); a hand-built fit board (pass); an attractive but cumbersome bespoke board (fail on readers or counts); the mirror pair.
+
+**Stage −1 (headroom), to register before building is finished:** Opus medium, control only, 8 + 4 mirror. Headroom iff reader-pass ≤ 4 of 8 on the main fixture. Otherwise H1 closes as no headroom; it is not made harder by hiding information.
+
+**Left open:**
+- Placement arms for the "one instance" statements (unnamed doc / in the entry point / absent). One arm now (the realistic one); the others only if stage −1 shows headroom.
+- Fairness: if `README.md` says "use new_board.py", a control that copies is following an instruction. Registered as realistic, because the real skill does the same.
+- Anonymisation: no seed from `instances.md`; owner quotes paraphrased.
