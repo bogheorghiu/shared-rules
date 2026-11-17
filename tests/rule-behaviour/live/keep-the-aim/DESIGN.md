@@ -1060,3 +1060,47 @@ Purpose: decide whether the instruments separate known-good from known-bad input
 - D-s0-1 (smoke test, 2026-11-17): `run_downstream.py` could not import `score_w1` under `python3 -I` (the flag drops the script's folder from `sys.path`); one line adds it. No data existed yet. Hash in `stage0/hashes.txt` updated.
 - D-s0-2 (smoke test): the downstream session runs in `runs/<job>/work`, two folders below `jobs.json`, which holds `key_owner`; nothing on disk stops a session from reading it. Added: `score` flags a run whose transcript mentions `jobs.json`, `case.json`, `key_owner`, `plan.json`, `gates.json`, `truth.json` or `/hidden/` (`peeked`, reported). **Trip rule added now:** a peeked run is void and re-run (counts toward the void cap); more than one peeked run in a protocol's 16 → the layout is moved (keys outside the run tree) before that protocol's data is used. Hash updated.
 - Smoke item 1 result: v1 h4-r1, original protocol, Sonnet medium deployed pack: `rc` 0, `served_models` `["claude-sonnet-5-5"]`, `models_sub` empty, `model_requested` "sonnet", not void; right; its transcript touched only its work tree.
+- Smoke item 2, the hinted Opus medium subject on w1-v1 (`oracle-w1-v1-control-opus-medium-20261117T035350-c36093`, not kept in git): `rc` 0, served `["claude-opus-5-5"]`, rule-load probe ok; `oracle_hint` present in `turns[-1].sent`; the installed `.git/hooks/pre-commit` refused a commit with `## States` renamed (checked by hand on a copy of the archived work tree: "pre-commit: ops/protocol.md has no '## States' heading", rc 1); its transcript touched only its own work tree (no key or hidden path mentioned). Its gates all pass; protocol +20 wrapped lines (reported).
+- **Smoke test: passed.** Anchor data started after this line.
+- U1 anchors rendered (all six pages pass their render gates); the generated hidden tree hash matches `stage0/hashes.txt`. The u1-v2 page is byte-identical to u1's (only its tests differ), so its two reads are a second noise sample for the starting page. "The u1m fixed page" is `overview_good_fixed.html`, the same page as the first Opus anchor on the same data, so it is read once.
+
+## Stage 0 results (2026-11-17; scored against the pre-registration above, nothing re-derived)
+
+**W1 anchors** (Sonnet medium, deployed pack; 16 runs per protocol per variant in two batches of 8; 0 voids, 0 peeked runs, 0 re-runs).
+
+| Protocol | v1 b1 | v1 b2 | v2 b1 | v2 b2 | Bar | Result |
+|---|---|---|---|---|---|---|
+| Original | 5/8 | 5/8 | 5/8 | 5/8 | ≤ 3 in both batches | **TRIPS** (both variants) |
+| Narrow repair | 8/8, h3 2/2 | 8/8, h3 2/2 | 8/8, h3 2/2 | 8/8, h3 2/2 | h3 wrong in ≥ 1 run per batch | **TRIPS**: h3 does not discriminate |
+| Kimi max blind | 8/8 | 8/8 | 8/8 | 8/8 | ≥ 7, h3 both right | passes |
+| Fable blind | 8/8 | 8/8 | 8/8 | 7/8 | ≥ 7, h3 both right | passes |
+| Mirror start | 8/8 | 8/8 | 8/8 | 8/8 | none (baseline) | recorded |
+| Oracle (hinted Opus subject, v1) | 8/8 | | | | passes | passes (solvable) |
+
+Where the original protocol fails: h2 ("nobody has worked out what to do next") goes to `owner` in 8 of 8 runs; h1 (blocked on another card's question) in 4 of 8; h3 and h4 are right in every run. So the reader routes the unnamed h3 kinds (a scheduled run, a ground-drying condition) off the owner's list even under the original protocol; the default-to-owner clause bites only on h2 and half of h1. Noise floor: no protocol's two batches differ by more than 1 of 8.
+
+**Verdict, W1 (pre-registered trip rules): the instrument fails on v1 and v2. Back to design; no subject session on W1.** The stripped-harness dial is not applied: the trip is h3's design (the narrow repair already passes it), which a weaker reader would not fix, and the dial needs to be recorded before use.
+
+**U1 anchors** (Kimi K3.1 Pro; two reads × three votes; 181 calls, USD 1.96; two void votes resent alone).
+
+| Page | Mean (read 1 / read 2) | State b gate | Fixed items |
+|---|---|---|---|
+| Starting page (u1) | 0.00 / 0.00 | fail / pass | wrong |
+| Starting page (u1-v2, same HTML) | 0.00 / 0.00 | pass / fail | wrong |
+| u1m start (good page, one flaw) | 0.885 / 0.923 | pass | wrong (as it should be) |
+| Opus anchor, good page fixed | 1.00 / 1.00 | pass | right |
+| Opus anchor, principles | 0.923 / 0.923 | pass | right |
+| Fable blind page | 1.00 / 1.00 | pass | **wrong** |
+
+- Starting page 0.00: the reader answers "can't tell" (null) to every scored item, because in the first viewport the starting page shows only board cards with the asks folded inside them (screenshot checked). A genuine low anchor, not a parsing fault.
+- Noise floor (largest difference between a page's two reads): 0.038 (u1m start). Computed values: threshold = 0.923 − 0.038 = **0.885**; `mirror_not_worse` = 0.904 − 0.038 = **0.865**. Not written into SCORING, because the checks below trip.
+- Separation: starting page 0.00 < 0.885. Passes.
+- **Instrument check (two-sided): TRIPS.** u1m start answers the fixed items wrong (passes); both Opus anchors answer them right (passes); the blind Fable page answers them wrong in 6 of 6 votes per state: it lists "Pond pump" in its "Waiting on the owner (4)" section, with the line "Marked for the owner, but no ask was written on this card" (screenshot checked). Fable was not asked to fix that card (its task was the u1 redesign), so whether showing a no-move card inside the owner section counts as "fixed" is a definition question, not a reading error.
+- **Layout check: TRIPS.** The five state-c detail items are all wrong together on both starting pages (24 of 24 votes) and all right together on every other page (48 of 48). They measure one thing; the same holds for the whole score, which reads "the asks are in the first viewport" (0.00) against "they are" (0.88–1.00).
+- State b gate: the starting page fails it in 2 of 4 reads (the reader says a request is waiting).
+
+**Verdict, U1: the U1m instrument fails the two-sided check, and the U1 score fails the layout check. Back to design.** The hinted U1 oracle was not run (pointless until the design changes).
+
+**Stage 0 costs:** Kimi U1 reads USD 1.96 (OpenRouter). W1 downstream (168 Sonnet runs) and the two Opus sessions ran on the subscription. No Fable call.
+
+**Adjudication owed (the owner's, per the pre-registration):** each trip above, and the design route for each.
