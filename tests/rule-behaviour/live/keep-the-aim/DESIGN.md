@@ -1220,3 +1220,6 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
   - **No effect:** rule L1 served ≤ 1 of 8 AND rule L1m served ≤ 1 of 4 (control: 0 of 7–8 and 0 of 4).
   - Anything else: mixed, reported as it is.
 - Control's one undecided run (void vote) is resent before the rule-arm reads, so control is final first.
+- Control's undecided run resolved (third vote resent): not served. **Control final: L1 0 of 8, L1m 0 of 4.**
+
+**Two readers (owner, 2026-11-17: "use both Fable and Kimi together for grading"; fixed before any Fable read).** Every L1/L1m page already read by Kimi (anchors, control) and every rule-arm page is also read by Fable 5.2, as one Fable subagent (owner: Fable subagents allowed sparingly) given the same screenshots, the same system prompt, questions and answer formats, no keys. Pages are shuffled and labelled with opaque ids, so the reader does not know anchor, control or rule. Scoring: an item at a width is right only if Kimi's vote majority is right AND Fable's answer is right; Kimi alone, Fable alone and their agreement rate are reported beside it. Served, the readings above and the anchor bars are recomputed under this combined rule; the Kimi-only results already recorded stay as recorded. Scripted checks (s1–s3, L1m edge count) are unchanged.
