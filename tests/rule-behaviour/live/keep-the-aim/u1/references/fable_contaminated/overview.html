@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boards overview</title>
+<style>
+  /* Colour tokens. Every colour on this page comes from here. */
+  :root {
+    --bg: #f6f6f3;
+    --surface: #ffffff;
+    --surface-2: #f0f0ec;
+    --border: #dcdcd5;
+    --border-strong: #b9b9b0;
+    --text: #1f1f1c;
+    --text-muted: #5f5f57;
+    --text-faint: #85857b;
+    --link: #2f5d8a;
+    --tag-bg: #ecece6;
+    --tag-text: #4a4a43;
+    --urgent: #a8320a;
+    --urgent-bg: #fbeee4;
+    --urgent-border: #d9763a;
+    --focus: #1d6fb8;
+    --radius: 6px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614;
+      --surface: #1f1f1c;
+      --surface-2: #272724;
+      --border: #34342f;
+      --border-strong: #4a4a43;
+      --text: #ecece6;
+      --text-muted: #a9a9a0;
+      --text-faint: #7d7d75;
+      --link: #9cbcdc;
+      --tag-bg: #2c2c28;
+      --tag-text: #c9c9c0;
+      --urgent: #ffb38a;
+      --urgent-bg: #3a2416;
+      --urgent-border: #c96a35;
+      --focus: #8cc4ff;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  [hidden] { display: none !important; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  a { color: var(--link); }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px 16px 40px;
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 16px;
+    margin-bottom: 6px;
+  }
+
+  header.top h1 {
+    font-size: 14px;
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  header.top .meta {
+    color: var(--text-faint);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .now {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+  }
+
+  .now.has-asks { color: var(--urgent); }
+
+  .now-sub {
+    margin: 2px 0 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 12px 20px;
+    align-items: start;
+  }
+
+  .cols > section { min-width: 0; }
+
+  .cols > section.full { grid-column: 1 / -1; }
+
+  .sec-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+
+  .sec-head h2 {
+    font-size: 15px;
+    margin: 0;
+    font-weight: 650;
+  }
+
+  .sec-note {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .sec-head input[type="search"] {
+    font: inherit;
+    font-size: 13px;
+    padding: 2px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    min-width: 0;
+    flex: 0 1 220px;
+    margin-left: auto;
+  }
+
+  .none {
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  .board-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  /* Waiting on you: one group per board, the asks in the urgent style. */
+  .group { margin-bottom: 10px; min-width: 0; }
+
+  .group h3 {
+    margin: 0 0 3px;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .group h3 .n {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .asks li {
+    background: var(--urgent-bg);
+    border-left: 4px solid var(--urgent-border);
+    padding: 4px 10px;
+    margin-bottom: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  .ask-text { font-weight: 600; }
+
+  .ask-card {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  /* Needs a look: quiet, never the urgent style. */
+  .look {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px 10px;
+    margin-bottom: 6px;
+    min-width: 0;
+  }
+
+  .look-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+  }
+
+  .aside {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .reason {
+    font-size: 13px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .reason .card-title { color: var(--text); }
+
+  .tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    white-space: nowrap;
+  }
+
+  .flag {
+    font-size: 11px;
+    padding: 0 6px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 999px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Everything else stays reachable, folded away. */
+  details.all { margin-top: 2px; }
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+
+  summary::before {
+    content: "+";
+    display: inline-block;
+    width: 1em;
+    font-family: var(--mono);
+    color: var(--text-faint);
+  }
+
+  details[open] > summary::before { content: "-"; }
+
+  details.all > summary {
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  ul.cards {
+    margin: 3px 0 3px 1em;
+    border-top: 1px solid var(--border);
+  }
+
+  ul.cards li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  ul.cards li.muted { color: var(--text-faint); }
+
+  ul.cards .title { min-width: 0; }
+
+  .rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 0 20px;
+  }
+
+  .row {
+    border-bottom: 1px solid var(--border);
+    padding: 3px 0;
+    min-width: 0;
+  }
+
+  .row-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1px 8px;
+    font-size: 14px;
+  }
+
+  .counts, .when {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .when { font-family: var(--mono); color: var(--text-faint); }
+
+  details.legend {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  details.legend summary { color: var(--text); }
+
+  details.legend dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 3px 12px;
+    margin: 6px 0 0;
+  }
+
+  details.legend dt { font-weight: 600; color: var(--text); }
+  details.legend dd { margin: 0; overflow-wrap: anywhere; }
+
+  footer.bottom {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 760px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .rows { grid-template-columns: minmax(0, 1fr); }
+    .now { font-size: 18px; }
+    .sec-head input[type="search"] { flex: 1 1 140px; margin-left: 0; }
+    .ask-card { display: block; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <h1>Boards overview</h1>
+    <span class="meta" id="meta"></span>
+  </header>
+
+  <p class="now" id="now" aria-live="polite"></p>
+  <p class="now-sub" id="now-sub"></p>
+
+  <main class="cols" id="boards">
+    <section id="waiting" aria-labelledby="waiting-h">
+      <div class="sec-head">
+        <h2 id="waiting-h">Waiting on you</h2>
+        <span class="sec-note">requests that say what to do</span>
+      </div>
+      <div id="waiting-list"></div>
+    </section>
+
+    <section id="attention" aria-labelledby="attention-h">
+      <div class="sec-head">
+        <h2 id="attention-h">Needs a look</h2>
+        <span class="sec-note">not requests: things that may be stuck</span>
+      </div>
+      <ul id="attention-list"></ul>
+    </section>
+
+    <section id="others" class="full" aria-labelledby="others-h">
+      <div class="sec-head">
+        <h2 id="others-h">Other boards</h2>
+        <span class="sec-note" id="others-note"></span>
+        <label for="filter" class="visually-hidden">Filter other boards</label>
+        <input type="search" id="filter" placeholder="Filter (press /)" autocomplete="off">
+      </div>
+      <ul class="rows" id="others-list"></ul>
+    </section>
+  </main>
+
+  <details class="legend">
+    <summary>What the words mean</summary>
+    <dl>
+      <dt>Waiting on you</dt><dd>a card marked for the owner whose request says what to do</dd>
+      <dt>move not named</dt><dd>a card marked for the owner with no request written; someone has to say what the move is</dd>
+      <dt>stale</dt><dd>no activity for more than 21 days before this page's data was generated</dd>
+      <dt>counts only</dt><dd>the board does not share its cards, so only its four counts are known</dd>
+      <dt>counts</dt><dd>open: not started; doing: being worked on; owner: marked for the owner; questions: open questions</dd>
+    </dl>
+  </details>
+
+  <footer class="bottom">
+    Data: <code>data/boards.js</code>.
+  </footer>
+</div>
+
+<script src="../data/boards.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // All text goes through el(): textContent only, never innerHTML.
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  var DATA = window.BOARD_DATA || { boards: [] };
+  var BOARDS = Array.isArray(DATA.boards) ? DATA.boards : [];
+  var COUNT_KEYS = ["open", "doing", "owner", "questions"];
+  var STALE_MS = 21 * 86400000;
+
+  function ms(iso) {
+    var t = iso ? new Date(iso).getTime() : NaN;
+    return isNaN(t) ? null : t;
+  }
+
+  // Staleness is measured from when the data was generated, so the page says the same thing whenever it is opened.
+  var NOW = ms(DATA.generated);
+  if (NOW === null) NOW = Date.now();
+
+  function pad(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function fmtDay(iso) {
+    var t = ms(iso);
+    if (t === null) return String(iso);
+    var d = new Date(t);
+    return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate());
+  }
+
+  function fmtDate(iso) {
+    var t = ms(iso);
+    if (t === null) return String(iso);
+    var d = new Date(t);
+    return fmtDay(iso) + " " + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + " UTC";
+  }
+
+  function plural(n, one, many) {
+    return n + " " + (n === 1 ? one : many);
+  }
+
+  function num(v) {
+    return typeof v === "number" && isFinite(v) ? v : 0;
+  }
+
+  function hasText(v) {
+    return typeof v === "string" && v.trim() !== "";
+  }
+
+  // What one board contributes: asks (owner cards that say what to do), owner cards with no move named,
+  // whether it is stale, and whether it only shares counts.
+  function classify(board) {
+    var countsOnly = board.sharing === "counts" || !Array.isArray(board.cards);
+    var cards = countsOnly ? [] : board.cards.filter(Boolean);
+    var asks = [], unnamed = [];
+    cards.forEach(function (card) {
+      if (!card.owner) return;
+      if (hasText(card.ask)) asks.push(card); else unnamed.push(card);
+    });
+    var last = ms(board.last_activity);
+    var quiet = last === null ? 0 : NOW - last;
+    var counts = board.counts || {};
+    return {
+      board: board, cards: cards, asks: asks, unnamed: unnamed, countsOnly: countsOnly,
+      stale: quiet > STALE_MS, weeks: Math.floor(quiet / (7 * 86400000)), last: last,
+      blindOwner: countsOnly ? num(counts.owner) : 0
+    };
+  }
+
+  function countsText(board) {
+    var counts = board.counts || {};
+    return COUNT_KEYS.map(function (key) {
+      return String(counts[key]) + " " + key;
+    }).join(" · ");
+  }
+
+  function cardList(info) {
+    var list = el("ul", "cards");
+    if (info.cards.length === 0) {
+      list.appendChild(el("li", "muted", "No cards"));
+      return list;
+    }
+    info.cards.forEach(function (card) {
+      var li = el("li");
+      li.appendChild(el("span", "title", card.title));
+      if (card.state && card.state !== "open") li.appendChild(el("span", "tag", card.state));
+      if (card.owner && hasText(card.ask)) li.appendChild(el("span", "tag", "waiting on you"));
+      if (card.owner && !hasText(card.ask)) li.appendChild(flag());
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function flag() {
+    var f = el("span", "flag", "move not named");
+    f.setAttribute("data-flag", "move-not-named");
+    return f;
+  }
+
+  function allCards(info) {
+    var det = el("details", "all");
+    det.appendChild(el("summary", null,
+      "All " + plural(info.cards.length, "card", "cards") + " · " + countsText(info.board) +
+      " · last activity " + fmtDay(info.board.last_activity)));
+    det.appendChild(cardList(info));
+    return det;
+  }
+
+  function waitingGroup(info) {
+    var art = el("article", "group");
+    art.setAttribute("data-board-id", info.board.id);
+    var h = el("h3", null, info.board.title);
+    if (info.asks.length > 1) {
+      h.appendChild(document.createTextNode(" "));
+      h.appendChild(el("span", "n", plural(info.asks.length, "request", "requests")));
+    }
+    art.appendChild(h);
+    var list = el("ul", "asks");
+    info.asks.forEach(function (card) {
+      var li = el("li");
+      li.appendChild(el("span", "ask-text", card.ask));
+      li.appendChild(el("span", "ask-card", card.title));
+      list.appendChild(li);
+    });
+    art.appendChild(list);
+    art.appendChild(allCards(info));
+    return art;
+  }
+
+  // One item per board. `home` is true when this item is the board's one place on the page.
+  function lookItem(info, home) {
+    var li = el("li", "look");
+    if (home) li.setAttribute("data-board-id", info.board.id);
+    var head = el("div", "look-head");
+    head.appendChild(el("span", "board-name", info.board.title));
+    if (info.stale) head.appendChild(el("span", "tag", "stale"));
+    if (info.countsOnly) head.appendChild(el("span", "tag", "counts only"));
+    if (!home) head.appendChild(el("span", "aside", "its requests are under Waiting on you"));
+    li.appendChild(head);
+    info.unnamed.forEach(function (card) {
+      var r = el("div", "reason");
+      r.appendChild(el("span", "card-title", card.title));
+      r.appendChild(document.createTextNode(" "));
+      r.appendChild(flag());
+      r.appendChild(document.createTextNode(" marked yours, nothing says what to do"));
+      li.appendChild(r);
+    });
+    if (info.stale) {
+      li.appendChild(el("div", "reason", "No activity for " + plural(info.weeks, "week", "weeks") +
+        " (last " + fmtDay(info.board.last_activity) + ")"));
+    }
+    if (info.blindOwner) {
+      li.appendChild(el("div", "reason", plural(info.blindOwner, "card is", "cards are") +
+        " marked for you, but this board does not share its cards"));
+    }
+    if (home && info.countsOnly) li.appendChild(el("div", "counts", countsText(info.board)));
+    if (home && !info.countsOnly) li.appendChild(allCards(info));
+    return li;
+  }
+
+  function otherRow(info) {
+    var li = el("li", "row");
+    li.setAttribute("data-board-id", info.board.id);
+    var head;
+    if (info.countsOnly) {
+      head = el("div", "row-head");
+      li.appendChild(head);
+    } else {
+      var det = el("details");
+      head = el("summary", "row-head");
+      det.appendChild(head);
+      det.appendChild(cardList(info));
+      li.appendChild(det);
+    }
+    head.appendChild(el("span", "board-name", info.board.title));
+    if (info.countsOnly) head.appendChild(el("span", "tag", "counts only"));
+    head.appendChild(el("span", "counts", countsText(info.board)));
+    head.appendChild(el("span", "when", "last " + fmtDay(info.board.last_activity)));
+    return li;
+  }
+
+  function render() {
+    var waiting = [], look = [], others = [];
+    var nAsks = 0, nUnnamed = 0, nStale = 0, nCountsOnly = 0;
+    BOARDS.map(classify).forEach(function (info) {
+      var needsLook = info.unnamed.length > 0 || info.stale || info.blindOwner > 0;
+      nAsks += info.asks.length;
+      nUnnamed += info.unnamed.length;
+      if (info.stale) nStale += 1;
+      if (info.countsOnly) nCountsOnly += 1;
+      if (info.asks.length) {
+        waiting.push(info);
+        if (needsLook) look.push([info, false]);
+      } else if (needsLook) {
+        look.push([info, true]);
+      } else {
+        others.push(info);
+      }
+    });
+    // What the page cannot see into comes first, then the most recently active.
+    others.sort(function (a, b) {
+      if (a.countsOnly !== b.countsOnly) return a.countsOnly ? -1 : 1;
+      return (b.last || 0) - (a.last || 0);
+    });
+
+    document.getElementById("meta").textContent = "Data from " + fmtDate(DATA.generated);
+
+    var now = document.getElementById("now");
+    now.classList.toggle("has-asks", nAsks > 0);
+    now.textContent = nAsks > 0
+      ? plural(nAsks, "request is", "requests are") + " waiting on you, on " + plural(waiting.length, "board", "boards") + "."
+      : "Nothing is waiting on you right now.";
+    var sub = [];
+    if (nUnnamed) sub.push(plural(nUnnamed, "card", "cards") + " marked yours with no move named");
+    if (nStale) sub.push(plural(nStale, "stale board", "stale boards"));
+    if (nCountsOnly) sub.push(plural(nCountsOnly, "board shares", "boards share") + " counts only");
+    sub.push(plural(BOARDS.length, "board", "boards") + " in all");
+    document.getElementById("now-sub").textContent = sub.join(" · ");
+
+    var w = document.getElementById("waiting-list");
+    w.textContent = "";
+    if (waiting.length === 0) {
+      w.appendChild(el("p", "none", BOARDS.length ? "Nothing is waiting on you right now."
+                                                  : "No boards registered yet."));
+    }
+    waiting.forEach(function (info) { w.appendChild(waitingGroup(info)); });
+
+    var a = document.getElementById("attention-list");
+    a.textContent = "";
+    if (look.length === 0) a.appendChild(el("li", "none", "Nothing looks stuck."));
+    look.forEach(function (entry) { a.appendChild(lookItem(entry[0], entry[1])); });
+
+    var o = document.getElementById("others-list");
+    o.textContent = "";
+    document.getElementById("others-note").textContent =
+      others.length ? plural(others.length, "board", "boards") + ", nothing for you; open one to see its cards" : "";
+    if (others.length === 0) o.appendChild(el("li", "none", "No other boards."));
+    others.forEach(function (info) { o.appendChild(otherRow(info)); });
+    applyFilter();
+  }
+
+  function applyFilter() {
+    var q = document.getElementById("filter").value.trim().toLowerCase();
+    document.querySelectorAll("#others-list > .row").forEach(function (row) {
+      var title = (row.querySelector(".board-name") || {}).textContent || "";
+      row.hidden = !!q && title.toLowerCase().indexOf(q) === -1;
+    });
+  }
+
+  document.getElementById("filter").addEventListener("input", applyFilter);
+  document.addEventListener("keydown", function (e) {
+    var filter = document.getElementById("filter");
+    if (e.key === "/" && document.activeElement !== filter) {
+      e.preventDefault();
+      filter.focus();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

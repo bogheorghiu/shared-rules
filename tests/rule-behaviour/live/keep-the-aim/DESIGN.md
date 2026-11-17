@@ -926,3 +926,31 @@ A Fable high batch then synthesised the three, keeping disagreements visible: US
   - A second high anchor, written from the 11-11 principles.
   - Questions that leaked another question's answer were reworded, so the first anchor read no longer applies and must be repeated.
   - Both high anchors are by Opus subagents; a Fable-built anchor is still owed.
+
+## Fable review 7 (2026-11-17)
+
+**Calls.** First batch `batch-1794874056-…` (one request, effort high, max_tokens 64000): `stop_reason` max_tokens, no text; the whole budget went to reasoning, including drafting the U1 page inside it. USD 1.57. Its reasoning summary is kept in the scratchpad (`fable6/failed_thinking.md`), not here: it is paraphrase, not a deliverable. Retry `batch-1794877231-…`: three requests (review, W1 reference, U1 reference), effort high, max_tokens 128000; all `end_turn`, 18.9k / 5.5k / 22.5k output tokens, USD 1.80. Review 7 total USD 3.37.
+
+**Owner rule, 2026-11-17, replacing the earlier "Fable high" pin:** from now on Fable submissions carry no reasoning or effort parameter at all. (OpenRouter's model page lists Fable 5.2's default effort as high; whether the Anthropic route behaves the same is UNRESOLVED.)
+
+**Packaging defect (mine).** Both reference requests carried the full review context, including `hidden/` (all h1–h4 cases and every h3 kind) and U1's `questions.json`. So neither Fable reference is blind. Fable said so itself for W1. Both are kept under `references/fable_contaminated/` and **may not serve as stage-0 anchors or set a threshold**. Blind references (W1: the v1 repo only; U1: the u1 repo only) are owed, without an effort parameter.
+
+**Verdict:** neither build ready for stage A. Seven blocking, three owner decisions. Disposition (each to be fixed or decided before stage 0; nothing fixed yet):
+
+| # | Finding (Fable's grade) | My check | Disposition |
+|---|---|---|---|
+| B1 | W1: `hidden()` starts all event cards at `session`; h1–h3 keys are "not owner", so doing nothing passes h1–h3 (CERTAIN on code). The low anchor is a hand-read table, not sessions. | GROUNDED: `make_fixture_w1.py` hidden(), `row[k] = ["open","session",…]`. | Fix: h1–h3 start where inertia fails (e.g. a new card, or a start value that must change); stage 0 anchors run per variant, with sessions. |
+| B1b | W1: "everything open must be somebody's" unscored: `done` or empty `waits_on` on an open card passes. | to check | Fix: h1–h3 require `state=open` and non-empty `waits_on`. |
+| B2 | W1 h3: v5 (duplicate) non-discriminating; v2, v6 weak. | to check | Replace v5's kind; reword v2/v6 or anchor per variant. |
+| B3 | Both scorers: infrastructure failure scores as a wrong answer (no void on non-zero return, model mismatch, API error). | to check | Fix: void and re-run. |
+| B4 | W1 build-agent reference names the v1/v3/v2 h3 kinds. | to check | It is not an anchor; blind references only. |
+| B5 | U1 mirror requires the literal "move not named" / `data-flag`. | to check | Fix: accept any non-urgent label or put the vocabulary in a file the task opens; also check "Your move" label gone and 390 px. |
+| B6 | U1 `render` runs the session's own tests at HEAD, so guards can be deleted with pins. | to check | Fix: run the fixture's original guard tests against the committed page. |
+| B7 | Missing: W1i scorer, w1 oracle entry, U1 floors/threshold/combined pass rule. W1i `other_wrong_owner_rows` lists 6, repo holds 9. | to check | Build before stage 0. |
+| D1 | U1: 4 of 14 scored items reward a layout choice (stale/opted-out); report-only would leave 10 < the synthesis's 12. | — | Owner. |
+| D2 | W1: hooks not installed in subject sessions; a renamed heading fails silently, plausibly costing the bolder arm. | — | Owner: install the hook, or report hook failures apart from the pass. |
+| D3 | U1 mirror skeleton fixes three h2 texts while the prompt invites restructuring; may need a wording dial. | — | Owner / design. |
+
+Smaller items (all to check): W1 growth cap counts lines, not characters; U1 q7 duplicates q1's key; U1 substring date matching; strict U1 gate fails a perfect page about 1 in 8 at the observed misread rate; state b q1 ambiguity; U1 v2 pins constrain only `[data-board-id]`; mirror built on a second sound protocol is a deviation to record (Fable: acceptable); one protocol shared by all six variants (state it in the registration).
+
+What Fable did not see: any session output; `run_v5.py`; hidden U1 states, the u1m page, both reference pages, `design/pattern.md`, `make_fixture_u.py`; selftest outputs.
