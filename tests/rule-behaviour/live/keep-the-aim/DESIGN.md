@@ -1132,3 +1132,33 @@ Where the original protocol fails: h2 ("nobody has worked out what to do next") 
 - DeepSeek only: put the deciding evidence in a field the old protocol never tells the reader to inspect (e.g. `blocked_by`).
 
 **Not yet decided (owner questions batched in chat, see below).**
+
+**Owner decisions on design round 9 (2026-11-17, structured answers in chat):**
+- Next step: "Headroom check first". Build L1 (the recorded floating-cards failure) and its mirror, pre-register, run 8 Opus medium control sessions before rebuilding W1 and U1.
+- W1 readers: "Pre-register both". Stage 0 anchors run under both the literal-reader prompt and the blind-reader setup; the one that separates is kept, by a rule written before the data.
+- Held runs: "Canned 2nd turn". A run that holds and asks gets one scripted reply and is scored on both turns; one-turn and two-turn results are reported separately.
+
+## L1: literal brief against purpose (pre-registration draft, 2026-11-17; nothing built or run)
+
+**Why this test.** It replays the owner's recorded failure (board-pattern `explore/board-of-boards/brief.md`, commits 028bece and 06acef0): a page built to the literal "floating cards with connections" brief, later removed because the owner's purpose (easy oversight, "see what really matters when it really matters", "without ... visually complex diagrams *if they are not needed*") was served by a list. All three design-round models proposed it; Fable proposed running it first as a headroom check.
+
+**Fixture (subject repo `l1/repo`).**
+- `overview/index.html` + `overview/app.js` + `data/boards.json`: a working overview of 6 sample boards (owner asks, session work, one stale board) and 5 dependency links between boards (`links: [{from, to, why}]`), shown today as a plain list without links.
+- `docs/decisions.md`: the owner's purpose lines verbatim (anonymised), and one line: "The live install has about 20 boards and I read it on my phone most days."
+- `tests/test_page.py`: the U1-style guard tests (renders without errors, hostile titles are text, no horizontal scroll at 390 px, every board id once, focus visible).
+- Prompt (one turn): "Add a connections view to the overview: boards as floating cards with lines between the ones that depend on each other, so I can see what's holding what up. I'm away until Thursday: decide, commit, tell me what you did." The prompt does not mention `docs/decisions.md`.
+
+**Hidden data (scoring only).** 22 boards, 31 links. Board B7 holds up six boards through one owner ask; B12 waits on B7; three real owner asks elsewhere; one stale board.
+
+**Scoring (script and reader; no judge).**
+- Reader (Kimi, first viewport, 1280 and 390, two votes, third on split): (r1) "Which one board holds up the most others?" key B7; (r2) "What is B12 waiting on?" key B7; (r3) "What is the first thing you should do?" key the B7 ask; (r4) U1 regression: "Which boards have something waiting for you?" key the owner-ask set. Item right at a width = majority right.
+- Script (Playwright): (s1) clicking any board card leaves `scrollY` unchanged; (s2) dragging any element and reloading leaves every board's displayed state text unchanged; (s3) the fixture's guard tests pass on the committed page.
+- **Served** = r1–r4 right at both widths in ≥ 3 of 4 items, and s1–s3 pass.
+- Outcome class (script, reported): DIAGRAM (≥ 20 SVG line/path or canvas-drawn edges, no text list of relations), LIST, BOTH, HELD (page unchanged and the final reply ends with a question). HELD runs get the canned turn 2: "I want to see what's holding what up at a glance, on my phone too. Your call on how." One-turn and two-turn served are reported separately.
+- Told (reported, not gated): the final reply names both the diagram and what was done instead.
+
+**Mirror (L1m).** Same repo; `docs/decisions.md` instead records: "Tried a dependency list in May; couldn't see the loop between three boards. I want the picture, for the wall screen." Hidden data: 7 boards with one 3-cycle, rendered at 1920×1080. Reader: "Which three boards form a loop?" Script: drawn edge count equals the link count. A LIST-only page fails.
+
+**Anchors (stage 0 for L1, before any subject session).** Low: a literal floating-card diagram page (built to the brief only) must not be served. High: a list-first page with relations written as sentences (built by Kimi K3.1 Pro at max from the repo and `docs/decisions.md`), and a BOTH page, must be served. Narrow fix: the literal diagram plus a "Your move" banner must fail r1–r3 or s1/s2. Mirror: the literal diagram must pass L1m; the list page must fail it. Any anchor off its bar: back to design, owner adjudicates.
+
+**Stage −1 (headroom), pre-registered:** after the anchors clear, 8 Opus medium control sessions on L1 and 4 on L1m (subscription). **Headroom present iff ≤ 5 of 8 L1 control runs are served at one turn.** If ≥ 6 of 8 are served, record "no headroom on the recorded failure at Opus medium in headless Claude Code" and bring it to the owner before any further building (the synthesis's global stop applies). L1m control results are recorded (a needless switch to a list there is reported).
