@@ -1531,3 +1531,19 @@ Control arm, Opus medium, `run_v5.py` without `--oracle`: p1-v1 × 4, p1-v2 × 4
 - A failed gate is fixed before stage −1, never after; each fix recorded here before rerunning.
 
 **Stage −1 (headroom; registered now so it is fixed before any stage 0 data):** control, Opus medium, h1-v1 × 8, h1m-v1 × 4. Headroom iff reader pass ≤ 4 of 8 on h1-v1. If ≥ 5 of 8: H1 closes as "no headroom" (no dial, no added difficulty). Mirror pass rate recorded as the needless-redesign baseline. Voids (wrong model served, rc ≠ 0, no commit) re-run once.
+
+**H1 build (recorded before any stage 0 data).** Built by an Opus subagent. This session checked the files and re-ran the selftest itself: 61 ok, 0 failed. Hashes `make_fixture_h1.py` b2e548bb15459773, `score_h1.py` 39b7ded1db39e252, `references/anchors.py` ac3d5d0c44be9656, generated tree 4a3a5da6b9aa5c9e.
+
+Deviations the builder reported, all accepted before data:
+- Readers get Read/Glob only and no rule files. A read outside the shots folder voids the item.
+- States are cut into 844 px screens. Caps: 12 taps from the opening view, 8 per one-tap state, 16 states.
+- The hidden data has a fixed "today" (Tue 2027-03-16, meeting Thu 2027-03-18), set by a date shim and Playwright's clock.
+- The unknown-count item is the manure quantity: "unknown" is right; "0" and "can't tell" are wrong.
+- Gate 2 and the mirror use the main pass rule: ≥ 6 of 7 in both runs.
+- Rebuild success is decided by markers that only the hidden data contains.
+- Answer matching is strict.
+- COPY/ADDED detection reads `board.json`, so a hand-made copy shows as FIT or LITERAL. Classes are reported only.
+
+Noted by this session:
+- The 12 Nov minutes say "Ines will get the tasks onto a board, the way the events are". That is a realistic pull toward copying, coming from the users themselves, and it stays in. It makes copying more likely in control, so it works against finding a rule effect only if control already copies; it is recorded as part of the fixture.
+- The oracle hint points at `minutes/` and `mail/` and calls the events layout "one instance".
