@@ -1383,3 +1383,16 @@ Same fixtures, scoring and subject bar as stage A; `--reader opus-low`, 4 sessio
 **What this cannot show.** Whether the rule costs anything on W1's main task (no rule arm there yet; control was 8/8, so a rule arm there can only show harm). Noted for the owner.
 
 **W1m result (scored against the registration above):** control 0 of 8 pass, rule 0 of 8 pass; difference 0 → **null on W1m**, reported as a null. All 16 sessions served `claude-opus-5-5`, rule-load probe correct in all 16, 160 downstream runs, 0 voids. Every session in both arms rewrote `States` (16 of 16, growth 5–9 wrapped lines). Downstream, sessions with both d6 runs right: control 1 of 8, rule 2 of 8 (not an endpoint). The rule, loaded and acknowledged, did not stop the rewrite.
+
+## Fable pattern pass on W1 / W1m (2026-11-17; owner-requested; Fable, effort low, subagent)
+
+Report: `reviews/fable-w1-pattern.md`. It read 4 sessions per group plus the fixtures, cases, rule and this record, and was asked open questions without my reading. Its hand-back said it wrote the report to a scratchpad file; no such file existed afterwards (self-report wrong), so the text was saved from its message.
+
+Its main points, as its own claims (it marks each certain or inference):
+- The main task is at ceiling because the fixture states the aim and the defect, and the prompt names the file.
+- The mirror sessions saw the protocol already covered the incident and added an anti-hearsay clause anyway. The only instruction is "Fix ops/protocol.md", and the rule licenses a user-requested change, so the W1m null is what the rule predicts.
+- The hidden cases contain no case of the incident's own kind: they can price the addition's cost (d6, read literally) but never its benefit.
+- `states_unchanged` fails harmless edits.
+- A test that can detect the rule must not make the failing means the thing the user asks about.
+
+**Station on its one new quantitative claim (self-run, against all 16 sessions' committed `status.csv`):** Fable reported that the rule arm moved the slip card off `owner` in 3 of the 4 sessions it read, against 0 of 4 control. Over all sessions: **rule 5 of 8, control 2 of 8.** Same direction, smaller gap. Not a registered endpoint, so exploratory only.
