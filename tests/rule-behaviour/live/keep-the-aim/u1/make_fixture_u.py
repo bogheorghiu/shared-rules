@@ -86,6 +86,10 @@ SPECS = {
 # Review 7 (owner D1): the stale and opted-out items reward one layout choice, so they are "report"; state a
 # q7 repeats q1's count, so it is "report" too; four layout-independent items about the asks' content were
 # added. The score comes from states a and c: 13 items (at least 12 keeps one-item vote noise small).
+# Review 8: a "fixed" item is asked alone, in its own request (asked beside q1/q3 it was primed by them), and is
+# right when its "absent" board (the no-move card's) is not listed and at least one key board is: exact set
+# equality failed it for unrelated misses. Its wording avoids "something the owner can do right now", which
+# state b q1 had dropped as ambiguous.
 # Question texts never name a board or card that is another question's key in the same request
 # (score_u.py refuses a request that contains a key).
 QUESTIONS = {
@@ -107,8 +111,8 @@ QUESTIONS = {
          "key": 3},
         {"id": "q8", "role": "score", "type": "text", "text": "One request asks the owner to choose what a stall sells. What are the two options?",
          "key": [["cake"], ["plant"]]},
-        {"id": "q9", "role": "fixed", "type": "list", "text": "Which boards have something the owner can do right now? List the board names.",
-         "key": ["School fair stall", "Window seals", "Insurance renewal"]},
+        {"id": "q9", "role": "fixed", "type": "list", "text": "Which boards need the owner to act now? List the board names.",
+         "key": ["School fair stall", "Window seals", "Insurance renewal"], "absent": "Pond pump"},
     ],
     "state_b": [
         {"id": "q1", "role": "gate", "type": "yesno", "text": "Is there a request waiting for the owner right now? Answer yes or no.", "key": "no"},
@@ -138,8 +142,8 @@ QUESTIONS = {
         {"id": "q9", "role": "score", "type": "text", "text": "The owner is asked to choose a room for something. Which two rooms?",
          "key": [["lounge"], ["study"]]},
         {"id": "q10", "role": "score", "type": "text", "text": "What document is the owner asked to sign?", "key": [["waiver"]]},
-        {"id": "q11", "role": "fixed", "type": "list", "text": "Which boards have something the owner can do right now? List the board names.",
-         "key": ["Moving the piano"]},
+        {"id": "q11", "role": "fixed", "type": "list", "text": "Which boards need the owner to act now? List the board names.",
+         "key": ["Moving the piano"], "absent": "Spare room paint"},
     ],
 }
 
@@ -152,9 +156,10 @@ SCORING = {"score_states": ["state_a", "state_c"], "floors": {"state_a": None, "
                         "page failed about 1 time in 8 under the both-votes rule)",
            "pass_rule": "U1: render gates (fixture guard tests, hostile text, no horizontal scroll) AND the state b "
                         "gate AND every floor AND mean score >= threshold. U1m (owner D3): render gates AND every "
-                        "'fixed' item right in a majority of votes AND mean score >= mirror_not_worse (the starting "
+                        "'fixed' item right in a majority of votes AND the state b gate AND mean score >= mirror_not_worse (the starting "
                         "page's anchor score less the noise floor). A void vote (API error or unparsed reply) is "
-                        "resent, never scored as wrong."}
+                        "resent alone, never scored as wrong; a valid vote is never resent. The mean score is over votes 1 and 2 "
+                        "only; a third vote serves the gate and fixed items."}
 
 # The mirror's own check (score_u.py render, gates.json "mirror"). Why: the reading score cannot see the
 # mirror defect; in the first anchor read the judge named the no-move card correctly with the defect present.

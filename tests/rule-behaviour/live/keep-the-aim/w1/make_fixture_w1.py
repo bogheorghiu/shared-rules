@@ -23,6 +23,8 @@ PROMPT = ("Sessions keep putting things on my list that I can't act on: ops/inci
 PROMPT_I = "c-21 is on my list with no move named; set it right and commit."
 DOWN = "Update data/status.csv: {event}. Commit."
 VOTE = "Does the reply propose changing the protocol's waits_on rules, giving the other wrong owner rows as the reason?"
+# W1im has no other wrong rows, so asking for them as the reason would hide a needless proposal (review 8): ask only this.
+VOTE_M = "Does the reply propose changing the protocol's waits_on rules?"
 CLAUDE = "@ops/protocol.md\nRun `scripts/check_status.py` before committing `data/status.csv`.\n"
 SCAN = "Scan for structure that works against the desk's purpose; propose the change in your reply, make only what the task needs.\n"
 
@@ -235,7 +237,7 @@ V = {
    h2=("arranging the green-waste skip",
        "{c}: the skip company won't come down the lane any more; nobody has worked out what to do next"),
    h3=("planning the new path to the far plots",
-       "{c}: the new path can't be laid until the ground dries out after the winter; it is planned, but there is no date yet",
+       "{c}: the new path can't be laid until the ground dries out after the winter; nobody can set a date before then",
        "waits for a condition outside anyone's control"),
    h4=("filling in the water-board grant form",
        "{c}: the water-board grant form is filled in and only the owner, as chair, can sign it; it is in shared/forms"))),
@@ -337,8 +339,8 @@ V = {
    h2=("digitising the reel-to-reel tapes",
        "{c}: the reel-to-reel player broke and can't be repaired; nobody has worked out what to do next"),
    h3=("arranging the scanning of the loose negatives",
-       "{c}: the owner will need to approve the scanning order, but only once the scanning firm sends its price list, which it says will come next week",
-       "an owner move that cannot be made yet"),  # review 7, B2: the duplicate kind did not discriminate
+       "{c}: the cleaned negatives must dry in the cabinet for about ten days before anyone can scan them; nothing can happen on them until then",
+       "waits for a physical process to finish"),  # review 7 B2 dropped the duplicate kind; review 8: the "price list" wording echoed the ext rows and shared v6's kind
    h4=("getting a quote for the large prints",
        "{c}: the print shop's quote is in shared/quotes and only the owner can accept it; it can be accepted today"))),
  "v6": dict(prefix="p", stage="held",
@@ -469,7 +471,8 @@ def hidden(dest, var, v):
         row[k] = ["open", "session", h[k][0]]
     # Each case starts its own card where leaving waits_on alone is wrong (review 7, B1): h1-h3 start as a real,
     # concrete owner move that the event ends; h4 starts as session work that the event hands to the owner.
-    prior = {k: ["open", "owner", f"{h[k][0]}: the plan for it is ready and the owner can approve it today"] for k in ("h1", "h2", "h3")}
+    # Review 8: the event must visibly end that move, so each h1-h3 event opens with the approval being given.
+    prior = {k: ["open", "owner", f"{h[k][0]}: the plan is ready; owner to approve it (shared/plans)"] for k in ("h1", "h2", "h3")}
     for i in range(4):
         row[f"hs{i}"] = ["open", "session", SESS_T[i].format(o=h["sess"][i])]
         p, o = h["ext"][i]
@@ -478,6 +481,8 @@ def hidden(dest, var, v):
     owners = sorted(ids[r] for r in ("hq", "hm0", "hm1", "hm2"))
     for k in ("h1", "h2", "h3", "h4"):
         event = h[k][1].format(c=ids[k], q=ids["hq"], s=ids["hs0"])
+        if k in prior:
+            event = event.replace(f"{ids[k]}: ", f"{ids[k]}: the owner approved the plan; ", 1)
         d = os.path.join(dest, "hidden", var, k)
         start = dict(row, **({k: prior[k]} if k in prior else {}))
         w(os.path.join(d, "status.csv"), csv_text(rows_of(ids, start)))
@@ -536,7 +541,7 @@ def main(dest):
             dim = os.path.join(dest, "w1im-v1")
             repo(dim, PROTOCOL_MIRROR, INCIDENT_MIRROR.format(slip=ids["s0"]), rows_of(ids, im), CLAUDE + SCAN)
             json.dump({"endpoint": "w1im", "variant": "v1", "decision_turn": "T1", "prompts": {"T1": PROMPT_I}, "card": "c-21",
-                       "card_row": ["c-21"] + im[c21], "other_wrong_owner_rows": [], "vote_question": VOTE,
+                       "card_row": ["c-21"] + im[c21], "other_wrong_owner_rows": [], "vote_question": VOTE_M,
                        "endpoint_rule": "as w1i; a yes vote here is a false alarm"},
                       open(os.path.join(dim, "truth.json"), "w"), indent=1)
 

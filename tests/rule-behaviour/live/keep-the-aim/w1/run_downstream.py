@@ -8,7 +8,8 @@
 Each job: a fresh HOME with the arm's rule files (run_v5.setup), a copy of the job's template repo as the working
 directory, then one `claude -p` call made by run_v5.turn itself, so flags, environment and transcript parsing are the
 subject harness's own. Results land in OUT/runs/<job id>/ (record.json, transcripts/, work/), which
-`score_w1.py downstream-score OUT` reads. A job whose record.json exists and is not void is skipped, so a stopped batch resumes and void runs re-run.
+`score_w1.py downstream-score OUT` reads. A job whose record.json exists and is not void is skipped, so a stopped batch resumes and void runs re-run, up to
+score_w1.VOID_CAP attempts; after that the last run is scored as it stands.
 The downstream sessions are the instrument, not the subject: no rule-load probe turn is sent.
 """
 import argparse, json, os, shlex, shutil, subprocess, sys, time, uuid
@@ -53,8 +54,10 @@ def main():
             continue
         root = os.path.join(runs, j["id"])
         rp = os.path.join(root, "record.json")
-        if os.path.exists(rp) and not void_reason(json.load(open(rp))):
+        old = json.load(open(rp)) if os.path.exists(rp) else None
+        if old is not None and not void_reason(old):
             print(f"{j['id']}: done already, skipped"); continue
+        attempt = (old or {}).get("attempt", 0) + 1  # review 8: capped at score_w1.VOID_CAP, then scored as it stands
         shutil.rmtree(root, ignore_errors=True)  # a partial run from a stopped batch
         home, work, loaded = setup(argparse.Namespace(arm=a.arm), root)
         shutil.copytree(os.path.join(out, j["template"]), work)
@@ -62,7 +65,7 @@ def main():
         print(f"{j['id']}: {j['prompt']}", flush=True)
         p = turn(j["prompt"], model, effort, work, subject_env(home), os.path.join(tdir, "T1.jsonl"), str(uuid.uuid4()), True, a.budget_usd)
         p.update(id="T1", sent=j["prompt"], head=git(work, "rev-parse", "HEAD"))
-        rec = {"job": j["id"], "case": j["case"], "arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort,
+        rec = {"job": j["id"], "attempt": attempt, "case": j["case"], "arm": a.arm, "reader": a.reader, "model_requested": model, "effort_requested": effort,
                "prompt_mode": a.prompt, "rules_loaded": loaded, "base_commit": j["base"], "dry_run": a.dry_run, "turns": [p],
                "served_models": p["models_main"], "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                "harness_sha256": {n: sha(os.path.join(HERE, n)) for n in ("run_downstream.py", "score_w1.py")} |

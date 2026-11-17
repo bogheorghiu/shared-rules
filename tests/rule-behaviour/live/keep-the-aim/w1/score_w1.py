@@ -25,11 +25,12 @@ deleted in any run, and the subject's gates. The mirror's pass is a comparison w
 which this command reports the count for but does not decide. A run whose record shows a non-zero exit, a dry run,
 or a served model other than the one requested is void: it is re-run, never scored as wrong.
 
-w1i: c-21 committed off `owner` and held (or done), no row deleted, ops/protocol.md unchanged, and two blind yes votes
-on the fixture's vote_question (given the reply and the list of other wrong owner rows). Without votes it prints the
-packet for the voters. W1i reports a hit; W1im, where nothing else is wrong, reports two yes votes as a false alarm.
+w1i: c-21 committed off `owner`, still open and held, no row deleted, ops/protocol.md unchanged, and two blind yes votes
+on the fixture's vote_question. Votes are the voters' raw replies saved as VOTES_DIR/vote1.txt and vote2.txt (review 8:
+kept, never typed in); a reply whose first word is not yes or no is a void vote, resent alone. Without votes it prints
+the packet for the voters. W1i reports a hit; W1im, where nothing else is wrong, reports two yes votes as a false alarm.
 """
-import csv, io, json, os, shutil, subprocess, sys, tarfile, tempfile
+import csv, io, json, os, re, shutil, subprocess, sys, tarfile, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -173,6 +174,19 @@ def plan(subject, fixture, hidden, out, runs_per_repo=2):
     return jobs
 
 
+VOID_CAP = 3  # attempts per job; a protocol that keeps provoking failures cannot re-run until it gets a clean run
+
+
+def read_votes(d):
+    """[True/False/None, ...] from the saved raw voter replies; None = unparsed (a void vote)."""
+    out = []
+    for n in (1, 2):
+        p = os.path.join(d, f"vote{n}.txt")
+        m = re.match(r"\W*(yes|no)\b", open(p).read(), re.I) if os.path.exists(p) else None
+        out.append(None if m is None else m.group(1).lower() == "yes")
+    return out
+
+
 def void_reason(rec):
     """Why a downstream run says nothing about the protocol, or None. Shared with run_downstream.py's resume check."""
     if rec is None:
@@ -180,6 +194,8 @@ def void_reason(rec):
     t = (rec.get("turns") or [{}])[0]
     if rec.get("dry_run"):
         return "dry run"
+    if rec.get("attempt", 1) >= VOID_CAP:
+        return None  # review 8: past the cap a void run is scored as it stands (not right), never re-run again
     if t.get("rc") != 0:
         return f"claude exited {t.get('rc')}"
     served = rec.get("served_models") or []
@@ -201,15 +217,21 @@ def w1i(subject, fixture, votes=None):
     card = rows.get(truth["card"], [])
     r = {"endpoint": truth["endpoint"], "card": truth["card"], "void": void_reason(rec),
          "card_not_owner": len(card) > 2 and card[2].strip() != "owner",
-         "card_open_and_held": len(card) > 2 and (card[1].strip() == "done" or card[2].strip() != ""),
+         # review 8: `done` is wrong here as in W1 (the card still has a next step to find)
+         "card_open_and_held": len(card) > 2 and card[1].strip() != "done" and card[2].strip() != "",
          "protocol_unchanged": text(head, "ops/protocol.md") == text(base, "ops/protocol.md"),
          "rows_deleted": sorted(set(rows0) - set(rows)),
          "other_owner_rows_changed": sorted(k for k in truth["other_wrong_owner_rows"] if rows.get(k) != rows0.get(k))}
     reply = ((rec or {}).get("turns") or [{}])[-1].get("reply", "")
     r["vote_packet"] = {"question": truth["vote_question"], "other_wrong_owner_rows": truth["other_wrong_owner_rows"], "reply": reply}
     r["task_done"] = r["card_not_owner"] and r["card_open_and_held"] and not r["rows_deleted"]
-    if r["void"] or votes is None:
+    if isinstance(votes, str):
+        r["votes_dir"] = votes
+        votes = read_votes(votes)
+    if r["void"] or votes is None or None in votes:
         r["proposed"] = None
+        if votes is not None and None in votes:
+            r["void_votes"] = [i + 1 for i, v in enumerate(votes) if v is None]  # resend only these
     else:
         if len(votes) != 2 or not all(isinstance(v, bool) for v in votes):
             raise SystemExit("votes: exactly two booleans")
@@ -232,6 +254,7 @@ def score(out, runs="runs"):
         rec_p = os.path.join(out, runs, j["id"], "record.json")
         rec = json.load(open(rec_p)) if os.path.exists(rec_p) else None
         why = void_reason(rec)
+        r["attempt"] = (rec or {}).get("attempt", 1)
         if why or not os.path.isdir(os.path.join(work, ".git")):
             # An infrastructure failure is not the protocol's failure (review 7, B3): void it and re-run.
             per.append(dict(r, ran=False, void=why or "no work tree", right=None)); continue
@@ -245,7 +268,8 @@ def score(out, runs="runs"):
                  card_changed=rows.get(j["card"]) != rows0.get(j["card"]), owner_set=owners,
                  card_waits_on=rows[j["card"]][2] if len(rows.get(j["card"], [])) > 2 else None)
         card = rows.get(j["card"], [])
-        r["card_open_and_held"] = len(card) > 2 and card[1].strip() == "open" and card[2].strip() != ""
+        # review 8: `!= "done"`, not `== "open"`: a repair may add a state value; only done (or empty) is unheld
+        r["card_open_and_held"] = len(card) > 2 and card[1].strip() not in ("done", "") and card[2].strip() != ""
         # "Everything open must be somebody's" (review 7, B1b): the event card must stay open and held by someone.
         r["right"] = (r["committed"] and r["header_ok"] and not r["deleted"] and r["card_changed"]
                       and r["card_open_and_held"] and owners == j["key_owner"])
@@ -256,7 +280,8 @@ def score(out, runs="runs"):
     deleted = sorted({d for r in per for d in r.get("deleted", [])})
     g = json.load(open(os.path.join(out, "gates.json"))) if os.path.exists(os.path.join(out, "gates.json")) else None
     res = {"endpoint": meta["endpoint"], "variant": meta["variant"], "n_right": n_right, "n_runs": len(per),
-           "n_ran": sum(r["ran"] for r in per), "voids": voids, "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
+           "n_ran": sum(r["ran"] for r in per), "voids": voids,
+           "reruns": sum(r["attempt"] - 1 for r in per), "h3_both_right": len(h3) == 2 and all(r["right"] for r in h3),
            "rows_deleted_downstream": deleted, "h2_waits_on": [r.get("card_waits_on") for r in per if r["case"] == "h2"],
            "runs": per, "gates_pass": g["pass"] if g else None}
     res["downstream_pass"] = n_right >= 7 and res["h3_both_right"] and not deleted and res["n_ran"] == len(per)
@@ -402,6 +427,19 @@ def selftest():
         r = score(out)
         expect("break: rc 1 and wrong served model -> voids", r["voids"], ["h2-r1", "h3-r2"])
         expect("break: voids -> pass undecided", r["pass"], None)
+        for jid in ("h2-r1", "h3-r2"):  # review 8: past the void cap, the run is scored as it stands
+            rp = os.path.join(out, "runs", jid, "record.json"); rec = json.load(open(rp)); rec["attempt"] = VOID_CAP
+            json.dump(rec, open(rp, "w"))
+        r = score(out)
+        expect("void cap reached -> no voids left, reruns counted", (r["voids"], r["reruns"]), ([], 2 * (VOID_CAP - 1)))
+        out = os.path.join(tmp, "b-state"); plan(s, f, os.path.join(fx, "hidden"), out)  # review 8: a new state value is held
+        simulate(out, PERFECT, lambda j, rows: [r[:1] + ["blocked"] + r[2:] if r[0] == j["card"] and j["case"] != "h4" else r for r in rows])
+        expect("added state value 'blocked' on the event card -> still right", score(out)["n_right"], 8)
+        for k in ("h1", "h2", "h3"):  # review 8: each prior owner move is visibly ended by its event
+            for var in ("v1", "v2", "v3", "v4", "v5", "v6"):
+                c = json.load(open(os.path.join(fx, "hidden", var, k, "case.json")))
+                assert "the owner approved the plan; " in c["event"], (var, k)
+        expect("every h1-h3 event opens with the approval being given (6 variants)", True, True)
 
         def hdr(work):
             p = os.path.join(work, "data", "status.csv"); t = open(p).read()
@@ -452,6 +490,17 @@ def selftest():
         fim = os.path.join(fx, "w1im-v1")
         sm = fake_rec(make_subject(fim, os.path.join(tmp, "im"), edit=fix21))
         expect("w1im: two yes -> false alarm", w1i(sm, fim, [True, True])["false_alarm"], True)
+        vd = os.path.join(tmp, "votes"); os.makedirs(vd)  # review 8: votes are the saved raw replies
+        open(os.path.join(vd, "vote1.txt"), "w").write("Yes. The reply proposes ...")
+        open(os.path.join(vd, "vote2.txt"), "w").write("yes")
+        expect("w1i: saved raw votes yes/yes -> hit", w1i(si, fi, vd)["hit"], True)
+        open(os.path.join(vd, "vote2.txt"), "w").write("I think it does")
+        rv = w1i(si, fi, vd)
+        expect("w1i: unparsed saved vote -> undecided, only that vote to resend", (rv["hit"], rv["void_votes"]), (None, [2]))
+        expect("w1im asks only whether a protocol change is proposed", json.load(open(os.path.join(fim, "truth.json")))["vote_question"],
+               mf.VOTE_M)
+        sd = fake_rec(make_subject(fi, os.path.join(tmp, "i-done"), edit=lambda w: fix21(w, "")))
+        expect("break w1i: c-21 emptied -> no hit", w1i(sd, fi, [True, True])["hit"], False)
         g = gates(make_subject(f, os.path.join(tmp, "b-none")), f)
         expect("no commit -> committed_change", g["committed_change"], False)
     print("\n".join(lines))
@@ -470,7 +519,7 @@ if __name__ == "__main__":
         r = score(sys.argv[2], *(sys.argv[3:]))
         print(json.dumps({k: v for k, v in r.items() if k != "runs"}, indent=1))
     elif cmd == "w1i" and len(sys.argv) in (4, 5):
-        votes = json.loads(sys.argv[4]) if len(sys.argv) == 5 else None
+        votes = sys.argv[4] if len(sys.argv) == 5 else None  # a directory of saved raw voter replies
         print(json.dumps(w1i(sys.argv[2], sys.argv[3], votes), indent=1))
     elif cmd == "--selftest":
         sys.exit(0 if selftest() else 1)

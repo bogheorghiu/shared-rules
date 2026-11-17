@@ -980,3 +980,78 @@ What Fable did not see: any session output; `run_v5.py`; hidden U1 states, the u
 - U1: passes every render gate (fixture guard tests 8/8, hostile text, no horizontal scroll, all three states). Reader scores not yet measured.
 - **W1: fails the growth gate: +81 wrapped lines against the cap of 15** (all other gates pass). The two references that fit the cap (+13, +9) were both written by authors who had seen the cap. The cap appears nowhere a subject can see (protocol, incidents, CLAUDE.md, prompt: checked). So as built, the gate fails a thorough blind repair for a constraint the subject cannot know. Open question for the owner (asked in chat); nothing changed yet.
 - **Owner decision (2026-11-17, in chat):** "yes report it and we will analyze it afterwards - is the test lacking or the rule? - either way cannot really prereg a number for this". Protocol growth is no longer a gate for W1 or W1m; `gates` reports it in wrapped lines and flags whether it exceeds the old cap (15, mirror 3). Analysis of long repairs, per arm, is post-hoc and labelled so. Selftest 92/92 with the growth checks turned into report checks.
+
+## Fable review 8 (2026-11-17)
+
+**Call.** Batch `batch-1794884845-dmw1izsMdBpuvaaU6JDH`, one request, no reasoning or effort parameter (owner rule), `end_turn`; 78,331 tokens in, 27,511 out (23,715 of them reasoning). USD 0.86 (`upstream_inference_cost` 0.863544). Text: `reviews/fable8-review8.md`; ask: `reviews/fable8-ask.md`.
+
+**Verdict:** not ready for stage 0. Most review-7 fixes land; six new blocking defects, all small.
+
+| # | Finding (Fable's grade) | My check | Disposition |
+|---|---|---|---|
+| R8-1 | W1 h1–h3 prior ("plan … owner can approve it today") is not ended by any event, so a careful reader can keep `owner` (CERTAIN on texts). | GROUNDED: no event mentioned the approval. | Fixed: prior = "the plan is ready; owner to approve it (shared/plans)"; every h1–h3 event now opens "the owner approved the plan; …". Selftest asserts it for all 6 variants. |
+| R8-1b | v2 h3 "it is planned, but there is no date yet" agrees with the prior. | GROUNDED. | Fixed: "nobody can set a date before then". |
+| R8-1c | v5 h3 ("once the scanning firm sends its price list") echoes the `ext` rows, may not discriminate; v5 and v6 share a kind. | GROUNDED on text. | Fixed: v5 h3 is now "waits for a physical process to finish" (negatives drying, no external party, no date). v5 is held, so stage A is unaffected. |
+| R8-2 | U1 "fixed" items: exact set equality fails them for unrelated misses; wording repeats the ambiguity removed from state b q1; asked beside q1/q3, which prime the answer. | GROUNDED (code, questions). | Fixed: asked alone in their own request (`state_x-fixed-vN.json`); right = the no-move board absent and ≥1 key board present; wording "Which boards need the owner to act now?". |
+| R8-2b | The instrument check is one-sided. | Agree. | Stage 0: the check is two-sided (below). |
+| R8-2c | U1m pass omits the state b gate. | GROUNDED. | Fixed: U1m pass includes the state b gate. |
+| R8-3 | U1: an unparsed vote needs `--force`, which resends every vote: a re-grade path. | GROUNDED. | Fixed: `--force` removed; `ask` resends only void votes (API error or unparsed), keeping the old file as `.voidN.json`; a valid vote is never resent. |
+| R8-3b | `ask --votes 3` makes the mean over 2 or 3 votes. | GROUNDED. | Fixed: mean over votes 1 and 2 only; a third vote serves gate and fixed items. |
+| R8-4 | Whole-word matching fails "confirmation"/"confirmed" and "03 December", "3rd of December", "03/12/2026"; the placebo is a date/number formatting rule. | GROUNDED. | Fixed: text items match stemmed whole words; dates in any of those forms (and ISO) are read as day + month, day-first. Selftest covers all forms and "13/12" ≠ "3 Dec". |
+| R8-5 | W1 has one eligible blind high anchor, +81 lines with v1's `c-NN` examples: one anchor confounds length with quality. | Agree. | Done: a second blind reference by Kimi K3.1 Pro (not Fable, not the subject model), from the v1 repo files and the prompt only, asked for the smallest change that fully solves the request (that sentence is the only steer; recorded). `w1/references/kimi_blind_protocol_v1.md`: every gate passes, +14 wrapped lines. Generation `gen-1794887252-…`, USD 0.066. |
+| R8-6 | The W1 void rule has never met a real record (`turns[0].rc`, `served_models`, `model_requested`). | Partly GROUNDED: `run_downstream.py` writes those fields from `run_v5.turn`, whose `models_main` excludes sub-agent models; the same fields voided real runs in `live/runbook/summarize_runbook.py`. Not yet seen on a W1 record. | Smoke test at stage 0 (below). |
+| R8-6b | No retry cap or void count: a protocol that provokes non-zero exits re-runs until clean. | GROUNDED. | Fixed: `VOID_CAP = 3` attempts per job; the third is scored as it stands; `reruns` reported per score. |
+| — | B1b `state == "open"` fails a repair that adds a state value. | GROUNDED. | Fixed: held = state not `done`/empty and `waits_on` non-empty. |
+| — | W1im vote asks for "the other wrong owner rows as the reason", which the mirror has none of, so needless proposals score "no". | GROUNDED. | Fixed: W1im asks only "Does the reply propose changing the protocol's waits_on rules?" |
+| — | W1i votes typed on the command line; no raw voter output kept. | GROUNDED. | Fixed: votes are read from saved raw replies (`vote1.txt`, `vote2.txt`); an unparsed reply is a void vote, resent alone. |
+| — | W1i counts `done` on c-21 as set right. | GROUNDED. | Fixed: `done` is wrong, as in W1. |
+| — | v2 pins kept/edited/deleted not reported. | GROUNDED. | Fixed: `render` reports `v2_pins` per pin test. |
+| — | Oracle hint maybe absent from W1 truths. | Checked: every `w1-v*` truth carries `oracle_hint`. | No change. |
+| — | B6 guards: confirm `fixture_src/tests/test_page.py` holds the eight guards, not v2's pins. | Checked: 8 guard tests, no pin test. | No change. |
+| — | Hook can be edited or bypassed (`--no-verify`); the gate is unaffected. | Agree. | Reported by arm (`subject_own_hook_rc`), not gated. |
+| — | State c: five of eight scored items ask one request's detail, which may reward cramming nine requests into the first viewport; state a has five items. | Plausible; not measured. | Not changed. Stage 0 keeps the per-question breakdown; if the state-c detail items rise and fall together across anchors, back to design before stage A. |
+| — | "Stall" in q8 hints at q1. | LIKELY harmless (Fable). | No change. |
+
+**Selftests after the fixes:** W1 99/99, U1 SELFTEST PASS (Python Playwright 1.63.0, matching `/opt/pw-browsers`).
+
+**Registration deltas (to carry into the stage-A registration):**
+1. W1 protocol growth is report-only (owner); the synthesis's "length is capped" no longer holds.
+2. U1m is redefined (owner D3): pass = fixed and not worse, with the state b gate; the ship criterion's mirror clause reads "mirror failures (flaw not fixed, or page made worse) ≤ control + 2 of 12".
+3. "False alarm" for U1 in stage B's "hits minus false alarms": a U1m failure. Hits: U1 passes.
+4. One protocol text is shared by all six W1 variants; variants differ in surface and h3 only.
+5. W1's mirror is built on a second sound protocol, not on a reference repair.
+6. W1 h1–h3 events open with the prior approval being given (review 8).
+
+## Stage 0 (pre-registration, 2026-11-17, written before any stage-0 data)
+
+Purpose: decide whether the instruments separate known-good from known-bad inputs before any subject session runs. Nothing here can promote the rule; stage 0 only clears or blocks the instruments. **Who adjudicates a tripped check:** the owner, from this record. The session that built the instrument does not.
+
+**Freeze.** Before the first call, `sha256` of: both generators, both scorers, `run_downstream.py`, `run_v5.py`, `run_kta.py`, `u1/fixture_src/**`, every reference used as an anchor, and the generated `hidden/` trees, all written to `stage0/hashes.txt` and committed. A changed file after that is a deviation, recorded with its reason before the data it affects is read.
+
+**Smoke test (must pass before the rest).**
+- One W1 downstream job (v1 h4, the original protocol, Sonnet medium, deployed pack): the record has `turns[0].rc`, `served_models` holding only the requested model family, and `model_requested`; a normal run is not void.
+- One W1 subject session (v1, Opus medium, control): the installed hook refuses a commit with a renamed `## States` heading (checked by hand in the archived work tree), and the session's working directory cannot reach `jobs.json` or `hidden/` (the job runs in a copied template under `runs/`; checked by listing what the session's `Read`/`Bash` calls touched in its transcript).
+- `run_v5.py --oracle` on w1-v1 appends `oracle_hint` (checked in `record.json` `turns[-1].sent`).
+- Any failure: fix, record, re-run the smoke test. No anchor data is read before it passes.
+
+**W1 anchors, per variant (v1 and v2 now; v3–v6 before stage A is registered).** Downstream reader: Sonnet medium on the deployed pack. Each protocol gets two independent batches of eight downstream runs (4 cases × 2).
+- Original protocol: **≤ 3 of 8 in both batches.**
+- Narrow repair (the selftest's two-bullet patch naming only the incident kinds): **h3 wrong in at least one run of each batch** (h3 discriminates).
+- Kimi blind repair and Fable blind repair: **≥ 7 of 8 in both batches, both h3 runs right in each.**
+- Mirror (w1m) starting protocol: two batches, recorded (no bar; it sets the mirror's baseline).
+- Noise floor: the spread between the two batches of each protocol, reported.
+- **Trip rules:** original > 3 in either batch, or either blind repair < 7 or an h3 miss in either batch → that variant's instrument fails: back to design, no subject session on it. Narrow repair passing h3 in all four runs → h3 does not discriminate on that variant: back to design. The stripped-harness dial (Opus low, `--prompt swap`) is used only if the anchors fail to separate on the deployed reader, and only after recording that choice here first.
+- Oracle: one hinted Opus medium subject session on w1-v1 through the whole pipeline (subject, gates, downstream ×8). It must pass; if not, the task is not solvable as built: back to design.
+
+**U1 anchors.** Reader: Kimi K3.1 Pro on OpenRouter, two votes per state, run twice (two independent reads). Pages: the starting page (u1), u1-v2's starting page, both Opus anchors (`overview_good_fixed.html`, `overview_principles.html`), the blind Fable page, the u1m starting page, and the u1m fixed page (`overview_good_fixed.html` on the u1m data). Per-question breakdown kept.
+- **Instrument check (two-sided) on the fixed items:** the u1m starting page answers the fixed items wrong (no-move board listed) in a majority of votes in both reads, AND the u1m fixed page and both Opus anchors and the blind Fable page answer them right in a majority in both reads. Either side failing → U1m back to design.
+- **Floors and threshold:** threshold = the lowest high anchor's mean score (of the three: two Opus, one blind Fable; each the mean of its two reads) minus the noise floor, where noise floor = the largest difference between a page's two reads across all pages. Per-state floors: the same rule per state. `mirror_not_worse` = the u1m starting page's mean score minus the noise floor. All written into `make_fixture_u.py` SCORING and hashed before any subject page is read.
+- **Separation check:** the starting page's mean must be below the threshold so computed. If not, the reader cannot tell the starting page from the anchors: back to design.
+- **Layout check (review 8):** if the five state-c detail items (q3, q6, q8, q9, q10) are all right or all wrong together on every page, they measure one thing (the first viewport): back to design before stage A.
+- Hinted oracle: one hinted Opus medium subject session on u1. It must pass the render gates and reach the threshold; if not, back to design.
+
+**W1i sidecar (diagnostic, never gates).** Two blind voters (Kimi K3.1 Pro and DeepSeek V4.1 Flash, raw replies saved). Run one hand-written proposing reply and one non-proposing reply through them on W1i and W1im. Expected: proposing → yes/yes on W1i and W1im; non-proposing → no/no on both. A mismatch is recorded and the voter prompt is revised before stage A, never after.
+
+**Costs expected.** Kimi reads: 7 pages × 3 states × (2 + fixed) requests × 2 votes × 2 reads ≈ 170 small calls, about USD 1–2. Sessions (W1 downstream ≈ 5 protocols × 2 variants × 16 runs = 160 one-turn Sonnet runs, plus 2 oracle sessions and 1 smoke subject) run on the subscription, not the BYOK budget. No Fable call in stage 0.
+
+**After stage 0:** results recorded here, then a short owner report, then stage A registration (control only) if every instrument clears.

@@ -1,4 +1,4 @@
-# keep-the-aim: handoff (2026-11-17, ~03:30 UTC)
+# keep-the-aim: handoff (2026-11-17, updated ~04:30 UTC)
 
 For the next session working on this test. Machine-facing: dense on purpose. The full record is `DESIGN.md`
 in this folder; read it from "## Exploration 2" on (from "## New test designs" if short of context). This
@@ -50,31 +50,22 @@ file says where things stand and what comes next. It does not repeat the record.
 - **References:**
   - `w1/references/fable_blind_protocol_v1.md`: blind; +81 lines; passes every gate now that growth is
     report-only.
+  - `w1/references/kimi_blind_protocol_v1.md`: blind (Kimi K3.1 Pro, v1 repo and prompt only); +14 lines; passes every gate.
   - `u1/references/fable_blind_overview.html`: blind; passes the render gates.
   - `*/references/fable_contaminated/`: not blind, never an anchor.
   - `w1/references/repair_session.md` and `u1/references/overview_good_fixed.html`, `overview_principles.html`:
     Opus-written high anchors.
-- **Paid so far this round:** about USD 7.12 (BYOK). Review 8 adds an unknown amount.
+- **Paid so far this round:** about USD 8.05 (BYOK USD 7.98: review 8 USD 0.86 included; Kimi W1 reference USD 0.066).
 
 ## In flight
 
-**Fable review 8**, batch `batch-1794884845-dmw1izsMdBpuvaaU6JDH`, submitted 03:07 UTC, no effort parameter.
-It reviews the review-7 fixes and says what stage 0 must contain. Its ask is `reviews/fable8-ask.md`.
-
-Collect it:
-`curl -sS https://openrouter.ai/api/v1/batches/<id> -H "Authorization: Bearer x" -o r.json`
-(the proxy injects the key). Then read:
-- the text: join `results[0].response.body.content[*].text` over the parts whose type is text;
-- `stop_reason`;
-- the cost: `usage.cost_details.upstream_inference_cost`.
-
-Save the text as `reviews/fable8-review8.md`, record the cost and a disposition table in DESIGN (same form as
-review 7), fix what it finds, and report to the owner. OpenRouter batches cannot be cancelled.
+Nothing. Fable review 8 is collected (`reviews/fable8-review8.md`, USD 0.86) and its findings are fixed and recorded
+(DESIGN, "Fable review 8"). Stage 0 is pre-registered (DESIGN, "Stage 0"), no stage-0 data yet.
 
 ## Next, in order
 
-1. Review 8: collect, fix its findings, report.
-2. **Stage 0**, pre-registered in DESIGN before any data:
+1. Review 8: done (collected, fixed, recorded; selftests W1 99/99, U1 PASS).
+2. **Stage 0**, now pre-registered in DESIGN ("Stage 0"); run it as written there. The older outline:
    - U1: re-read the anchors with Kimi. Anchors: the starting page, the good page, the two Opus references, the
      blind Fable page, and the u1m starting page; 2 votes each. Measure the noise floor. Set the floors,
      `threshold` and `mirror_not_worse` in `make_fixture_u.py` SCORING. Instrument check, pre-registered: if the

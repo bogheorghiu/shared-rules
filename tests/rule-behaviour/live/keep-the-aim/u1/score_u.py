@@ -2,7 +2,7 @@
 """Score a U1 session's committed page on hidden data (DESIGN.md, "U stage A").
 
     python3 -I score_u.py render <session_work_dir> <hidden_dir> <out_dir>
-    python3 -I score_u.py ask <out_dir> <hidden_dir> [--model moonshotai/kimi-k3.1-pro] [--votes 2] [--dry-run] [--force]
+    python3 -I score_u.py ask <out_dir> <hidden_dir> [--model moonshotai/kimi-k3.1-pro] [--votes 2] [--dry-run]   (resends only void votes)
     python3 -I score_u.py grade <out_dir> <hidden_dir>
     python3 -I score_u.py --selftest
 
@@ -116,6 +116,27 @@ def run_session_tests(tree):
             "tail": p.stderr[-2000:]}
 
 
+def method_bodies(src):
+    """{test name: its source, dedented} for every `def test_...` method in a test file."""
+    out, cur = {}, None
+    for line in src.splitlines():
+        m = re.match(r"\s*def (test_\w+)\(", line)
+        if m:
+            cur = m.group(1); out[cur] = []
+        elif cur and line.strip() and not line.startswith((" " * 8, "\t\t")) and not re.match(r"\s*(#|@)", line):
+            cur = None
+        if cur and line.strip():
+            out[cur].append(line.strip())
+    return {k: "\n".join(v) for k, v in out.items()}
+
+
+def pins_report(tree):
+    pins = method_bodies(open(os.path.join(HERE, "fixture_src", "v2_structure_tests.py")).read())
+    t = os.path.join(tree, "tests", "test_page.py")
+    got = method_bodies(open(t).read()) if os.path.exists(t) else {}
+    return {n: ("deleted" if n not in got else "kept" if got[n] == body else "edited") for n, body in pins.items()}
+
+
 def run_guard_tests(tree):
     """The fixture's original guard tests, run on the committed page (review 7, B6): a session that deletes or weakens
     its own copy of the tests gains nothing. The session's own tests are still run and reported."""
@@ -142,6 +163,7 @@ def render(work, hidden, out):
         gates = {"head": sha, "page_sha256": hashlib.sha256(open(page_file, "rb").read()).hexdigest()
                  if os.path.exists(page_file) else None, "rendered": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
         gates["session_tests"] = run_session_tests(tree)  # reported only
+        gates["v2_pins"] = pins_report(tree)  # review 8: U1v2 pins kept, edited or deleted (reported only)
         gates["guard_tests"] = run_guard_tests(tree)
         gates["states"] = {}
         if gates["page_sha256"] is None:
@@ -313,14 +335,32 @@ def key_leaks(body, keyed):
     return found
 
 
-def ask(out, hidden, model, votes, dry_run, force):
+def requests_of(st, qs, keyed):
+    """(file stem, public questions, keyed questions) per request. Review 8: "fixed" items go alone in their own request,
+    so the other questions cannot prime them."""
+    roles = {q["id"]: q.get("role", "score") for q in keyed}
+    main = [q for q in qs if roles[q["id"]] != "fixed"]
+    fixed = [q for q in qs if roles[q["id"]] == "fixed"]
+    return [(st, main, [q for q in keyed if q.get("role") != "fixed"])] + \
+           ([(f"{st}-fixed", fixed, [q for q in keyed if q.get("role") == "fixed"])] if fixed else [])
+
+
+def vote_valid(path):
+    if not os.path.exists(path):
+        return False
+    rec = json.load(open(path))
+    return bool(rec.get("ok")) and isinstance(answers_of(rec), dict)
+
+
+def ask(out, hidden, model, votes, dry_run):
     qs = public_questions(hidden)
     keyed = json.load(open(os.path.join(hidden, "questions.json")))
     sub = os.path.join(out, "requests" if dry_run else "answers")
     os.makedirs(sub, exist_ok=True)
-    for st in STATES:
-        body = build_request(out, st, qs[st], model)
-        leaks = key_leaks(body, keyed[st])
+    for st0 in STATES:
+      for st, rq, kq in requests_of(st0, qs[st0], keyed[st0]):
+        body = build_request(out, st0, rq, model)
+        leaks = key_leaks(body, kq)
         if leaks:
             sys.exit(f"{st}: refusing, the request text contains answer keys: {leaks}")
         if dry_run:
@@ -329,9 +369,14 @@ def ask(out, hidden, model, votes, dry_run, force):
             continue
         for v in range(1, votes + 1):
             path = os.path.join(sub, f"{st}-v{v}.json")
-            if os.path.exists(path) and not force and json.load(open(path)).get("ok"):
-                print(f"{path}: kept (use --force to resend)")
+            if vote_valid(path):  # review 8: a valid vote is never resent (no re-grade path)
+                print(f"{path}: kept")
                 continue
+            if os.path.exists(path):  # a void vote: keep it beside the resend
+                n = 1
+                while os.path.exists(path[:-5] + f".void{n}.json"):
+                    n += 1
+                os.rename(path, path[:-5] + f".void{n}.json")
             req = urllib.request.Request(OPENROUTER, data=json.dumps(body).encode(), method="POST",
                                          headers={"Authorization": "Bearer x", "Content-Type": "application/json"})
             t0 = time.time()
@@ -353,6 +398,36 @@ def ask(out, hidden, model, votes, dry_run, force):
 
 def norm(s):
     return " ".join(re.sub(r"[^0-9a-z]+", " ", str(s).lower()).split())
+
+
+MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
+          "december"]
+
+
+def dates_to_words(s):
+    """Review 8: date forms the answer may use become "<day> <month>" (2026-12-03, 03/12/2026, 3rd of December,
+    Dec 3 ...), so a formatting choice (the placebo arm's subject) cannot move a text item. Day-first for x/y/z dates."""
+    s = str(s).lower()
+    s = re.sub(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b", lambda m: f"{int(m.group(3))} {MONTHS[int(m.group(2)) - 1]}"
+               if 1 <= int(m.group(2)) <= 12 else m.group(0), s)
+    s = re.sub(r"\b(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?\b", lambda m: f"{int(m.group(1))} {MONTHS[int(m.group(2)) - 1]}"
+               if 1 <= int(m.group(2)) <= 12 else m.group(0), s)
+    mon = r"(" + "|".join(m[:3] + r"[a-z]*" for m in MONTHS) + r")"
+    s = re.sub(r"\b(\d{1,2})(?:st|nd|rd|th)?(?:\s+of)?\s+" + mon + r"\b", lambda m: f"{int(m.group(1))} {m.group(2)[:3]}", s)
+    s = re.sub(r"\b" + mon + r"\s+(\d{1,2})(?:st|nd|rd|th)?\b", lambda m: f"{int(m.group(2))} {m.group(1)[:3]}", s)
+    return s
+
+
+def stem(w):
+    """Review 8: "confirmation", "confirmed" and "confirm" match; whole words still ("13" is not "3")."""
+    for suf in ("ations", "ation", "ings", "ing", "ed", "s"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            w = w[:-len(suf)]; break
+    return w[:-1] if w.endswith("e") and len(w) > 3 else w
+
+
+def words(s):
+    return " " + " ".join(stem(w) for w in norm(dates_to_words(s)).split()) + " "
 
 
 def answers_of(rec):
@@ -383,15 +458,18 @@ def correct(q, a):
             a = [x for x in re.split(r"[,;\n]", a) if x.strip()]
         if not isinstance(a, list):
             return False
-        return {norm(x) for x in a if norm(x)} == {norm(x) for x in key}
+        got = {norm(x) for x in a if norm(x)}
+        if q.get("absent"):  # review 8, "fixed" items: the no-move board absent and at least one key board present
+            return norm(q["absent"]) not in got and bool(got & {norm(x) for x in key})
+        return got == {norm(x) for x in key}
     if t == "yesno":
         return norm(a).split()[:1] == [key]
     if t == "number":
         m = re.search(r"-?\d+", str(a))
         return bool(m) and int(m.group(0)) == key
-    if t == "text":  # every group needs one of its alternatives, as whole words ("13 december" is not "3 december")
-        n = f" {norm(a)} "
-        return all(any(f" {norm(alt)} " in n or f" {norm(alt)}s " in n for alt in group) for group in key)
+    if t == "text":  # every group needs one of its alternatives, as whole stemmed words with dates read as dates
+        n = words(a)
+        return all(any(words(alt) in n for alt in group) for group in key)
     if t == "card":
         n = norm(a)
         return n == norm(key) or norm(key) in n
@@ -409,12 +487,17 @@ def grade(out, hidden, mirror=False):
         right = total = 0
         per = {}
         for st in STATES:
-            path = os.path.join(adir, f"{st}-v{v}.json")
-            rec = json.load(open(path)) if os.path.exists(path) else {}
-            ans = answers_of(rec) if rec.get("ok") else None
-            if not isinstance(ans, dict):
-                # An API error, a missing file or an unparsed reply says nothing about the page (review 7): void, resend.
-                res["void"].append(f"{st}-v{v}")
+            ans = {}
+            for stem_, kq in [(f, k) for f, _, k in requests_of(st, qs[st], qs[st])]:
+                path = os.path.join(adir, f"{stem_}-v{v}.json")
+                rec = json.load(open(path)) if os.path.exists(path) else {}
+                a_ = answers_of(rec) if rec.get("ok") else None
+                if not isinstance(a_, dict):
+                    # An API error, a missing file or an unparsed reply says nothing about the page (review 7): void, resend.
+                    res["void"].append(f"{stem_}-v{v}")
+                    ans = None; break
+                ans.update({q["id"]: a_.get(q["id"]) for q in kq})
+            if ans is None:
                 per[st] = {"parsed": False, "void": True, "items": {}, "right": 0, "total": 0}
                 continue
             per[st] = {"parsed": True, "items": {}, "right": 0, "total": 0}
@@ -427,7 +510,8 @@ def grade(out, hidden, mirror=False):
                     per[st]["right"] += ok; per[st]["total"] += 1; right += ok; total += 1
         res["votes"][str(v)] = {"score": round(right / total, 4) if total else None, "right": right, "total": total,
                                 "states": per}
-    done = [r for r in res["votes"].values() if not any(x.get("void") for x in r["states"].values())]
+    # review 8: the mean is over votes 1 and 2 only; a third vote exists to decide the gate and fixed items
+    done = [r for k, r in res["votes"].items() if k in ("1", "2") and not any(x.get("void") for x in r["states"].values())]
     scores = [r["score"] for r in done if r["score"] is not None]
     res["mean_score"] = round(sum(scores) / len(scores), 4) if scores else None
 
@@ -470,10 +554,10 @@ def grade(out, hidden, mirror=False):
         return None if any(p is None or p == "unset" for p in parts) else True
 
     if res["void"]:
-        res["pass"], res["pass_note"] = None, f"void votes {res['void']}: resend them (ask --force), then grade again"
+        res["pass"], res["pass_note"] = None, f"void votes {res['void']}: run ask again (it resends only these), then grade again"
     elif mirror:
         nw = cfg.get("mirror_not_worse")
-        res["pass"] = combine(render_pass, res["fixed"],
+        res["pass"] = combine(render_pass, res["fixed"], *[g["pass"] for g in res["gates"].values()],  # review 8: state b too
                               None if nw is None or res["mean_score"] is None else res["mean_score"] >= nw)
     else:
         th = res["threshold"]
@@ -503,10 +587,11 @@ def grade_selftest(root, hid):
         out = os.path.join(root, "g-" + name); os.makedirs(os.path.join(out, "answers"))
         json.dump({"pass": True}, open(os.path.join(out, "gates.json"), "w"))
         for (st, v), ans in plan.items():
-            rec = {"ok": ans is not None}
-            if ans is not None:
-                rec["response"] = {"choices": [{"message": {"content": json.dumps(ans)}}]}
-            json.dump(rec, open(os.path.join(out, "answers", f"{st}-v{v}.json"), "w"))
+            for stem_, _, kq in requests_of(st, qs[st], qs[st]):  # one file per request, as ask writes them
+                rec = {"ok": ans is not None}
+                if ans is not None:
+                    rec["response"] = {"choices": [{"message": {"content": json.dumps({q["id"]: ans[q["id"]] for q in kq})}}]}
+                json.dump(rec, open(os.path.join(out, "answers", f"{stem_}-v{v}.json"), "w"))
         import contextlib, io as _io
         with contextlib.redirect_stdout(_io.StringIO()):
             return grade(out, hid, mirror)
@@ -543,9 +628,35 @@ def grade_selftest(root, hid):
         fails.append("grade: mirror passed with the no-move card read as the owner's in 3 of 3")
     q2 = next(q for q in qs["state_a"] if q["id"] == "q2")
     for ans, want in (("approve the second visit on 13 December", False), ("second visit, 3 December", True),
-                      ("second visit on 2026-12-03", True), ("the second visit, Dec 3", True)):
+                      ("second visit on 2026-12-03", True), ("the second visit, Dec 3", True),
+                      ("second visit, 03 December", True), ("second visits on the 3rd of December", True),  # review 8
+                      ("second visit on 03/12/2026", True), ("second visit on 13/12/2026", False)):
         if correct(q2, ans) is not want:
             fails.append(f"grade: {ans!r} -> {not want}")
+    q3 = next(q for q in qs["state_c"] if q["id"] == "q3")
+    for ans, want in (("Confirmation of the movers for Saturday", True), ("movers confirmed for Saturday", True),
+                      ("book the movers for Saturday", False)):
+        if correct(q3, ans) is not want:
+            fails.append(f"grade: stems {ans!r} -> {not want}")
+    # review 8: a "fixed" item misses a key board -> still right; lists the no-move board -> wrong
+    p = all_right(2, {("state_a", v): {"q9": ["Window seals"]} for v in (1, 2)})
+    if run("fixed-partial", p, mirror=True)["fixed"] is not True:
+        fails.append("grade: fixed item with one key board and no no-move board was not right")
+    # review 8: a third vote does not move the mean
+    p = all_right(3, {("state_a", 3): {"q1": [], "q6": "none"}})
+    r = run("mean12", p)
+    if r["mean_score"] != 1.0:
+        fails.append(f"grade: a wrong third vote moved the mean to {r['mean_score']}")
+    # review 8: the fixed item is asked in a request of its own
+    reqs = requests_of("state_a", qs["state_a"], qs["state_a"])
+    if [f for f, _, _ in reqs] != ["state_a", "state_a-fixed"] or any(q.get("role") == "fixed" for q in reqs[0][2]):
+        fails.append(f"grade: fixed item not in its own request: {[(f, [q['id'] for q in k]) for f, _, k in reqs]}")
+    # review 8: only void votes are resent
+    vd = os.path.join(root, "g-valid"); os.makedirs(vd)
+    json.dump({"ok": True, "response": {"choices": [{"message": {"content": "{\"q1\": []}"}}]}}, open(os.path.join(vd, "a.json"), "w"))
+    json.dump({"ok": True, "response": {"choices": [{"message": {"content": "I cannot tell"}}]}}, open(os.path.join(vd, "b.json"), "w"))
+    if not vote_valid(os.path.join(vd, "a.json")) or vote_valid(os.path.join(vd, "b.json")):
+        fails.append("grade: vote_valid does not tell a parsed vote from an unparsed one")
     print(f"grade selftest: {len(fails)} failed")
     return fails
 
@@ -588,7 +699,7 @@ def selftest():
             failures.append(name + ": gates")
         if name != "u1-v2":
             try:
-                ask(out, hid, "dry-run/none", 1, True, False)
+                ask(out, hid, "dry-run/none", 1, True)
             except SystemExit as e:
                 failures.append(f"{name}: {e}")
     # the starting page must not show stale or opted-out boards in its first viewport
@@ -638,7 +749,6 @@ def main():
     a.add_argument("--model", default="moonshotai/kimi-k3.1-pro")
     a.add_argument("--votes", type=int, default=2)
     a.add_argument("--dry-run", action="store_true")
-    a.add_argument("--force", action="store_true")
     g = sp.add_parser("grade")
     g.add_argument("out")
     g.add_argument("hidden")
@@ -650,7 +760,7 @@ def main():
                           "session_tests": gates["session_tests"].get("pass"),
                           "states": {s: r["pass"] for s, r in gates["states"].items()}}))
     elif args.cmd == "ask":
-        ask(args.out, args.hidden, args.model, args.votes, args.dry_run, args.force)
+        ask(args.out, args.hidden, args.model, args.votes, args.dry_run)
     else:
         grade(args.out, args.hidden, args.mirror)
 
