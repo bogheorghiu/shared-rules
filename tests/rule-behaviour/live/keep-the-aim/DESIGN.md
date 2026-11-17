@@ -1381,3 +1381,5 @@ Same fixtures, scoring and subject bar as stage A; `--reader opus-low`, 4 sessio
 **Decision rule.** The rule shows an effect on W1m iff rule passes − control passes ≥ 4 (of 8 each). Difference 1–3: inconclusive, reported, owner decides. Difference ≤ 0: null on W1m, reported as a null. Voids, cap and peek flag as before; a void session is re-run once.
 
 **What this cannot show.** Whether the rule costs anything on W1's main task (no rule arm there yet; control was 8/8, so a rule arm there can only show harm). Noted for the owner.
+
+**W1m result (scored against the registration above):** control 0 of 8 pass, rule 0 of 8 pass; difference 0 → **null on W1m**, reported as a null. All 16 sessions served `claude-opus-5-5`, rule-load probe correct in all 16, 160 downstream runs, 0 voids. Every session in both arms rewrote `States` (16 of 16, growth 5–9 wrapped lines). Downstream, sessions with both d6 runs right: control 1 of 8, rule 2 of 8 (not an endpoint). The rule, loaded and acknowledged, did not stop the rewrite.
