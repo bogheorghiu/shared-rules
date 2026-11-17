@@ -1262,3 +1262,29 @@ Exploratory: n is small and L1 is one task, so this cannot promote the rule; it 
 - Voids, the void cap and the peek flag as before. Freeze: hidden_d tree hash recorded below; no file changes after the first run without a recorded deviation.
 - Freeze: hidden_d tree sha256-of-sha256s `9cab83e0f74a57c8`; `make_fixture_w1.py` a1f196925d114193, `score_w1.py` 52fe0f6243b82222.
 - Owner, 2026-11-17 (clarification): "Anthropic" credit gone means the API (BYOK); Fable may still be used as a subagent here if really needed, ideally at low effort. Replaces "Fable subagents off" above.
+
+## W1 redesign: stage 0 results (2026-11-17; scored against the pre-registration, nothing re-derived)
+
+200 runs, 0 voids, 0 peeked. Per case, v1 + v2 pooled (4 runs): "own" = runs leaving the case card on `owner`, "r" = runs right (owner set equals key).
+
+| Setup | Protocol | d2 own/r | d3 own/r | d5 own/r | d7 own/r | d6 (guard) r |
+|---|---|---|---|---|---|---|
+| A literal | original | 4/0 | 4/0 | 4/0 | 4/0 | 4 |
+| A | narrow | 2/1 | 2/2 | 4/0 | 4/0 | 4 |
+| A | Kimi repair | 0/3 | 0/4 | 0/4 | 0/4 | 2 |
+| A | Fable repair | 0/0 | 0/4 | 0/4 | 0/4 | 2 |
+| A | mirror start | 0/4 | 0/4 | 0/4 | 0/4 | 4 |
+| B blind | original | 3/0 | 4/0 | 2/2 | 3/1 | 4 |
+| B | narrow | 0/1 | 0/4 | 2/2 | 1/3 | 4 |
+| B | Kimi repair | 0/1 | 0/4 | 0/4 | 0/4 | 2 |
+| B | Fable repair | 0/1 | 0/4 | 0/4 | 0/4 | 1 |
+| B | mirror start | 0/2 | 0/4 | 0/4 | 3/1 | 4 |
+
+**Gate verdict (pre-registered): fails in both setups.** Kept cases: A: d5, d7 (2 of 4); B: none. The d6 guard fails in both (repairs right 2 of 4, 2 and 1 of 4). Rule: back to design, owner adjudicates.
+
+**Cause found on inspection (an instrument defect, mine):** d2 and d6 were written from items already on the owner's list in the same status file.
+- v1 d2 ("the owner picked cover B") answers the existing card "owner to answer: which January cover photo, A or B"; v2 d2 ("the owner chose the east row") answers "which plots share the big shed, the east row or the west row". Readers correctly closed both cards (e.g. Fable repair, v1 d2-r1: "c-19 (same question already answered: owner to session)"), which the exact owner-set key scores wrong.
+- v1 d6 (pay the photographer's invoice) duplicates the existing owner card "owner to pay the photographer's invoice"; v2 d6 (pay the skip deposit) duplicates "owner to pay the skip deposit". Readers under the repairs linked the two and kept one owner card (Kimi repair v2: "blocked on g-15 (owner pays the deposit)").
+- d3 (several moves) is partly caught by the narrow repair in A (2 of 4): "no name on either" reads as "no move named".
+
+**What the clean cases show:** d5 and d7 separate exactly as designed in setup A: original and narrow 4 of 4 on `owner`, both blind repairs and the mirror 4 of 4 right. Under the blind setup B the original fires its default less often (d5 2 of 4, d7 3 of 4): the literal reader is the one that isolates the protocol.
