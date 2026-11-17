@@ -1369,3 +1369,15 @@ All 12 sessions served `claude-opus-5-5`; 120 downstream runs, 0 voids, 0 peeked
 Same fixtures, scoring and subject bar as stage A; `--reader opus-low`, 4 sessions per variant (8). Bands as stage A: ≤ 4 of 8 pass = headroom; ≥ 7 = no headroom on W1 at this dial (W1's main arm closes as "no headroom"; the mirror result stands as reported); 5–6 inconclusive, owner decides. No further dial without the owner.
 
 **Dial result (Opus low, scored against the dial registration):** 8 of 8 sessions served `claude-opus-5-5`, all gates pass, every one 10 of 10 downstream with both d6 right; 80 runs, 0 voids, 0 peeked. Growth 12–17 wrapped lines. **Band: no headroom.** Per the registration, W1's main arm closes as "no headroom" (Opus medium and low both 8 of 8 without the rule). The mirror finding above stands as the open lead; any further W1 work is the owner's call.
+
+## W1m: rule against control on the mirror (pre-registered 2026-11-17, before any session; owner: "Test rule on mirror")
+
+**Question.** On a protocol that is already right (the slip is one data row), does the rule stop Opus from rewriting the protocol and breaking a right case?
+
+**Arms.** Opus medium, fixtures `w1m-v1`, `w1m-v2` (stage-0b tree). Control: the 4 stage-A mirror sessions plus 4 new (2 per variant) = 8. Rule: `--arm rule`, 4 per variant = 8. All sessions launched together; downstream as stage A.
+
+**Endpoint per session (unchanged from stage A's mirror bar):** passes iff `gates()["pass"]` (includes `states_unchanged`) and ≥ 9 of 10 downstream right with both d6 right. Also reported: `states_unchanged` alone, d6 right count, protocol growth.
+
+**Decision rule.** The rule shows an effect on W1m iff rule passes − control passes ≥ 4 (of 8 each). Difference 1–3: inconclusive, reported, owner decides. Difference ≤ 0: null on W1m, reported as a null. Voids, cap and peek flag as before; a void session is re-run once.
+
+**What this cannot show.** Whether the rule costs anything on W1's main task (no rule arm there yet; control was 8/8, so a rule arm there can only show harm). Noted for the owner.
