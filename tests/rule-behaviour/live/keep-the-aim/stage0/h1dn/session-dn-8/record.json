@@ -1,0 +1,173 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1-datanote",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "6cec2095fb230b40af582f399214689386cdae72",
+ "turns": [
+  {
+   "main_calls": 11,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && cat README* 2>/dev/null | head -50\", \"description\": \"List repo files and show README\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat docs/pattern.md incoming/tasks.csv boards/events/board.json boards/events/events.csv minutes/*.md mail/*.txt .gitignore\", \"description\": \"Show docs, data, minutes, mail\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat kit/board.py kit/new_board.py\", \"description\": \"Show board kit scripts\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o 'Updated[^<]*' boards/events/index.html && git log --format='%ad' -1\", \"description\": \"Check events page build date\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir -p /tmp/kitcheck && cp -r boards/events /tmp/kitcheck/before && python3 -I -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board; from datetime import date\\nboard.build('/tmp/kitcheck/before', date(2026,11,17))\\\" && cmp /tmp/kitcheck/before/index.html boards/events/index.html "
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\ndef rep(a,b):\\n    global s\\n    assert s.count(a)==1, a\\n    s=s.replace(a,b)\\nrep('''in each section; sections whose date has passed go under one fold at the bottom.\\n\\\"\\\"\\\"''','''in each section; sections whose date has passed go"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-8/h1-v1-control-opus-medium-20261123T015857-cd2e6a/work/kit/board.py\", \"old_string\": \"    return col.get(\\\"prefix\\\", \\\"\\\") + col.get(\\\"words\\\", {}).get(v.lower(), v) if col.get(\\\"words\\\", {}).get(v.lower(), v) else \\\"\\\"\", \"new_string\": \"    v = "
+    },
+    {
+     "thread": "main",
+     "name": "Write",
+     "input": "{\"file_path\": \"/tmp/h1dn/runs/dn-8/h1-v1-control-opus-medium-20261123T015857-cd2e6a/work/boards/tasks/board.json\", \"content\": \"{\\n \\\"title\\\": \\\"Committee tasks\\\",\\n \\\"purpose\\\": \\\"What's due before the next Thursday meeting, who has it, and what still has nobody on it.\\\",\\n \\\"data\\\": \\\"../../incomin"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"sed -i 's/\\\"prefix\\\": \\\"on \\\"/\\\"prefix\\\": \\\"waiting on \\\"/' boards/tasks/board.json && python3 kit/board.py boards/tasks && python3 kit/board.py boards/events && git diff --stat && python3 -I -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board; from datetime import date\\nboard.bui"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git checkout boards/events/index.html && python3 - <<'EOF'\\np='README.md'; s=open(p).read()\\na=\\\"\\\"\\\"  still needs.\\n\\\"\\\"\\\"\\nassert s.count(a)==1\\ns=s.replace(a,a+\\\"\\\"\\\"- `boards/tasks/`: the committee's task sheet: what's overdue, what's due by the next two\\n  Thursdays, who has it (or"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git branch tasks-board && git reset -q --hard 6cec209 && git checkout -q tasks-board && git log --oneline --all --graph && git status --short\", \"description\": \"Move commit onto a tasks-board branch\"}"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 165037,
+    "num_turns": 12,
+    "total_cost_usd": 0.6464151999999999
+   },
+   "final_context": 39259,
+   "main_input": 22,
+   "main_cache_read": 275616,
+   "main_cache_creation": 34048,
+   "main_output": 133,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 165.8,
+   "reply": "Baseline confirmed: the existing kit reproduces the events page exactly. Now extending the kit for a tasks board.\nTidying the `cell()` line I wrote, which is hard to read:\nI committed straight to `main`, but the convention is to branch first, so I'm moving the commit onto its own branch. Merging it is a one-line fast-forward.\nI've built the tasks board and committed it on a branch called `tasks-board` (commit `42df204`). It isn't on `main` yet. If the pages are served from `main`, run `git checkout main && git merge tasks-board` before Thursday's meeting so the committee sees it.\n\n## What the board shows\nThe page is `boards/tasks/index.html`. I designed it around the complaints in the minutes, top to bottom:\n\n- **Polytunnel watering rota** at the top, with this week marked. Dot asked to see it on her phone at the gate, and the missed handover in October came from a swap nobody could see. Christmas week shows as **nobody yet**.\n- **Open tasks grouped by when they're due:** Overdue, due by Thu 26 Nov, due by Thu 3 Dec, then Later. The committee meets on Thursdays, and on 12 Nov it took 40 minutes to reach the things due by next Thursday. Now those come first.\n- **Every task shows who has it** on its own line, so Hal doesn't have to scroll sideways. Tasks with no owner say **nobody yet**: the shed gutter, the water meter, lost property, compost bays and plot 9.\n- **Done tasks are folded away at the bottom**, as Tomas asked.\n- Due dates, what a task is waiting on, quantities (manure: 3 loads) and notes are shown too.\n\n## Decisions you may want to revisit\n- **It reads `incoming/tasks.csv` directly** instead of a copy in the board's folder. Ines can drop next week's export in and rebuild, with no copy step to forget. If the export's filename changes, update `data` in `boards/tasks/board.json`.\n- **Grouping by due date, not by person.** I chose this because the meeting's main problem was getting to what's due. Ines's \"what's mine this week\" is answered by scanning the top two groups for her name. A per-person view would be a separate change.\n- **The groups are worked out when the page is built**, so it needs rebuilding before each Thursday (`python3 kit/board.py boards/tasks`). I added this to the README.\n- I wrote the files by hand rather than with `kit/new_board.py`, because that copies the events board's columns, none of which fit the task sheet.\n\n## Changes to the shared kit (`kit/board.py`)\n- A board can now group tasks by due date, show a rota, format dates, and put a prefix on a column (e.g. \"waiting on council\").\n- Status is no longer case-sensitive. The sheet has \"Done\" on the tool shed inventory, which would otherwise have shown as still open.\n- **Checked:** the events board comes out identical to the committed page when built for the same date. I haven't committed a rebuild of the events page, since it would only change the \"Updated\" date.\n\n## Things I noticed but didn't change\n- **The council has no named contact for the site** (their 10 Nov email). That one gap is holding up six tasks: the water meter, skip permit, fence, standpipes, car park signs and part of the bills problem. Choosing who it should be is the committee's call, not mine.\n- The sheet has \"priya\" in lower case on the seed potato order. It's shown as typed; it's better fixed in the spreadsheet.\n- Waiting tasks read a little repetitively (\"Waiting \u00b7 waiting on council\"). I left it that way so a waiting task never loses its status when nobody has filled in what it's waiting on.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "42df20431e343d4cae5c18ed1dcc58d4c8bdcb48"
+  }
+ ],
+ "started": "2026-11-23T01:58:57Z",
+ "config_sha256": "492d4b7635b36b6ada0c5d81610b39baf0751ddd684d11e2c44f0384cb04f48c",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}

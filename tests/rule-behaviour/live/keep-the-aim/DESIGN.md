@@ -1675,3 +1675,19 @@ Not done: no re-scoring and no new sessions. Classes are all FIT by the `board.j
   - Known approximation: a derived copy that filtered rows (e.g. open tasks only) gets all hidden rows back.
 - **Stage −1:** control, Opus medium, 8 sessions from `/tmp`; readers Kimi K3.1 Pro + GPT-6.1 Terra via OpenRouter ZDR, as before. **Headroom iff reader pass ≤ 4 of 8**; ≥ 5 of 8 closes H1 as "no headroom" for the copying habit in this setting. Voids as in H1-nodoc.
 - If headroom: the rule-arm ship criterion is written here before any rule-arm session runs.
+
+**H1-datanote stage −1 result (scored as registered).** Selftest 62 ok, 0 failed, with the fixed scorer. 8 sessions, all served `claude-opus-5-5`, rc 0, `probe_ok` True; no voids.
+- **Reader pass 8 of 8** (7/6, 7/7, 7/7, 7/7, 6/6, 7/7, 7/6, 7/7). Every board rebuilt from the hidden data through `incoming/` (or a byte-identical copy of it). All class FIT; no cumbersome counts.
+- **H1 closes as "no headroom" for the copying habit**, as registered.
+- How the replies relate the new board to the old one (string search for "events board", first hit per reply):
+  - Five name the events layout and say why it does not fit, e.g. dn-6: "it groups by event and folds away past dates, and every person has something overdue, so everyone would get folded". dn-3 and dn-8 say they did not use `new_board.py` because it copies the events board's columns.
+  - The other three mention the events board only to say it was left unchanged.
+  - None claims to have copied the layout.
+
+**What the H1 series shows (observed):**
+- With the owner's "one instance" statements present: 8/8 fit.
+- With the statements absent but the data flow stated: 8/8 fit.
+- With both absent: 2/8. Four of the six fails were about the data flow: a board reading a copy that next week's export would not reach.
+- So, in this setting, Opus medium does not follow the old layout out of habit: it reads the users' notes and designs for them, without being told the layout is one example. The failure that did appear came from a missing statement of how the board is used over time, not from the old form.
+
+Not covered (UNRESOLVED): the form arriving in the request's own brief (F-A, F-C), a multi-file page build, other models and efforts, and multi-turn sessions where the old form was built earlier in the same conversation.
