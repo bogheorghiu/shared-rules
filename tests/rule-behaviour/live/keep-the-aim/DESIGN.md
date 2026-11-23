@@ -1639,3 +1639,11 @@ What the sessions did (read in three replies and diffs: h1-v1-1, h1-v1-5, h1m-v1
 - (iv) a session that never opens `docs/`.
 
 Data: `stage0/h1sm1/` (renders, reader records, each session's `record.json` and commit diff).
+
+## H1-nodoc: the same task without the "one instance" doc (registered 2026-11-23, before any session; owner: "Run H1 without the doc (Recommended)")
+
+- **Fixture:** `h1-v1-nodoc` = `h1-v1` (round-2 generator, tree `/tmp/h1-fixtures-r2`) with `docs/pattern.md` deleted. Nothing else in the repo names it (checked by grep). What still pulls toward copying: the README's `new_board.py`, the minutes' "the way the events are". The users' needs stay in minutes and mail. Hidden data, items, keys and readers are the same as h1-v1. This is placement arm (iii), "absent", from revision 1.
+- **Stage −1:** control, Opus medium, 8 sessions, run from `/tmp`; readers Kimi K3.1 Pro (run 1) and GPT-6.1 Terra (run 2) via OpenRouter ZDR, as in round 2. **Headroom iff reader pass ≤ 4 of 8.** If ≥ 5 of 8: H1 closes on this arm too, no further variants.
+- Voids: wrong model served, rc ≠ 0, no commit, or `probe_ok` False; each is re-run once.
+- Reported, not gated: class (COPY / ADDED / LITERAL / FIT), cumbersome counts, whether the reply names the events layout as one option among others.
+- **If headroom:** a rule-arm comparison follows (8 rule vs 8 control). Its ship criterion is written here before any rule-arm session runs.
