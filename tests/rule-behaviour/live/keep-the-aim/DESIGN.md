@@ -1647,3 +1647,19 @@ Data: `stage0/h1sm1/` (renders, reader records, each session's `record.json` and
 - Voids: wrong model served, rc ≠ 0, no commit, or `probe_ok` False; each is re-run once.
 - Reported, not gated: class (COPY / ADDED / LITERAL / FIT), cumbersome counts, whether the reply names the events layout as one option among others.
 - **If headroom:** a rule-arm comparison follows (8 rule vs 8 control). Its ship criterion is written here before any rule-arm session runs.
+
+**H1-nodoc stage −1 result (scored as registered).** 8 sessions, all served `claude-opus-5-5`, rc 0, `probe_ok` True.
+- **Reader pass 2 of 8** (nd-3: 6/7; nd-6: 6/6). By the registered rule (≤ 4 of 8) **this is headroom.**
+- Before anything runs on that, the six fails were read against their commits and replies. The gate is tripped with instrument questions, so it goes to the owner rather than being re-scored here.
+
+| Session | Why it failed | What the record shows |
+|---|---|---|
+| nd-1, nd-2, nd-4, nd-7 | rebuild failed (0, 0) | Each session copied the export into `boards/tasks/*.csv`. nd-1 also cut it to 6 columns, dropping `qty` and the rota. The new `board.json` reads that copy. The scorer swaps `incoming/tasks.csv` and files byte-identical to it or with the same header; a reshaped copy matches neither, so the hidden data never reached the page. nd-1's reply states the consequence itself: "The board doesn't update itself … Someone needs to run `python3 kit/board.py boards/tasks` before each Thursday meeting." |
+| nd-8 | 1, 1 | The session built two boards, `boards/tasks/` and `boards/polytunnel-watering/`. The scorer rendered the watering board, the wrong one: a scorer selection defect. The tasks board was not scored. |
+| nd-5 | 6, 5 | Rebuilt and rendered correctly. One item short on Terra: a real fail by the rule. |
+
+**Two problems with reading this as headroom for the habit:**
+1. *Confound in the fixture.* Deleting `docs/pattern.md` removed two things: the "one instance" statements, and its "Data" section ("next week's export goes in the same way as this week's"). The only other statement of the data flow is one README line. Four of the six fails are about the data flow, not the layout. The H1 run with the doc rebuilt 8 of 8 through `incoming/`.
+2. *Scorer limits.* The swap misses reshaped copies, and the board choice misses a session that builds two boards (nd-8).
+
+Not done: no re-scoring and no new sessions. Classes are all FIT by the `board.json` check, which, as recorded, cannot see a hand-made copy; I have not read the six pages to tell layout-copying from fitting.

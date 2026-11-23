@@ -1,0 +1,153 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1-nodoc",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "b3112757fbf139f98ed7f1a6fa69c455a7a82e76",
+ "turns": [
+  {
+   "main_calls": 7,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && echo --- && find . -path ./.git -prune -o -type f -print | head -50\", \"description\": \"List repository files\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"for f in README.md .gitignore kit/*.py incoming/tasks.csv boards/events/board.json boards/events/events.csv mail/*.txt minutes/*.md; do echo \\\"=== $f\\\"; cat \\\"$f\\\"; done; echo \\\"=== html\\\"; head -c 1500 boards/events/index.html\", \"description\": \"Show contents of repo files\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o 'Updated[^<]*' boards/events/index.html; mkdir -p /tmp/scratch-board && cat > /tmp/scratch-board/prereg.md <<'EOF'\\nPre-registered 2026-11-23 before editing kit/board.py:\\nkit change ships iff boards/events/index.html built by the changed kit with today=2026-11-23\\nis byte-ident"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\nrep=[\\n('''Reads boards/<name>/board.json and the CSV file it names (\\\"data\\\", relative to the board's folder) and writes\\nboards/<name>/index.html. Rows are grouped into sections by the \\\"section\\\" field and ordered by the earliest"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir boards/tasks && sed -e 's/^Tool shed inventory,Bea,2026-11-10,Done,/Tool shed inventory,Bea,2026-11-10,done,/' -e 's/^Seed potato order,priya,/Seed potato order,Priya,/' incoming/tasks.csv > boards/tasks/tasks.csv && diff incoming/tasks.csv boards/tasks/tasks.csv\\ncat > boards/tas"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1nd/runs/nd-5/h1-v1-control-opus-medium-20261123T013632-ce483a/work/README.md\", \"old_string\": \"  still needs.\\n\", \"new_string\": \"  still needs.\\n- `boards/tasks/`: the committee's tasks, one section per person plus \\\"Nobody yet\\\", soonest due\\n  first; done"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git add -A && git status --short && git commit -q -F - <<'EOF'\\nAdd a committee tasks board\\n\\nBuilds boards/tasks/ from the sheet export in incoming/tasks.csv, for the\\nrequests in the 29 Oct and 12 Nov minutes: one section per person so each\\nmember can see their own jobs, a \\\"Nobody "
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 126961,
+    "num_turns": 8,
+    "total_cost_usd": 0.51159
+   },
+   "final_context": 35781,
+   "main_input": 14,
+   "main_cache_read": 149610,
+   "main_cache_creation": 29874,
+   "main_output": 747,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 127.7,
+   "reply": "Baseline built (differs from the committed page only by its build date, as expected). Now the kit changes.\nRegression criterion met: the events page is byte-identical. Now the tasks board.\nThe board reads correctly. Next I'll add it to the README and commit.\nI've set up the tasks board at `boards/tasks/` and committed it to `main` as `42c7c34`. Nothing was pushed.\n\n## What the board does\nI built it from `incoming/tasks.csv` and shaped it around what the minutes asked for:\n- **One section per person.** Ines asked to \"just know what's mine this week\", and Hal can read his jobs on his phone without scrolling sideways.\n- **A \"Nobody yet\" section.** Five jobs have no name against them, including the shed gutter (due 30 Sep) and the water meter. This section comes first because it holds the oldest overdue job, not because it's fixed at the top.\n- **Soonest due first, and overdue jobs are marked.** Six are overdue right now.\n- **Done jobs are folded away at the bottom**, which is what Tomas asked for.\n- Each job also shows what it's waiting on (council, bank and so on), any quantity (3 loads of manure) and its notes.\n\n## Decisions you should know about\n- **I changed the shared builder, `kit/board.py`.** The events board groups by date and hides whole sections once their date has passed, which would have hidden exactly the overdue tasks. I added a few optional settings that only the tasks board uses. To check the events board wasn't affected, I built its page before and after the change with the date fixed to 23 Nov. The two came out byte-for-byte the same.\n- **I made two small data fixes in the board's copy:** \"Done\" to \"done\" (otherwise the tool shed inventory wouldn't fold away) and \"priya\" to \"Priya\" (otherwise she'd get a second section). The original export in `incoming/` is untouched.\n- **The polytunnel rota isn't on the board.** The two rota columns have nothing to do with the task on the same row, so showing them next to the tasks would be misleading. The 29 Oct minutes say the rota stays in the sheet, so I kept the columns in `boards/tasks/tasks.csv`, just not displayed. **However, Dot asked (in the P.S. in `mail/`) to see the rota at the gate on her phone.** A small separate rota board would do that; I can build it if you want.\n- **\"Overdue\" is worked out when the page is built**, so someone needs to rebuild it at least weekly with `python3 kit/board.py boards/tasks`. I've added this to the README.\n- **Where to update tasks from now on:** I treated `boards/tasks/tasks.csv` as the place to edit, the way `events.csv` works. If Ines keeps the spreadsheet as the master copy, each new export has to be copied over it, and the two fixes above will need redoing unless the sheet is corrected.\n\n## For Thursday (not code)\nThe board shows that five jobs are stuck on the council: the water meter, the plot 14 fence, the skip permit, draining the standpipes and the car park signs. According to the council's 10 Nov email, they all need a \"named contact for the site\", and the society has had none since April. Choosing that person would unblock all five. The seed scheme order (Priya) is also due Monday 30 Nov. Christmas week on the rota is still empty; Hal offered to take it.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "42c7c34578607dc26cc1af9bf917bd06248b690d"
+  }
+ ],
+ "started": "2026-11-23T01:36:32Z",
+ "config_sha256": "492d4b7635b36b6ada0c5d81610b39baf0751ddd684d11e2c44f0384cb04f48c",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}
