@@ -163,6 +163,42 @@ def markers_ok(texts, markers):
     return any(re.search(m, blob) for m in markers["hidden"]) and not any(re.search(m, blob) for m in markers["visible"])
 
 
+def derived_hidden(data, visible, hidden):
+    """A CSV the subject derived from the export (copied, cut to some columns, renamed, or split, e.g. a rota file):
+    rebuild it from the hidden export the same way. Each of its columns maps to the export column whose values it
+    shares most (header name first). Returns the new bytes, or None if the file is not derived from the export."""
+    rd = lambda b: list(csv.reader(io.StringIO(b.decode("utf-8", "replace"))))
+    try:
+        f, v, h = rd(data), rd(visible), rd(hidden)
+    except csv.Error:
+        return None
+    if len(f) < 2 or len(v) < 2:
+        return None
+    vh, vrows = [c.strip().lower() for c in v[0]], v[1:]
+    vcols = [{r[j].strip() for r in vrows if j < len(r) and r[j].strip()} for j in range(len(vh))]
+    fh, frows = f[0], f[1:]
+    mapping = []
+    for i, name in enumerate(fh):
+        vals = {r[i].strip() for r in frows if i < len(r) and r[i].strip()}
+        if name.strip().lower() in vh:
+            mapping.append(vh.index(name.strip().lower())); continue
+        best = max(range(len(vh)), key=lambda j: len(vals & vcols[j])) if vals else None
+        mapping.append(best if best is not None and vals and len(vals & vcols[best]) >= max(1, len(vals) // 2) else None)
+    if not frows or not any(m is not None for m in mapping):
+        return None
+    first = [r[0].strip() for r in frows if r and r[0].strip()]
+    if mapping[0] is None or sum(x in vcols[mapping[0]] for x in first) < max(1, len(first) // 2):
+        return None
+    out, seen = [fh], set()
+    for r in h[1:]:
+        row = [r[m] if m is not None and m < len(r) else "" for m in mapping]
+        if not any(c.strip() for c in row) or tuple(row) in seen:
+            continue
+        seen.add(tuple(row)); out.append(row)
+    buf = io.StringIO(); csv.writer(buf, lineterminator="\n").writerows(out)
+    return buf.getvalue().encode()
+
+
 def html_pages(tree_dir, head, base, hint):
     """Candidate pages, best first: the hint, else html new or changed by the subject (or made by the rebuild) outside
     boards/events/ unless the subject's own commit changed boards/events/."""
@@ -355,6 +391,11 @@ def render(subject, hidden_csv, out):
     for p, (data, mode) in list(tree.items()):
         if p == rep or (visible and data == visible) or (p.endswith(".csv") and vis_header and data.split(b"\n", 1)[0] == vis_header):
             tree[p] = (hidden, mode); swapped.append(p)
+    for p, (data, mode) in list(tree.items()):  # copies the subject reshaped (fix registered 2026-11-23 after H1-nodoc)
+        if p.endswith(".csv") and p not in swapped and not p.startswith("boards/events/") and visible:
+            d = derived_hidden(data, visible, hidden)
+            if d is not None:
+                tree[p] = (d, mode); swapped.append(p + " (derived)")
     if rep not in tree:
         tree[rep] = (hidden, 0o644); swapped.append(rep)
     shutil.rmtree(out, ignore_errors=True)
@@ -385,12 +426,16 @@ def render(subject, hidden_csv, out):
             seen_cmds.add(c)
             r = run_cmd(c, work, env); r["source"] = src
             ran.append(r)
+            if src == "documented" and any(s2 == "documented" and c2 not in seen_cmds for s2, c2 in cands):
+                continue  # build every new board before judging (fix 2026-11-23: nd-8 built two boards)
             if static_ok():
                 rebuild_by = r
                 break
         pages = html_pages(work, head, base, keys.get("page_hint"))
-        page = next((p for p in pages if markers_ok([open(os.path.join(work, p), errors="replace").read()], keys["markers"])),
-                    pages[0] if pages else None)
+        def mscore(p):  # the page carrying most of the hidden data, not the first that carries any (fix 2026-11-23)
+            t = open(os.path.join(work, p), errors="replace").read()
+            return sum(bool(re.search(m, t)) for m in keys["markers"]["hidden"]) if markers_ok([t], keys["markers"]) else -1
+        page = max(pages, key=lambda p: (mscore(p), -pages.index(p))) if pages else None
         states, caps = [], []
         if page:
             srv = serve(work)

@@ -1663,3 +1663,15 @@ Data: `stage0/h1sm1/` (renders, reader records, each session's `record.json` and
 2. *Scorer limits.* The swap misses reshaped copies, and the board choice misses a session that builds two boards (nd-8).
 
 Not done: no re-scoring and no new sessions. Classes are all FIT by the `board.json` check, which, as recorded, cannot see a hand-made copy; I have not read the six pages to tell layout-copying from fitting.
+
+## H1-datanote: the habit with the data flow put back (registered 2026-11-23, before any session; owner: "Isolate, then re-run (Recommended)")
+
+- **Fixture:** `h1-v1-datanote` = `h1-v1` with `docs/pattern.md` reduced to its title, its intro line, its "Data" section (verbatim) and "Keep the data current and rebuild." Removed: "What a board is", "When we make another one", and the one-instance sentence of "Looking after a board". Checked: no "instance", "fixed" or "layout" left in the file. The README still does not name the doc. Everything else is the same as h1-v1: prompt, minutes, copy script, hidden data, items.
+- **Scorer fixes** (written after H1-nodoc and checked against its sessions by rendering only: no readers and no re-scoring; the nd results stay as recorded):
+  1. A CSV the subject derived from the export (copied, cut to fewer columns, renamed or split) is rebuilt from the hidden export the same way (`derived_hidden`).
+  2. Every new board is built before the rebuild is judged.
+  3. The page scored is the one carrying the most hidden markers.
+  - Check: nd-1, 2, 4, 7 and 8 now rebuild on the hidden data, and nd-8's tasks board is the page chosen. The selftest re-runs with this launch.
+  - Known approximation: a derived copy that filtered rows (e.g. open tasks only) gets all hidden rows back.
+- **Stage −1:** control, Opus medium, 8 sessions from `/tmp`; readers Kimi K3.1 Pro + GPT-6.1 Terra via OpenRouter ZDR, as before. **Headroom iff reader pass ≤ 4 of 8**; ≥ 5 of 8 closes H1 as "no headroom" for the copying habit in this setting. Voids as in H1-nodoc.
+- If headroom: the rule-arm ship criterion is written here before any rule-arm session runs.
