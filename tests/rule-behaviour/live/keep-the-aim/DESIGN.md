@@ -1691,3 +1691,14 @@ Not done: no re-scoring and no new sessions. Classes are all FIT by the `board.j
 - So, in this setting, Opus medium does not follow the old layout out of habit: it reads the users' notes and designs for them, without being told the layout is one example. The failure that did appear came from a missing statement of how the board is used over time, not from the old form.
 
 Not covered (UNRESOLVED): the form arriving in the request's own brief (F-A, F-C), a multi-file page build, other models and efforts, and multi-turn sessions where the old form was built earlier in the same conversation.
+
+## 2026-11-26 — owner's answer on where failures show; deferred work (near limits)
+
+Owner answer (chat, 2026-11-26): the failures show in **Claude Desktop / Claude Design** and in **session-to-session briefs**; read staged `docs/staged-rules/name-states-by-what-they-are.md`.
+
+Reading (UNRESOLVED, not yet tested): every lab run here was one-turn headless Claude Code, so none sampled either surface. The answer fits the reviewers' untested hand-off theory (a brief turns a proposal or old form into a given) and the surface gap noted earlier in this log. The name-states rule is the same family seen from the writer's side: a brief or label that carries a version's history ("back to", "v2 changes") hands the next session the old form as context. Possible merge point for the staged set; not decided.
+
+Deferred to after the usage reset (owner: "use 100% delegation", "defer the bulk of the work"), bulk to non-Claude models via ZDR:
+1. Fold this answer into CONCLUSIONS.md, FOR-FUTURE-MODELS.md, CONTENT-MAP.md and explainer.html; republish the artifact at the same file path.
+2. Draft a pre-registered brief-hand-off test: session A writes a brief from loose owner ideas; session B (Claude, since the question is how Claude is affected) builds from it; score whether proposals became requirements. Surface: as close to Desktop/Design as a harness allows (Gap: no headless Desktop/Design runner known).
+3. Reconcile keep-the-aim, details-yield-patterns-persist and name-states-by-what-they-are as one staged set (owner decision).
