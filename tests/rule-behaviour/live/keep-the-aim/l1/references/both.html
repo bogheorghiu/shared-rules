@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boards overview</title>
+<!-- L1 BOTH anchor: owner-first list with the relations written as sentences, and a small connections
+     diagram below it. Expected to serve L1. -->
+<style>
+  :root {
+    --bg: #f6f6f3;
+    --surface: #ffffff;
+    --border: #dcdcd5;
+    --text: #1f1f1c;
+    --text-muted: #66665e;
+    --text-faint: #8a8a80;
+    --move-bg: #fdf1e6;
+    --move-border: #e2a46f;
+    --line: #8a9bb0;
+    --node: #2f5d8a;
+    --node-ask: #c2570c;
+    --focus: #c2570c;
+    --radius: 6px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614;
+      --surface: #1f1f1c;
+      --border: #34342f;
+      --text: #ecece6;
+      --text-muted: #a3a39a;
+      --text-faint: #7d7d75;
+      --move-bg: #33261a;
+      --move-border: #8a5a30;
+      --line: #5d6b7c;
+      --node: #7fa8d1;
+      --node-ask: #f0a35e;
+      --focus: #f0a35e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.4; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 14px 16px 40px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  .meta { color: var(--text-muted); font-size: 12px; margin: 0; }
+  .summary { font-size: 16px; font-weight: 600; margin: 8px 0 10px; }
+  section { margin: 0 0 14px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 0 0 4px; }
+  ol, ul { list-style: none; margin: 0; padding: 0; }
+  li { overflow-wrap: anywhere; }
+  #you li {
+    background: var(--move-bg);
+    border: 1px solid var(--move-border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    margin-bottom: 6px;
+  }
+  #you .holds, #you .also { display: block; font-size: 13px; color: var(--text-muted); }
+  #blocked li, #moving li, #stale li { padding: 3px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  #quiet ul { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; color: var(--text-muted); }
+  .why { color: var(--text-muted); }
+  svg.map { width: 100%; max-width: 640px; height: auto; display: block; background: var(--surface);
+            border: 1px solid var(--border); border-radius: var(--radius); }
+  svg.map line { stroke: var(--line); stroke-width: 1; }
+  svg.map .arrow { fill: var(--line); }
+  svg.map circle { fill: var(--node); }
+  svg.map circle.ask { fill: var(--node-ask); }
+  svg.map text { fill: var(--text); font-size: 11px; font-family: var(--font); }
+  .note { font-size: 12px; color: var(--text-faint); margin: 4px 0 0; }
+  .empty { color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Boards</h1>
+    <p class="meta" id="meta"></p>
+  </header>
+  <p class="summary" id="summary"></p>
+  <main id="main"></main>
+</div>
+<script>
+(function () {
+  "use strict";
+  var STALE_DAYS = 21;
+  var SVG = "http://www.w3.org/2000/svg";
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+  function svgEl(tag, attrs) {
+    var n = document.createElementNS(SVG, tag);
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    return n;
+  }
+  function day(iso) { return String(iso || "").slice(0, 10); }
+  function names(list) {
+    if (list.length < 2) return list.join("");
+    return list.slice(0, -1).join(", ") + " and " + list[list.length - 1];
+  }
+  function section(id, title, items, tag) {
+    if (!items.length) return;
+    var s = el("section");
+    s.id = id;
+    s.appendChild(el("h2", null, title + " (" + items.length + ")"));
+    var list = el(tag || "ul");
+    items.forEach(function (li) { list.appendChild(li); });
+    s.appendChild(list);
+    document.getElementById("main").appendChild(s);
+  }
+  function boardItem(b) {
+    var li = el("li");
+    li.setAttribute("data-board-id", b.id);
+    li.tabIndex = 0;
+    return li;
+  }
+
+  function render(data) {
+    var boards = Array.isArray(data.boards) ? data.boards : [];
+    var links = Array.isArray(data.links) ? data.links : [];
+    var now = Date.parse(data.generated) || Date.now();
+    var byId = {}, waiters = {}, waitsOn = {};
+    boards.forEach(function (b) { byId[b.id] = b; waiters[b.id] = []; waitsOn[b.id] = []; });
+    links.forEach(function (l) {
+      if (!byId[l.from] || !byId[l.to]) return;
+      waiters[l.to].push(l.from);
+      waitsOn[l.from].push(l);
+    });
+    function title(id) { return byId[id].title; }
+    function stale(b) {
+      var t = Date.parse(b.last_activity);
+      return !isNaN(t) && now - t > STALE_DAYS * 86400000;
+    }
+    document.getElementById("meta").textContent = "Snapshot " + day(data.generated) + " · " + boards.length + " boards";
+    if (!boards.length) { document.getElementById("summary").textContent = "No boards yet."; return; }
+
+    var asks = boards.filter(function (b) { return b.ask; });
+    asks.sort(function (a, b) { return waiters[b.id].length - waiters[a.id].length; });  // stable: registry order on ties
+    var summary = asks.length ? asks.length + (asks.length === 1 ? " board needs you." : " boards need you.")
+                              : "Nothing is waiting on you.";
+    if (asks.length && waiters[asks[0].id].length)
+      summary += " Start with " + asks[0].title + ": " + waiters[asks[0].id].length + " boards are waiting on it.";
+    document.getElementById("summary").textContent = summary;
+
+    var you = asks.map(function (b) {
+      var li = boardItem(b);
+      li.appendChild(el("b", null, b.title));
+      li.appendChild(document.createTextNode(": " + b.ask));
+      var w = waiters[b.id].map(title);
+      if (w.length) li.appendChild(el("span", "holds", "Holding up " + w.length + ": " + w.join(", ") + "."));
+      var on = waitsOn[b.id].map(function (l) { return title(l.to); });
+      if (on.length) li.appendChild(el("span", "also", "Also waiting on " + names(on) + "."));
+      return li;
+    });
+    section("you", "Waiting on you", you, "ol");
+
+    var rest = boards.filter(function (b) { return !b.ask; });
+    var blocked = rest.filter(function (b) { return waitsOn[b.id].length; }).map(function (b) {
+      var li = boardItem(b);
+      li.appendChild(el("b", null, b.title));
+      li.appendChild(document.createTextNode(" is waiting on " + names(waitsOn[b.id].map(function (l) { return title(l.to); })) + " "));
+      li.appendChild(el("span", "why", "(" + waitsOn[b.id].map(function (l) { return l.why; }).join("; ") + ")"));
+      if (stale(b)) li.appendChild(document.createTextNode(" · no activity since " + day(b.last_activity)));
+      return li;
+    });
+    section("blocked", "Waiting on another board", blocked);
+
+    var free = rest.filter(function (b) { return !waitsOn[b.id].length; });
+    section("moving", "In progress", free.filter(function (b) { return !stale(b) && b.doing; }).map(function (b) {
+      var li = boardItem(b);
+      li.appendChild(el("b", null, b.title));
+      li.appendChild(document.createTextNode(": " + b.doing));
+      return li;
+    }));
+    section("stale", "No activity for 3 weeks or more", free.filter(stale).map(function (b) {
+      var li = boardItem(b);
+      li.appendChild(el("b", null, b.title));
+      li.appendChild(document.createTextNode(": nothing since " + day(b.last_activity)));
+      return li;
+    }));
+    section("quiet", "Quiet", free.filter(function (b) { return !stale(b) && !b.doing; }).map(function (b) {
+      var li = boardItem(b);
+      li.textContent = b.title;
+      return li;
+    }));
+
+    if (!links.length) return;
+    var s = el("section");
+    s.id = "map";
+    s.appendChild(el("h2", null, "Connections"));
+    var W = 640, H = 420, cx = W / 2, cy = H / 2, R = 150;
+    var svg = svgEl("svg", {"class": "map", viewBox: "0 0 " + W + " " + H, role: "img",
+                            "aria-label": "Diagram of which boards wait on which"});
+    var defs = svgEl("defs");
+    var marker = svgEl("marker", {id: "arrow", viewBox: "0 0 10 10", refX: "10", refY: "5", markerWidth: "6",
+                                  markerHeight: "6", orient: "auto-start-reverse"});
+    marker.appendChild(svgEl("path", {"class": "arrow", d: "M0,0 L10,5 L0,10 z"}));
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+    var at = {};
+    boards.forEach(function (b, i) {
+      var a = (i / boards.length) * 2 * Math.PI - Math.PI / 2;
+      at[b.id] = {x: cx + R * Math.cos(a), y: cy + R * Math.sin(a), c: Math.cos(a)};
+    });
+    links.forEach(function (l) {
+      if (!at[l.from] || !at[l.to]) return;
+      var p = at[l.from], q = at[l.to], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+      svg.appendChild(svgEl("line", {x1: p.x, y1: p.y, x2: q.x - dx / d * 7, y2: q.y - dy / d * 7, "marker-end": "url(#arrow)"}));
+    });
+    boards.forEach(function (b) {
+      var p = at[b.id];
+      svg.appendChild(svgEl("circle", {cx: p.x, cy: p.y, r: 4, "class": b.ask ? "ask" : "", "data-node": b.id}));
+      var t = svgEl("text", {x: p.x + (p.c >= 0 ? 8 : -8), y: p.y + 4, "text-anchor": p.c >= 0 ? "start" : "end"});
+      t.textContent = b.title;
+      svg.appendChild(t);
+    });
+    s.appendChild(svg);
+    s.appendChild(el("p", "note", "Each arrow points from a board to the board it is waiting on. Orange: waiting on you."));
+    document.getElementById("main").appendChild(s);
+  }
+
+  fetch("../data/boards.json").then(function (r) { return r.json(); }).then(render).catch(function () {
+    document.getElementById("meta").textContent = "Could not load ../data/boards.json.";
+  });
+})();
+</script>
+</body>
+</html>

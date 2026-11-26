@@ -1,0 +1,148 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1-nodoc",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "bc2994374ced4508d9f01f13d66206534cc17469",
+ "turns": [
+  {
+   "main_calls": 7,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && cat $(git ls-files | head -20) 2>/dev/null | head -200\", \"description\": \"List repo files and show contents\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"sed -n 75,200p kit/board.py; cat kit/new_board.py mail/* minutes/*; cat .gitignore\", \"description\": \"Show rest of kit, mail, minutes\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"sed -n 60,75p kit/board.py && mkdir -p /tmp/h1nd/scratch && python3 -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board, shutil, datetime\\nshutil.copytree('boards/events','/tmp/h1nd/scratch/ev_before')\\nboard.build('/tmp/h1nd/scratch/ev_before', datetime.date(2026,11,17))\\\" && dif"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'\\ns=open(p).read()\\ndef rep(a,b):\\n    global s\\n    assert s.count(a)==1, a\\n    s=s.replace(a,b)\\nrep('''in each section; sections whose date has passed go under one fold at the bottom.\\n\\\"\\\"\\\"''','''in each section; sections whose date has passed go"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 kit/new_board.py --title \\\"Tasks\\\" --purpose \\\"The committee's jobs, by who has them. Find your name; the ones with nobody against them are at the top.\\\" && python3 - <<'EOF'\\nimport csv, json\\nd='boards/tasks/'\\ncfg=json.load(open(d+'board.json'))\\ncfg.pop('past_label')\\ncfg['s"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='README.md'; s=open(p).read()\\na=\\\"\\\"\\\"  still needs.\\n\\\"\\\"\\\"\\nassert s.count(a)==1\\ns=s.replace(a,a+\\\"\\\"\\\"- `boards/tasks/`: the committee's jobs, grouped by who has them, unowned ones first,\\n  done ones folded away. Overdue and due-this-week are worked out when t"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 122553,
+    "num_turns": 7,
+    "total_cost_usd": 0.5292621999999999
+   },
+   "final_context": 38875,
+   "main_input": 14,
+   "main_cache_read": 159471,
+   "main_cache_creation": 33664,
+   "main_output": 54,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 123.3,
+   "reply": "Only the shared stylesheet gained two classes; the events board's content is byte-identical. Now the board itself:\nAll 40 rows are accounted for: 34 open and 6 done. Updating the README, then committing:\nI've set up the tasks board and committed it to `main` (not pushed). It's at `boards/tasks/` and was built from the 12 Nov export in `incoming/tasks.csv`.\n\n## How the board is laid out, and why\n- **Grouped by person, names in alphabetical order.** Ines asked to see \"what's mine this week\" and Hal wanted to read names on his phone without scrolling sideways. Grouping by person gives both. Each person's jobs are sorted by due date.\n- **\"Nobody yet\" comes first.** The minutes keep coming back to jobs with no owner: the water meter, the shed gutter since July, lost property. Putting those at the top makes them the first thing the meeting sees.\n- **Each job is marked \"overdue\" (red) or \"this week\" (orange).** That covers what the meeting needs to get through without reading every line.\n- **Done jobs are folded away at the bottom,** because Tomas asked not to scroll past them every week.\n\nI also considered grouping by due window (overdue / this week / later). I chose people because the problem the minutes keep describing is who owns what, not when.\n\n## Changes to the board kit\n`kit/board.py` needed new options for this: sections in name order, a fold for done jobs, a due-date column with the overdue and this-week labels, and a short text before a value (e.g. \"on council\"). The events board uses none of them. I rebuilt it before and after the change, and the only difference is two new style rules; what it shows is the same. I didn't rebuild or commit its page.\n\n## Data cleanup when importing\n- \"Done\" was changed to \"done\" and \"priya\" to \"Priya\".\n- I merged the quantity column into the notes (\"3 loads\", \"25 kg\", \"6 rolls\"). The padlock row had no unit, so I wrote \"4 padlocks\".\n- All 40 rows came across: 34 open and 6 done.\n\n## Left for you or the committee\n1. **The polytunnel rota is not on the board.** Its two columns are a separate rota stuck onto the side of the task rows. On 29 Oct the committee decided it \"stays in the task sheet\", but Dot then asked to see it at the gate on a Saturday. That could mean a printed notice rather than a phone page, so I left it for the committee. The data is still in `incoming/tasks.csv`. Christmas week is still blank, and so is Hal's offer to take it.\n2. **The council needs a named contact.** The water meter, the skip permit, the plot 14 fence, the standpipes and the car park signs are all waiting on the council. Its 10 Nov reply says it has no named contact for the site and will act through whoever we name. I haven't assigned this; it's a committee decision. Hal offered to ring if someone sends him the account number.\n3. **The board doesn't update itself.** \"Overdue\" and \"this week\" are worked out when the page is built (today, 23 Nov). Someone needs to run `python3 kit/board.py boards/tasks` before each Thursday meeting. I've added this to the README.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "f9db1aedea69dc81b81930eb81008168934f5071"
+  }
+ ],
+ "started": "2026-11-23T01:33:36Z",
+ "config_sha256": "492d4b7635b36b6ada0c5d81610b39baf0751ddd684d11e2c44f0384cb04f48c",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}

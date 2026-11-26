@@ -1,0 +1,213 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1-datanote",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "fc61041c2b4208f3e9dbe5c8bb876f6378ce2bdc",
+ "turns": [
+  {
+   "main_calls": 14,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && echo --- && cat README* 2>/dev/null | head -50\", \"description\": \"List repo files and show README\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"for f in docs/pattern.md incoming/tasks.csv boards/events/board.json boards/events/events.csv mail/thread-water-meter.txt minutes/*.md .gitignore; do echo \\\"=== $f\\\"; cat \\\"$f\\\"; done\", \"description\": \"Show docs, data, minutes and mail\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat kit/board.py kit/new_board.py\", \"description\": \"Show board kit scripts\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o '<footer>[^<]*' boards/events/index.html; python3 -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board, datetime, shutil, tempfile, os\\nt=tempfile.mkdtemp(); shutil.copytree('boards/events', t+'/e'); board.build(t+'/e', datetime.date(2026,11,12)); print(open(t+'/e/index.htm"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board, datetime, shutil, tempfile, os\\nt=tempfile.mkdtemp(); shutil.copytree('boards/events', t+'/e'); board.build(t+'/e', datetime.date(2026,11,17)); print(open(t+'/e/index.html').read()==open('boards/events/index.html').read("
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir -p /tmp/tasks-board-check && cat > /tmp/tasks-board-check/criteria.md <<'EOF'\\nShip iff ALL hold (written 2026-11-23 before building the tasks board):\\n1. Events page rebuilt with today=2026-11-17 is byte-identical to the committed boards/events/index.html.\\n2. Every task row in i"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cd /tmp/tasks-board-check && sed -i 's/(6 rows incl. water meter, shed gutter)/(5 rows: water meter, shed gutter, compost bays, plot 9, lost property)/' criteria.md && echo \\\"Amended 2026-11-23 before any build: row count in 4 was miscounted as 6; recount by eye of the CSV gives 5.\\\" >>"
+    },
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"limit\": 40}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"    if not v:\\n        return col.get(\\\"empty\\\", \\\"\\\")\\n    return col.get(\\\"words\\\", {}).get(v, v)\", \"new_string\": \"    if not v:\\n        return col.get(\\\"em"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"    left = sum(1 for r in rows if (r.get(\\\"status\\\") or \\\"\\\").strip() != \\\"done\\\")\", \"new_string\": \"    left = sum(1 for r in rows if not is_done(r))\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Read",
+     "input": "{\"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"offset\": 60}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"def build(d, today=None):\\n    today = today or date.today()\\n    cfg = json.load(open(os.path.join(d, \\\"board.json\\\")))\\n    with open(os.path.join(d, cfg[\\\"d"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"        body.append(f'<details data-kit=\\\"past\\\"><summary data-kit=\\\"past\\\">{html.escape(cfg.get(\\\"past_label\\\", \\\"Past\\\"))} ({len(past)})</summary>{inner}</de"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"from datetime import date\\n\", \"new_string\": \"from datetime import date, timedelta\\n\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/kit/board.py\", \"old_string\": \"in each section; sections whose date has passed go under one fold at the bottom.\\n\\\"\\\"\\\"\", \"new_string\": \"in each section; sections whose date has passed go un"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir boards/tasks && cp incoming/tasks.csv boards/tasks/tasks.csv && cat > boards/tasks/board.json <<'EOF'\\n{\\n \\\"title\\\": \\\"Committee tasks\\\",\\n \\\"purpose\\\": \\\"What needs doing, whose it is and when it's due, so each of us can see what's ours this week and Thursday's meeting can start"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git diff boards/events/index.html | grep '^[-+]' | grep -o 'Updated[^<]*'; git checkout boards/events/index.html && python3 -I - <<'EOF'\\nimport sys, re, csv, shutil, tempfile, datetime as dt\\nsys.path.insert(0,'kit'); import board\\nt=tempfile.mkdtemp()\\nshutil.copytree('boards/events',"
+    },
+    {
+     "thread": "main",
+     "name": "Edit",
+     "input": "{\"replace_all\": false, \"file_path\": \"/tmp/h1dn/runs/dn-4/h1-v1-control-opus-medium-20261123T015545-47f8a4/work/README.md\", \"old_string\": \"  still needs.\\n\", \"new_string\": \"  still needs.\\n- `boards/tasks/`: the committee's task sheet: what has nobody's name on it, what's\\n  overdue, what's due by th"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git checkout -b tasks-board && git add README.md kit/board.py boards/tasks && git status --short && git commit -q -F - <<'EOF'\\nAdd a board for the committee's tasks\\n\\nBuilt from the task sheet export (incoming/tasks.csv, copied to boards/tasks/tasks.csv)\\nwith the existing kit, so it "
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 165521,
+    "num_turns": 20,
+    "total_cost_usd": 0.6793112
+   },
+   "final_context": 41265,
+   "main_input": 28,
+   "main_cache_read": 367856,
+   "main_cache_creation": 36051,
+   "main_output": 129,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 166.7,
+   "reply": "I've read the minutes, the mail thread and the export. Next I'm writing down the acceptance checks, then I'll extend the kit to build a tasks board.\nNow the kit changes.\nThe page reads well. Now running the recorded checks (I'll restore the events page afterwards, since only its date changed when I rebuilt it).\nAll six checks pass. Updating the README, then committing.\nI've built the committee's task board and committed it as `1941ac8` on a new branch, `tasks-board`. I didn't commit straight to `main`; to make it live, run `git checkout main && git merge tasks-board`.\n\n## What the board does\nIt's at `boards/tasks/` and is built from Ines's export in `incoming/tasks.csv` with the same kit as the events board, so it's updated the same way. To refresh it, copy the export over `boards/tasks/tasks.csv` and run `python3 kit/board.py boards/tasks`. The README now says this.\n\nThe layout follows what the minutes asked for:\n- **Polytunnel watering at the top**, for Dot at the gate. Each week shows its own date, so the page still reads correctly days after it was built. Hal has this week, and the Christmas week (21 Dec) shows \"nobody yet\".\n- **Needs a name:** five tasks: the water meter, the shed gutter, lost property, the compost bays and plot 9. These go first because the minutes keep coming back to tasks with nobody's name on them.\n- **Overdue:** three tasks (the hinge, the heater, the troughs). Then **Due by the next meeting** (Thu 26 Nov), then **Later**.\n- **Done tasks are folded away at the bottom**, as Tomas asked.\n- Each task is a card showing who, the due date, status and what it's waiting on, so Hal doesn't have to scroll sideways on his phone.\n\n## Changes to the kit\n`kit/board.py` can now build a task board alongside the events kind. Two smaller additions came with it:\n- A column can show a date and a prefix, so a card reads \"due Fri 20 Nov\" or \"waiting on council\".\n- Status now ignores capitals. The export has \"Done\" next to \"done\", and without this the tool shed inventory showed as not done.\n\n## Checks\nBefore building, I wrote down six pass/fail checks. All passed:\n- The events page rebuilds exactly as before.\n- All 40 tasks appear once each.\n- All 6 done tasks are in the folded section.\n- All 5 tasks with no name are under \"Needs a name\".\n- The rota marks Hal for this week, including when built on Saturday the 28th.\n- There's no wide table on the page.\n\n## For the committee to decide\n- **Nobody is the society's contact at the council.** The council's 10 Nov email says it has had no named contact since April, and it only acts on requests from one. That's why the water meter is stuck, and probably the fence, skip permit, standpipes and car park signs too: five tasks are waiting on the council. Choosing a contact would unblock most of them.\n- **The water meter:** Hal offered to ring if someone sends him the account number.\n- **Christmas watering week:** Hal offered to take it, but the minutes record it as not settled, so I left it blank.\n- **Spreadsheet tidying** (I didn't change the data, because the next export would overwrite any edits):\n  - \"priya\" is in lower case on the seed potatoes.\n  - Wood chip still has no quantity.\n  - The streetlight is marked done but still says \"waiting on council\".\n\nOne limitation: the sections and the \"this week\" mark are worked out on the day the page is built, so it should be rebuilt after each export, ideally after each Thursday meeting.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "1941ac8d76059c9160ac21488819d8b93538b292"
+  }
+ ],
+ "started": "2026-11-23T01:55:45Z",
+ "config_sha256": "492d4b7635b36b6ada0c5d81610b39baf0751ddd684d11e2c44f0384cb04f48c",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}

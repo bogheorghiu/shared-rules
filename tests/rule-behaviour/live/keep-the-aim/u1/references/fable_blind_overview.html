@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boards overview</title>
+<style>
+  /* Colour tokens. Every colour on this page comes from here; see design/pattern.md. */
+  :root {
+    --bg: #f6f6f3;
+    --surface: #ffffff;
+    --surface-2: #f0f0ec;
+    --border: #dcdcd5;
+    --border-strong: #b9b9b0;
+    --text: #1f1f1c;
+    --text-muted: #66665e;
+    --text-faint: #8a8a80;
+    --accent: #2f5d8a;
+    --accent-text: #ffffff;
+    --accent-soft: #e8eff6;
+    --link: #2f5d8a;
+    --tag-bg: #ecece6;
+    --tag-text: #4a4a43;
+    --focus: #c2570c;
+    --shadow: 0 1px 2px rgba(31, 31, 28, 0.08);
+    --radius: 6px;
+    --gap: 16px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614;
+      --surface: #1f1f1c;
+      --surface-2: #272724;
+      --border: #34342f;
+      --border-strong: #4a4a43;
+      --text: #ecece6;
+      --text-muted: #a3a39a;
+      --text-faint: #7d7d75;
+      --accent: #7fa8d1;
+      --accent-text: #11202e;
+      --accent-soft: #1c2a38;
+      --link: #9cbcdc;
+      --tag-bg: #2c2c28;
+      --tag-text: #c9c9c0;
+      --focus: #f0a35e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  /* The hidden attribute has to win over display rules such as .board's flex,
+     otherwise the filter marks boards hidden without hiding them. */
+  [hidden] { display: none !important; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  a { color: var(--link); }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  header.top h1 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 650;
+  }
+
+  header.top .meta {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Groups: what needs the owner comes first, the rest follows. */
+  .group { margin: 0 0 28px; }
+
+  .group > h2 {
+    font-size: 17px;
+    font-weight: 650;
+    margin: 0 0 4px;
+  }
+
+  .group-owner > h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .group .n {
+    display: inline-block;
+    min-width: 24px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: 1px;
+  }
+
+  .group .n.hot {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .group-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+
+  .all-clear {
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .toolbar label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .toolbar input[type="search"] {
+    font: inherit;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    min-width: 0;
+    flex: 1 1 200px;
+    max-width: 320px;
+  }
+
+  .btn {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .btn:hover { background: var(--surface-2); }
+
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .btn.toggle {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+
+  .count-line {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  .group-owner .grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+    gap: 12px;
+  }
+
+  .board {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .board h3 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .board p { margin: 0; }
+
+  .board .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .board .head h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* The ask is the headline of a board that is waiting on the owner. */
+  .ask {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+
+  .ask-text {
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .ask-card {
+    font-size: 13px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .ask-unlisted,
+  .context,
+  .sharing-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .flag {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .board .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .board .counts span b {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .board .counts span.zero b {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .board .activity {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+
+  .board .detail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .board.collapsed .detail { display: none; }
+
+  .board ul.cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .board ul.cards li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    overflow-wrap: anywhere;
+  }
+
+  .board ul.cards li:last-child { border-bottom: 0; }
+
+  .tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    white-space: nowrap;
+  }
+
+  .board .foot {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Finished boards stay on the page, but quietly. */
+  .group-done .board {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .group-done .board h3 {
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .compact .board { padding: 10px 12px; gap: 4px; }
+  .compact .board .detail { gap: 4px; }
+  .compact .board ul.cards li { padding: 3px 0; font-size: 13px; }
+  .compact .ask { padding: 4px 8px; }
+  .compact .ask-text { font-size: 15px; }
+
+  .empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+  }
+
+  footer.bottom {
+    margin-top: 32px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  details.legend {
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+  }
+
+  details.legend summary {
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  details.legend dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 4px 12px;
+    margin: 8px 0 0;
+  }
+
+  details.legend dt { font-weight: 600; color: var(--text); }
+  details.legend dd { margin: 0; }
+
+  @media print {
+    .toolbar, .btn.toggle, details.legend { display: none; }
+    .board { box-shadow: none; break-inside: avoid; }
+    .board.collapsed .detail { display: flex; }
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 16px 12px 40px; }
+    header.top h1 { font-size: 19px; }
+    .board { padding: 10px 12px; gap: 6px; }
+    .group-owner .grid { gap: 10px; }
+    .toolbar input[type="search"] { max-width: none; }
+    details.legend dl { grid-template-columns: minmax(0, 1fr); }
+    details.legend dd { margin-bottom: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <h1>Boards overview</h1>
+    <span class="meta" id="meta"></span>
+  </header>
+
+  <main id="boards">
+    <!-- What is waiting on the owner. Filled by render(). -->
+    <div id="attention"></div>
+
+    <div class="toolbar" role="group" aria-label="Board tools">
+      <label for="filter" class="visually-hidden">Filter boards</label>
+      <input type="search" id="filter" placeholder="Filter boards (press /)" autocomplete="off">
+      <button type="button" class="btn" id="expand-all">Expand all</button>
+      <button type="button" class="btn" id="collapse-all">Collapse all</button>
+      <button type="button" class="btn" id="density" aria-pressed="false">Compact</button>
+    </div>
+
+    <p class="count-line" id="count-line" role="status"></p>
+
+    <!-- Every other board, grouped. Filled by render(). -->
+    <div id="rest"></div>
+  </main>
+
+  <details class="legend">
+    <summary>How to read this page</summary>
+    <dl>
+      <dt>Waiting on the owner</dt><dd>boards with an unfinished card marked for the owner; the ask is shown as it was written</dd>
+      <dt>Gone quiet</dt><dd id="legend-quiet">unfinished work and no recent activity</dd>
+      <dt>Under way</dt><dd>unfinished work, recent activity, nothing marked for the owner</dd>
+      <dt>Nothing left to do</dt><dd>no open, doing, owner or question cards</dd>
+      <dt>Order</dt><dd>each board appears once; registry order within a group</dd>
+      <dt>Ages</dt><dd>counted to the snapshot time at the top of the page, not to your clock</dd>
+      <dt>open</dt><dd>cards not started</dd>
+      <dt>doing</dt><dd>cards someone is working on</dd>
+      <dt>owner</dt><dd>cards marked for the owner</dd>
+      <dt>questions</dt><dd>open questions on the board</dd>
+    </dl>
+  </details>
+
+  <footer class="bottom">
+    Data: <code>data/boards.js</code>. Each board appears once, grouped by what it needs; registry order within a group.
+  </footer>
+</div>
+
+<script src="../data/boards.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // All text goes through el(): textContent only, never innerHTML.
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  var DATA = window.BOARD_DATA || { boards: [] };
+  var BOARDS = Array.isArray(DATA.boards) ? DATA.boards : [];
+  var COUNT_KEYS = ["open", "doing", "owner", "questions"];
+  var STORE_KEY = "boards-overview:v2";
+  var OLD_STORE_KEY = "boards-overview:v1";
+  var DAY_MS = 24 * 60 * 60 * 1000;
+
+  // A board with unfinished work and no activity for this long is listed under "Gone quiet".
+  var QUIET_DAYS = 30;
+  // Say so in the header when the snapshot itself is at least this old.
+  var STALE_SNAPSHOT_DAYS = 2;
+
+  // Display order. Each board lands in exactly one group, so each data-board-id
+  // is on the page exactly once (tools/sync.py relies on that).
+  var GROUPS = [
+    { key: "owner", title: "Waiting on the owner", summary: "waiting on the owner" },
+    { key: "quiet", title: "Gone quiet", summary: "gone quiet",
+      note: "Unfinished work, and no activity for " + QUIET_DAYS + " days or more." },
+    { key: "unknown", title: "Can't tell", summary: "that can't be read",
+      note: "No cards or owner count shared, so this page can't say what these boards need." },
+    { key: "moving", title: "Under way", summary: "under way",
+      note: "Unfinished work, recent activity, nothing marked for the owner." },
+    { key: "done", title: "Nothing left to do", summary: "with nothing left to do",
+      note: "No open, doing, owner or question cards." }
+  ];
+
+  function readStore(key) {
+    try {
+      var value = JSON.parse(window.localStorage.getItem(key));
+      return value && typeof value === "object" ? value : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Card lists now start closed, so v1's "collapsed" map no longer means anything.
+  // Only the density choice is carried over.
+  function loadPrefs() {
+    var loaded = readStore(STORE_KEY);
+    if (!loaded) {
+      var old = readStore(OLD_STORE_KEY);
+      loaded = { compact: !!(old && old.compact) };
+    }
+    if (!loaded.expanded || typeof loaded.expanded !== "object") loaded.expanded = {};
+    return loaded;
+  }
+
+  function savePrefs(prefs) {
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify(prefs));
+    } catch (e) {
+      /* storage blocked: preferences just don't persist */
+    }
+  }
+
+  var prefs = loadPrefs();
+  var summary = "";
+
+  function pad(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function plural(n, one, many) {
+    return n + " " + (n === 1 ? one : many);
+  }
+
+  function num(v) {
+    return typeof v === "number" && isFinite(v) && v > 0 ? v : 0;
+  }
+
+  function toTime(iso) {
+    if (!iso) return null;
+    var t = new Date(iso).getTime();
+    return isNaN(t) ? null : t;
+  }
+
+  // "2026-11-14T18:20:00Z" -> "2026-11-14 18:20 UTC"
+  function fmtDate(iso) {
+    var t = toTime(iso);
+    if (t === null) return iso ? String(iso) : "not recorded";
+    var d = new Date(t);
+    return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()) +
+      " " + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + " UTC";
+  }
+
+  // Ages are counted to the snapshot, not to the clock: they describe the data on
+  // screen and stay true in a tab that is left open.
+  var SNAPSHOT = toTime(DATA.generated);
+  var REFERENCE = SNAPSHOT !== null ? SNAPSHOT : Date.now();
+
+  function snapshotText() {
+    if (SNAPSHOT === null) {
+      return DATA.generated ? "Snapshot " + String(DATA.generated) : "Snapshot time not recorded";
+    }
+    var text = "Snapshot " + fmtDate(DATA.generated);
+    var lag = Math.floor((Date.now() - SNAPSHOT) / DAY_MS);
+    if (lag >= STALE_SNAPSHOT_DAYS) text += " \u00b7 " + lag + " days old";
+    return text;
+  }
+
+  function ageText(days) {
+    if (days === null) return "last activity not recorded";
+    if (days < 1) return "active in the last day";
+    return "no activity for " + plural(days, "day", "days");
+  }
+
+  function boardTitle(board) {
+    var t = board.title;
+    return t !== undefined && t !== null && String(t) !== "" ? String(t) : String(board.id);
+  }
+
+  // Work out what a board needs. Everything the page says about a board comes from here.
+  function analyse(board) {
+    var counts = board.counts && typeof board.counts === "object" ? board.counts : {};
+    var cards = Array.isArray(board.cards) ? board.cards.filter(Boolean) : null;
+    var asks = [];
+    var others = [];
+    var live = 0;
+    if (cards) {
+      cards.forEach(function (card) {
+        var unfinished = card.state !== "done";
+        if (unfinished) live += 1;
+        if (card.owner && unfinished) asks.push(card); else others.push(card);
+      });
+    }
+    // Counts and cards should agree; when they don't, believe whichever says more is outstanding.
+    var ownerCount = Math.max(num(counts.owner), asks.length);
+    var unfinished = Math.max(
+      num(counts.open) + num(counts.doing) + num(counts.questions) + num(counts.owner), live);
+    var last = toTime(board.last_activity);
+    var quietDays = last === null ? null : Math.floor((REFERENCE - last) / DAY_MS);
+    var readable = cards !== null || typeof counts.owner === "number";
+
+    var group;
+    if (!readable) group = "unknown";
+    else if (ownerCount > 0) group = "owner";
+    else if (unfinished === 0) group = "done";
+    else if (quietDays !== null && quietDays >= QUIET_DAYS) group = "quiet";
+    else group = "moving";
+
+    return {
+      board: board, counts: counts, cards: cards, asks: asks, others: others,
+      ownerCount: ownerCount, unfinished: unfinished, quietDays: quietDays, group: group
+    };
+  }
+
+  // Always all four, in this order, zeros included (dimmed). A count that is missing shows as "?".
+  function countsLine(counts) {
+    var wrap = el("div", "counts");
+    COUNT_KEYS.forEach(function (key) {
+      var v = counts[key];
+      var known = typeof v === "number" && isFinite(v);
+      var span = el("span", known && v === 0 ? "zero" : null);
+      span.appendChild(el("b", null, known ? String(v) : "?"));
+      span.appendChild(document.createTextNode(" " + key));
+      wrap.appendChild(span);
+    });
+    return wrap;
+  }
+
+  function cardItem(card) {
+    var li = el("li");
+    li.appendChild(el("span", "title", card.title));
+    if (card.state && card.state !== "open") li.appendChild(el("span", "tag", card.state));
+    if (card.owner) li.appendChild(el("span", "tag", "owner"));
+    return li;
+  }
+
+  // One card that is waiting on the owner: the ask as written, then which card it is.
+  function askBlock(card) {
+    var box = el("div", "ask");
+    var ask = typeof card.ask === "string" ? card.ask.trim() : "";
+    var hasTitle = card.title !== undefined && card.title !== null && String(card.title).trim() !== "";
+    var title = hasTitle ? String(card.title) : "Untitled card";
+    if (ask) {
+      box.appendChild(el("p", "ask-text", ask));
+      box.appendChild(el("p", "ask-card", "Card: " + title));
+    } else {
+      box.appendChild(el("p", "ask-text", title));
+      box.appendChild(el("p", "ask-card", "Marked for the owner, but no ask was written on this card."));
+    }
+    return box;
+  }
+
+  function unlistedText(info, n) {
+    if (!info.cards) {
+      return plural(n, "card is", "cards are") + " marked for the owner. " +
+        (info.board.sharing === "counts"
+          ? "This board shares counts only, so the ask isn't shown here."
+          : "The data has no card list for this board, so the ask isn't shown here.");
+    }
+    return "The counts show " + n + " more marked for the owner than the card list does.";
+  }
+
+  function ownerContext(info) {
+    var rest = info.unfinished - info.ownerCount;
+    var first = rest <= 0
+      ? "Nothing else left on this board"
+      : plural(rest, "other card unfinished", "other cards unfinished");
+    return first + " \u00b7 " + ageText(info.quietDays);
+  }
+
+  function renderBoard(info) {
+    var board = info.board;
+    var isOwner = info.group === "owner";
+    var art = el("article", "board");
+    art.setAttribute("data-board-id", board.id);
+
+    var heading = el("h3", "board-title", boardTitle(board));
+    var counts = countsLine(info.counts);
+    var activity = el("div", "activity", "Last activity: " + fmtDate(board.last_activity));
+
+    // The card list, or a plain line saying why there isn't one.
+    var listed = info.cards ? (isOwner ? info.others : info.cards) : null;
+    var body;
+    if (!listed) {
+      body = el("p", "sharing-note", board.sharing === "counts"
+        ? "This board shares counts only, so its cards aren't listed here."
+        : "No card list in the data for this board.");
+    } else if (listed.length === 0) {
+      body = el("p", "sharing-note", isOwner ? "No other cards on this board." : "No cards on this board.");
+    } else {
+      body = el("ul", "cards");
+      listed.forEach(function (card) {
+        body.appendChild(cardItem(card));
+      });
+    }
+
+    var collapsible = isOwner || !!(listed && listed.length);
+    var toggle = null;
+    if (collapsible) {
+      toggle = el("button", "btn toggle");
+      toggle.type = "button";
+      toggle.setAttribute("data-show", isOwner ? "Details" : "Show " + plural(listed.length, "card", "cards"));
+      toggle.setAttribute("data-hide", isOwner ? "Hide details" : "Hide cards");
+      toggle.addEventListener("click", function () {
+        setCollapsed(art, board.id, !art.classList.contains("collapsed"));
+      });
+    }
+
+    var detail = el("div", "detail");
+    if (isOwner) {
+      // Ask first; counts, activity and the other cards are one click away.
+      var head = el("div", "head");
+      head.appendChild(heading);
+      head.appendChild(toggle);
+      art.appendChild(head);
+      info.asks.forEach(function (card) {
+        art.appendChild(askBlock(card));
+      });
+      var unlisted = info.ownerCount - info.asks.length;
+      if (unlisted > 0) art.appendChild(el("p", "ask-unlisted", unlistedText(info, unlisted)));
+      art.appendChild(el("p", "context", ownerContext(info)));
+      detail.appendChild(counts);
+      detail.appendChild(activity);
+      detail.appendChild(body);
+      art.appendChild(detail);
+    } else {
+      art.appendChild(heading);
+      if (info.group === "quiet") {
+        art.appendChild(el("p", "flag", "No activity for " + plural(info.quietDays, "day", "days")));
+      }
+      art.appendChild(counts);
+      art.appendChild(activity);
+      if (collapsible) {
+        var foot = el("div", "foot");
+        foot.appendChild(toggle);
+        art.appendChild(foot);
+        detail.appendChild(body);
+        art.appendChild(detail);
+      } else {
+        art.appendChild(body);
+      }
+    }
+
+    paintCollapsed(art, !prefs.expanded[board.id]);
+    return art;
+  }
+
+  function paintCollapsed(art, collapsed) {
+    art.classList.toggle("collapsed", collapsed);
+    var btn = art.querySelector(".toggle");
+    if (!btn) return;
+    var label = btn.getAttribute(collapsed ? "data-show" : "data-hide");
+    var title = art.querySelector(".board-title");
+    btn.textContent = label;
+    btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    btn.setAttribute("aria-label", label + ": " + (title ? title.textContent : ""));
+  }
+
+  function setCollapsed(art, id, collapsed) {
+    paintCollapsed(art, collapsed);
+    if (collapsed) delete prefs.expanded[id]; else prefs.expanded[id] = true;
+    savePrefs(prefs);
+  }
+
+  function renderGroup(def, items, count, unreadable) {
+    var section = el("section", "group group-" + def.key);
+    section.setAttribute("data-group", def.key);
+    var heading = el("h2", null, def.title + " ");
+    heading.id = "group-title-" + def.key;
+    heading.appendChild(el("span", def.key === "owner" && count > 0 ? "n hot" : "n", String(count)));
+    section.setAttribute("aria-labelledby", heading.id);
+    section.appendChild(heading);
+    if (def.note) section.appendChild(el("p", "group-note", def.note));
+
+    if (def.key === "owner") {
+      if (items.length === 0) {
+        section.appendChild(el("p", "all-clear",
+          "Nothing is marked for the owner in this snapshot." +
+          (unreadable
+            ? " " + plural(unreadable, "board", "boards") + " can't be checked; see \u201cCan't tell\u201d below."
+            : "")));
+      }
+      // Filled by applyFilter() when the filter hides something that is waiting.
+      var note = el("p", "group-note filtered-note");
+      note.hidden = true;
+      section.appendChild(note);
+    }
+
+    var grid = el("div", "grid");
+    items.forEach(function (info) {
+      grid.appendChild(renderBoard(info));
+    });
+    section.appendChild(grid);
+    return section;
+  }
+
+  function render() {
+    var top = document.getElementById("attention");
+    var rest = document.getElementById("rest");
+    top.textContent = "";
+    rest.textContent = "";
+    document.getElementById("meta").textContent = snapshotText();
+    document.getElementById("legend-quiet").textContent =
+      "unfinished work and no activity for " + QUIET_DAYS + " days or more";
+
+    if (BOARDS.length === 0) {
+      summary = "";
+      document.getElementById("count-line").textContent = "";
+      top.appendChild(el("div", "empty", "No boards registered yet."));
+      return;
+    }
+
+    // Each board goes into exactly one group; within a group, registry order is kept,
+    // so a board only moves when what it needs changes.
+    var byGroup = {};
+    GROUPS.forEach(function (def) {
+      byGroup[def.key] = [];
+    });
+    BOARDS.forEach(function (board) {
+      var info = analyse(board);
+      byGroup[info.group].push(info);
+    });
+
+    var asks = 0;
+    byGroup.owner.forEach(function (info) {
+      asks += info.ownerCount;
+    });
+    document.title = (asks ? "(" + asks + ") " : "") + "Boards overview";
+
+    var parts = [];
+    GROUPS.forEach(function (def) {
+      var items = byGroup[def.key];
+      if (def.key === "owner") {
+        top.appendChild(renderGroup(def, items, asks, byGroup.unknown.length));
+      } else if (items.length) {
+        rest.appendChild(renderGroup(def, items, items.length, 0));
+      }
+      if (items.length) parts.push(items.length + " " + def.summary);
+    });
+    summary = plural(BOARDS.length, "board", "boards") + ": " + parts.join(", ");
+    applyFilter();
+  }
+
+  function applyFilter() {
+    var q = document.getElementById("filter").value.trim().toLowerCase();
+    var shown = 0;
+    document.querySelectorAll("#boards .group").forEach(function (section) {
+      var boards = section.querySelectorAll(".board");
+      var visible = 0;
+      boards.forEach(function (art) {
+        var title = (art.querySelector(".board-title") || {}).textContent || "";
+        var match = !q || title.toLowerCase().indexOf(q) !== -1;
+        art.hidden = !match;
+        if (match) visible += 1;
+      });
+      shown += visible;
+      var note = section.querySelector(".filtered-note");
+      if (note) {
+        // The "waiting on the owner" group never disappears; it says what the filter is hiding.
+        var hiddenCount = boards.length - visible;
+        note.hidden = hiddenCount === 0;
+        note.textContent = hiddenCount
+          ? "The filter is hiding " + plural(hiddenCount, "board", "boards") + " from this list."
+          : "";
+      } else {
+        section.hidden = boards.length > 0 && visible === 0;
+      }
+    });
+    document.getElementById("count-line").textContent = q
+      ? shown + " of " + BOARDS.length + " boards match “" + q + "”"
+      : summary;
+  }
+
+  function setDensity(compact) {
+    document.getElementById("app").classList.toggle("compact", compact);
+    var btn = document.getElementById("density");
+    btn.setAttribute("aria-pressed", compact ? "true" : "false");
+    btn.textContent = compact ? "Comfortable" : "Compact";
+    prefs.compact = compact;
+    savePrefs(prefs);
+  }
+
+  function wire() {
+    document.getElementById("filter").addEventListener("input", applyFilter);
+    document.getElementById("expand-all").addEventListener("click", function () {
+      document.querySelectorAll("#boards .board").forEach(function (art) {
+        setCollapsed(art, art.getAttribute("data-board-id"), false);
+      });
+    });
+    document.getElementById("collapse-all").addEventListener("click", function () {
+      document.querySelectorAll("#boards .board").forEach(function (art) {
+        setCollapsed(art, art.getAttribute("data-board-id"), true);
+      });
+    });
+    document.getElementById("density").addEventListener("click", function () {
+      setDensity(!document.getElementById("app").classList.contains("compact"));
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "/" && document.activeElement !== document.getElementById("filter")) {
+        e.preventDefault();
+        document.getElementById("filter").focus();
+      }
+    });
+  }
+
+  wire();
+  if (prefs.compact) setDensity(true);
+  render();
+})();
+</script>
+</body>
+</html>

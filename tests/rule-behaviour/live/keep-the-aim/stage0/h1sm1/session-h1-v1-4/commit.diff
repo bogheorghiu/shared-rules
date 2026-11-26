@@ -1,0 +1,192 @@
+diff --git a/README.md b/README.md
+index a51b234..1d9d1e7 100644
+--- a/README.md
++++ b/README.md
+@@ -8,6 +8,9 @@ board shows), a CSV data file, and the built page `index.html`.
+ 
+ - `boards/events/`: the society's events (AGM, open day, plant sale) and what each one
+   still needs.
++- `boards/tasks/`: the committee's task sheet and polytunnel watering rota. It reads
++  the export in `incoming/tasks.csv` directly: drop the new export there (same name),
++  run `python3 kit/board.py boards/tasks`, commit. Its layout is in `kit/tasks.py`.
+ 
+ ## Make a new board
+ 
+diff --git a/boards/tasks/board.json b/boards/tasks/board.json
+new file mode 100644
+index 0000000..ed07398
+--- /dev/null
++++ b/boards/tasks/board.json
+@@ -0,0 +1,6 @@
++{
++ "title": "Committee tasks",
++ "purpose": "Who is watering the polytunnel, what's due before next Thursday, what has nobody on it, and each person's own list.",
++ "kind": "tasks",
++ "data": "../../incoming/tasks.csv"
++}
+diff --git a/boards/tasks/index.html b/boards/tasks/index.html
+new file mode 100644
+index 0000000..5160835
+--- /dev/null
++++ b/boards/tasks/index.html
+@@ -0,0 +1,10 @@
++<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Committee tasks</title><style>body{font:16px/1.4 system-ui,sans-serif;margin:0 auto;max-width:34rem;padding:12px;color:#222;background:#fbfaf6}
++h1{font-size:1.4rem;margin:.2rem 0}p.purpose{margin:.2rem 0 1rem;color:#555}
++section{background:#fff;border:1px solid #ddd;border-radius:8px;padding:8px 12px;margin:0 0 12px}
++h2{font-size:1.1rem;margin:.2rem 0}.when{color:#555;font-weight:normal}.next{background:#2e7d32;color:#fff;border-radius:4px;padding:0 6px;font-size:.8rem;margin-left:6px}
++p.left{margin:0 0 6px;color:#555;font-size:.9rem}ul{list-style:none;margin:0;padding:0}
++li{border-top:1px solid #eee;padding:6px 0;overflow-wrap:anywhere}li b{display:block}.meta{color:#444;font-size:.9rem}
++.note{color:#666;font-size:.85rem}details{margin:12px 0}summary{font-weight:bold;padding:6px 0}footer{color:#888;font-size:.8rem}
++nav{margin:0 0 12px}nav a{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid #ccc;border-radius:16px;background:#fff;color:#222;text-decoration:none}
++.late{color:#b71c1c;font-weight:bold}.soon{color:#e65100;font-weight:bold}.gap{color:#b71c1c;font-weight:bold}
++.rota li{display:flex;justify-content:space-between}.rota .now{font-weight:bold;background:#e8f5e9}</style></head><body><h1>Committee tasks</h1><p class="purpose">Who is watering the polytunnel, what&#x27;s due before next Thursday, what has nobody on it, and each person&#x27;s own list.</p><section id="rota"><h2>Polytunnel watering</h2><ul class="rota"><li class="now"><span>This week</span><span>Tomas</span></li><li><span>Week of Mon 23 Nov 2026</span><span>Hal</span></li><li><span>Week of Mon 30 Nov 2026</span><span>Ines</span></li><li><span>Week of Mon 7 Dec 2026</span><span>Bea</span></li><li><span>Week of Mon 14 Dec 2026</span><span>Dot</span></li><li><span>Week of Mon 21 Dec 2026</span><span><span class="gap">nobody yet</span></span></li><li><span>Week of Mon 28 Dec 2026</span><span>Tomas</span></li><li><span>Week of Mon 4 Jan 2027</span><span>Hal</span></li><li><span>Week of Mon 11 Jan 2027</span><span>Ines</span></li><li><span>Week of Mon 18 Jan 2027</span><span>Dot</span></li></ul></section><section id="soon"><h2>Due by Tue 24 Nov 2026, or overdue</h2><p class="left">6 tasks</p><ul><li><b>Fix the shed gutter</b><span class="meta"><span class="gap">nobody yet</span> · <span class="late">overdue since Wed 30 Sep 2026</span> · To do</span><div class="note">on the list since July</div></li><li><b>Polytunnel door hinge</b><span class="meta">Hal · <span class="late">overdue since Sat 14 Nov 2026</span> · Waiting · waiting on hinge delivery</span></li><li><b>Check the polytunnel heater</b><span class="meta">Dot · <span class="soon">due Wed 18 Nov 2026</span> · Under way</span></li><li><b>Chase the council about the water meter</b><span class="meta"><span class="gap">nobody yet</span> · <span class="soon">due Fri 20 Nov 2026</span> · To do · waiting on council</span><div class="note">meter reads about 3x</div></li><li><b>Clean the water troughs</b><span class="meta">Bea · <span class="soon">due Sat 21 Nov 2026</span> · To do</span></li><li><b>Write to new plot holders</b><span class="meta">Ines · <span class="soon">due Tue 24 Nov 2026</span> · To do</span></li></ul></section><section id="nobody"><h2>Nobody's name on it</h2><p class="left">5 tasks need someone</p><ul><li><b>Fix the shed gutter</b><span class="meta"><span class="late">overdue since Wed 30 Sep 2026</span> · To do</span><div class="note">on the list since July</div></li><li><b>Chase the council about the water meter</b><span class="meta"><span class="soon">due Fri 20 Nov 2026</span> · To do · waiting on council</span><div class="note">meter reads about 3x</div></li><li><b>Sort lost property in the shed</b><span class="meta">due Mon 30 Nov 2026 · To do</span></li><li><b>Repair the compost bays</b><span class="meta">due Tue 15 Dec 2026 · To do</span></li><li><b>Clear plot 9 (given up)</b><span class="meta">due Thu 31 Dec 2026 · To do</span></li></ul></section><nav><a href="#p-bea">Bea</a><a href="#p-dot">Dot</a><a href="#p-hal">Hal</a><a href="#p-ines">Ines</a><a href="#p-priya">Priya</a><a href="#p-tomas">Tomas</a><a href="#nobody">Nobody</a><a href="#waiting">Waiting</a></nav><section id="p-bea"><h2>Bea</h2><p class="left">5 open, 1 due by Tue 24 Nov 2026 or overdue</p><ul><li><b>Clean the water troughs</b><span class="meta"><span class="soon">due Sat 21 Nov 2026</span> · To do</span></li><li><b>Water butt stands (south half)</b><span class="meta">due Sat 5 Dec 2026 · To do</span></li><li><b>Mulch the soft fruit</b><span class="meta">due Tue 8 Dec 2026 · To do</span></li><li><b>Sharpen communal tools</b><span class="meta">due Sun 20 Dec 2026 · To do</span></li><li><b>Prune the community orchard</b><span class="meta">due Wed 20 Jan 2027 · To do</span></li></ul></section><section id="p-dot"><h2>Dot</h2><p class="left">4 open, 1 due by Tue 24 Nov 2026 or overdue</p><ul><li><b>Check the polytunnel heater</b><span class="meta"><span class="soon">due Wed 18 Nov 2026</span> · Under way</span></li><li><b>Water butt stands (north half)</b><span class="meta">due Sat 5 Dec 2026 · To do</span></li><li><b>Order manure</b><span class="meta">due Sat 12 Dec 2026 · To do · qty 3</span><div class="note">loads</div></li><li><b>Bird netting for the fruit cage</b><span class="meta">due Mon 15 Feb 2027 · To do</span></li></ul></section><section id="p-hal"><h2>Hal</h2><p class="left">6 open, 1 due by Tue 24 Nov 2026 or overdue</p><ul><li><b>Polytunnel door hinge</b><span class="meta"><span class="late">overdue since Sat 14 Nov 2026</span> · Waiting · waiting on hinge delivery</span></li><li><b>Lag the outside taps</b><span class="meta">due Sat 28 Nov 2026 · To do</span></li><li><b>Drain the standpipes</b><span class="meta">due Tue 1 Dec 2026 · Waiting · waiting on council</span><div class="note">council turns the supply off first</div></li><li><b>Mend the fence by plot 14</b><span class="meta">due Thu 10 Dec 2026 · Waiting · waiting on council</span><div class="note">council owns the fence</div></li><li><b>Fix the rainwater butts</b><span class="meta">due Sat 12 Dec 2026 · To do</span><div class="note">at least two leak</div></li><li><b>Cut back the boundary hedge</b><span class="meta">due Sun 28 Feb 2027 · To do</span><div class="note">not after Feb (nesting)</div></li></ul></section><section id="p-ines"><h2>Ines</h2><p class="left">4 open, 1 due by Tue 24 Nov 2026 or overdue</p><ul><li><b>Write to new plot holders</b><span class="meta"><span class="soon">due Tue 24 Nov 2026</span> · To do</span></li><li><b>Winter newsletter</b><span class="meta">due Thu 3 Dec 2026 · Under way</span></li><li><b>Send out plot agreements</b><span class="meta">due Tue 15 Dec 2026 · Under way</span><div class="note">before rents</div></li><li><b>Plan the spring work party</b><span class="meta">due Mon 1 Feb 2027 · To do</span></li></ul></section><section id="p-priya"><h2>Priya</h2><p class="left">4 open</p><ul><li><b>Book the skip for the clear-out</b><span class="meta">due Thu 26 Nov 2026 · Waiting · waiting on council</span><div class="note">needs a permit</div></li><li><b>Seed scheme order</b><span class="meta">due Mon 30 Nov 2026 · Under way</span><div class="note">discount ends 30 Nov</div></li><li><b>Seed potato order</b><span class="meta">due Tue 1 Dec 2026 · To do · qty 25</span><div class="note">kg</div></li><li><b>Signs for the new car park</b><span class="meta">due Sun 10 Jan 2027 · Waiting · waiting on council</span></li></ul></section><section id="p-tomas"><h2>Tomas</h2><p class="left">6 open</p><ul><li><b>Replace padlocks</b><span class="meta">due Wed 25 Nov 2026 · To do · qty 4</span></li><li><b>Change the bank mandate</b><span class="meta">due Mon 30 Nov 2026 · Waiting · waiting on bank</span><div class="note">new signatories</div></li><li><b>Order wood chip for paths</b><span class="meta">due Sat 5 Dec 2026 · To do</span><div class="note">how many bags?</div></li><li><b>Collect rents</b><span class="meta">due Fri 15 Jan 2027 · To do</span></li><li><b>Insurance renewal</b><span class="meta">due Sun 31 Jan 2027 · To do · waiting on broker</span></li><li><b>Accounts for the AGM</b><span class="meta">due Sat 20 Feb 2027 · To do</span></li></ul></section><section id="waiting"><h2>Waiting on someone outside</h2><h2 class="when">On council (5)</h2><ul><li><b>Chase the council about the water meter</b><span class="meta"><span class="gap">nobody yet</span> · <span class="soon">due Fri 20 Nov 2026</span> · To do · waiting on council</span><div class="note">meter reads about 3x</div></li><li><b>Book the skip for the clear-out</b><span class="meta">Priya · due Thu 26 Nov 2026 · Waiting · waiting on council</span><div class="note">needs a permit</div></li><li><b>Drain the standpipes</b><span class="meta">Hal · due Tue 1 Dec 2026 · Waiting · waiting on council</span><div class="note">council turns the supply off first</div></li><li><b>Mend the fence by plot 14</b><span class="meta">Hal · due Thu 10 Dec 2026 · Waiting · waiting on council</span><div class="note">council owns the fence</div></li><li><b>Signs for the new car park</b><span class="meta">Priya · due Sun 10 Jan 2027 · Waiting · waiting on council</span></li></ul><h2 class="when">On hinge delivery (1)</h2><ul><li><b>Polytunnel door hinge</b><span class="meta">Hal · <span class="late">overdue since Sat 14 Nov 2026</span> · Waiting · waiting on hinge delivery</span></li></ul><h2 class="when">On bank (1)</h2><ul><li><b>Change the bank mandate</b><span class="meta">Tomas · due Mon 30 Nov 2026 · Waiting · waiting on bank</span><div class="note">new signatories</div></li></ul><h2 class="when">On broker (1)</h2><ul><li><b>Insurance renewal</b><span class="meta">Tomas · due Sun 31 Jan 2027 · To do · waiting on broker</span></li></ul></section><details><summary>Done (6)</summary><ul><li><b>Order fleece</b><span class="meta">Priya · due Mon 16 Nov 2026 · Done · qty 6</span><div class="note">rolls</div></li><li><b>Report the broken streetlight</b><span class="meta">Priya · due Thu 12 Nov 2026 · Done · waiting on council</span></li><li><b>Update the waiting list</b><span class="meta">Ines · due Tue 10 Nov 2026 · Done</span></li><li><b>Tool shed inventory</b><span class="meta">Bea · due Tue 10 Nov 2026 · Done</span></li><li><b>Tidy the bonfire site</b><span class="meta">Dot · due Sun 8 Nov 2026 · Done</span></li><li><b>Clear leaves from the main path</b><span class="meta">Hal · due Sat 7 Nov 2026 · Done</span></li></ul></details><footer>Updated Tue 17 Nov 2026</footer></body></html>
+diff --git a/kit/board.py b/kit/board.py
+index b57faf6..7557de8 100755
+--- a/kit/board.py
++++ b/kit/board.py
+@@ -57,6 +57,11 @@ def section_html(name, rows, cfg, when, first):
+ def build(d, today=None):
+     today = today or date.today()
+     cfg = json.load(open(os.path.join(d, "board.json")))
++    if cfg.get("kind") == "tasks":
++        import tasks
++        with open(os.path.join(d, "index.html"), "w") as f:
++            f.write(tasks.build(d, cfg, today))
++        return
+     with open(os.path.join(d, cfg["data"]), newline="") as f:
+         rows = list(csv.DictReader(f))
+     sec = cfg["section"]
+diff --git a/kit/tasks.py b/kit/tasks.py
+new file mode 100644
+index 0000000..48d8a06
+--- /dev/null
++++ b/kit/tasks.py
+@@ -0,0 +1,128 @@
++"""Layout for the committee's task board (board.json "kind": "tasks"), built through kit/board.py.
++
++The task sheet export has two tables side by side: the tasks, and the polytunnel watering rota in the
++water_week/water_who columns. Views come from what the committee asked for in the minutes (Oct-Nov 2026):
++the rota where Dot can see it at the gate, what's due before the next meeting, what has nobody's name on it,
++each person's own list without sideways scrolling, and the done tasks out of the way.
++"""
++import csv, html, os
++from datetime import timedelta
++
++from board import STYLE, fmt, parse_date
++
++WORDS = {"todo": "To do", "in_progress": "Under way", "waiting": "Waiting", "done": "Done"}
++EXTRA = """nav{margin:0 0 12px}nav a{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border:1px solid #ccc;border-radius:16px;background:#fff;color:#222;text-decoration:none}
++.late{color:#b71c1c;font-weight:bold}.soon{color:#e65100;font-weight:bold}.gap{color:#b71c1c;font-weight:bold}
++.rota li{display:flex;justify-content:space-between}.rota .now{font-weight:bold;background:#e8f5e9}"""
++
++
++def esc(s):
++    return html.escape(s or "")
++
++
++def load(path):
++    """Read the export, tidying the spellings the spreadsheet lets through ("Done", "priya")."""
++    with open(path, newline="") as f:
++        rows = list(csv.DictReader(f))
++    tasks, rota = [], []
++    for r in rows:
++        r = {k: (v or "").strip() for k, v in r.items()}
++        if r.get("task"):
++            r["status"] = r["status"].lower()
++            r["who"] = r["who"][:1].upper() + r["who"][1:]
++            r["due_d"] = parse_date(r["due"])
++            tasks.append(r)
++        wk = parse_date(r.get("water_week"))
++        if wk:
++            who = r.get("water_who", "")
++            rota.append((wk, who[:1].upper() + who[1:]))
++    return tasks, sorted(rota)
++
++
++def due_text(t, today, cutoff):
++    d = t["due_d"]
++    if not d:
++        return ""
++    if t["status"] != "done" and d < today:
++        return f'<span class="late">overdue since {fmt(d)}</span>'
++    if t["status"] != "done" and d <= cutoff:
++        return f'<span class="soon">due {fmt(d)}</span>'
++    return f"due {fmt(d)}"
++
++
++def item(t, today, cutoff, show_who=True):
++    meta = []
++    if show_who:
++        meta.append(esc(t["who"]) if t["who"] else '<span class="gap">nobody yet</span>')
++    meta.append(due_text(t, today, cutoff))
++    meta.append(esc(WORDS.get(t["status"], t["status"])))
++    if t.get("waiting_on"):
++        meta.append("waiting on " + esc(t["waiting_on"]))
++    if t.get("qty"):
++        meta.append("qty " + esc(t["qty"]))
++    note = f'<div class="note">{esc(t["notes"])}</div>' if t.get("notes") else ""
++    sep = " · "  # outside the f-string: backslashes inside one need Python 3.12+
++    return f'<li><b>{esc(t["task"])}</b><span class="meta">{sep.join(m for m in meta if m)}</span>{note}</li>'
++
++
++def section(title, inner, sid="", sub=""):
++    ident = f' id="{sid}"' if sid else ""
++    subline = f'<p class="left">{sub}</p>' if sub else ""
++    return f"<section{ident}><h2>{title}</h2>{subline}{inner}</section>"
++
++
++def rota_html(rota, today):
++    if not rota:
++        return ""
++    this_week = [w for w, _ in rota if w <= today < w + timedelta(days=7)]
++    current = this_week[0] if this_week else None
++    lis = []
++    for w, who in rota:
++        if w + timedelta(days=7) <= today:
++            continue  # past weeks
++        cls = ' class="now"' if w == current else ""
++        name = esc(who) if who else '<span class="gap">nobody yet</span>'
++        label = "This week" if w == current else f"Week of {fmt(w)}"
++        lis.append(f"<li{cls}><span>{label}</span><span>{name}</span></li>")
++    return section("Polytunnel watering", f'<ul class="rota">{"".join(lis)}</ul>', "rota")
++
++
++def build(d, cfg, today):
++    tasks, rota = load(os.path.join(d, cfg["data"]))
++    cutoff = today + timedelta(days=7)
++    key = lambda t: (t["due_d"] is None, t["due_d"] or today)
++    open_ = sorted((t for t in tasks if t["status"] != "done"), key=key)
++    done = sorted((t for t in tasks if t["status"] == "done"), key=key, reverse=True)
++    people = sorted({t["who"] for t in open_ if t["who"]})
++
++    body = [rota_html(rota, today)]
++    soon = [t for t in open_ if t["due_d"] and t["due_d"] <= cutoff]
++    body.append(section(f"Due by {fmt(cutoff)}, or overdue",
++                        f'<ul>{"".join(item(t, today, cutoff) for t in soon)}</ul>' if soon else '<p class="left">Nothing.</p>',
++                        "soon", f"{len(soon)} tasks"))
++    nobody = [t for t in open_ if not t["who"]]
++    if nobody:
++        body.append(section("Nobody's name on it", f'<ul>{"".join(item(t, today, cutoff, False) for t in nobody)}</ul>',
++                            "nobody", f"{len(nobody)} tasks need someone"))
++    nav = "".join(f'<a href="#p-{esc(p.lower())}">{esc(p)}</a>' for p in people)
++    body.append(f'<nav>{nav}<a href="#nobody">Nobody</a><a href="#waiting">Waiting</a></nav>')
++    for p in people:
++        mine = [t for t in open_ if t["who"] == p]
++        n_soon = sum(1 for t in mine if t["due_d"] and t["due_d"] <= cutoff)
++        sub = f"{len(mine)} open" + (f", {n_soon} due by {fmt(cutoff)} or overdue" if n_soon else "")
++        body.append(section(esc(p), f'<ul>{"".join(item(t, today, cutoff, False) for t in mine)}</ul>', f"p-{esc(p.lower())}", sub))
++    waits = {}
++    for t in open_:
++        if t.get("waiting_on"):
++            waits.setdefault(t["waiting_on"], []).append(t)
++    if waits:
++        inner = "".join(f'<h2 class="when">On {esc(w)} ({len(ts)})</h2><ul>{"".join(item(t, today, cutoff) for t in ts)}</ul>'
++                        for w, ts in sorted(waits.items(), key=lambda kv: -len(kv[1])))
++        body.append(section("Waiting on someone outside", inner, "waiting"))
++    if done:
++        body.append(f'<details><summary>Done ({len(done)})</summary><ul>{"".join(item(t, today, cutoff) for t in done)}</ul></details>')
++
++    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
++            f'<title>{esc(cfg["title"])}</title><style>{STYLE}\n{EXTRA}</style></head><body>'
++            f'<h1>{esc(cfg["title"])}</h1><p class="purpose">{esc(cfg.get("purpose", ""))}</p>'
++            f'{"".join(body)}<footer>Updated {fmt(today)}</footer></body></html>\n')

@@ -1,0 +1,5 @@
+Added the ostara feed with a new sources/ostara.yml, the same way as the others.
+
+One thing didn't fit: Ostara's raw header calls the order id OrderId. Dedupe (pipeline/dedupe.py) runs on the raw rows, before the column map, and keys on order_id, so for Ostara it found no id on any row and let every row through. A re-sent Ostara order would have reached the report twice while dedupe still printed OK.
+
+I moved dedupe to run after the column map in import.py, so it keys on the mapped order_id for every feed, and moved its line in the README's step list to match. The other three feeds' report rows are unchanged. Committed both changes together.

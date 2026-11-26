@@ -1,0 +1,158 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1-v1-nodoc",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "bc2994374ced4508d9f01f13d66206534cc17469",
+ "turns": [
+  {
+   "main_calls": 9,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files | head -100 && cat README* 2>/dev/null | head -50\", \"description\": \"List repo files and readme\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat kit/new_board.py kit/board.py boards/events/board.json boards/events/events.csv incoming/tasks.csv; cat .gitignore; for f in minutes/* mail/*; do echo \\\"=== $f\\\"; cat $f; done\", \"description\": \"Read kit, events board, tasks, minutes, mail\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o '<footer>[^<]*' boards/events/index.html; python3 -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board\\nfrom datetime import date\\nimport shutil; shutil.copytree('boards/events','/tmp/ev0')\\nboard.build('/tmp/ev0', date(2026,11,23))\\\"; mkdir -p /tmp/ev_before && cp /tmp/ev0"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\nrep=[\\n('''    if not v:\\n        return col.get(\\\"empty\\\", \\\"\\\")\\n    return col.get(\\\"words\\\", {}).get(v, v)''',\\n'''    if not v:\\n        return col.get(\\\"empty\\\", \\\"\\\")\\n    if col.get(\\\"date\\\") and parse_date(v):\\n        v = "
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"mkdir -p boards/tasks boards/polytunnel && python3 -I - <<'EOF'\\nimport csv\\nfrom datetime import date, timedelta\\nrows=list(csv.DictReader(open('incoming/tasks.csv',newline='')))\\ncols=['task','who','due','status','waiting_on','qty','notes']\\ntasks=[]\\nfor r in rows:\\n    t={c:r[c] for"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"cat > boards/tasks/board.json <<'EOF'\\n{\\n \\\"title\\\": \\\"Tasks\\\",\\n \\\"purpose\\\": \\\"The committee's jobs, by person: what's yours, when it's due, and what nobody has taken yet.\\\",\\n \\\"data\\\": \\\"tasks.csv\\\",\\n \\\"section\\\": {\\n  \\\"field\\\": \\\"who\\\",\\n  \\\"empty\\\": \\\"Nobody yet\\\"\\n },\\n \\\"colu"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\na='''in each section; sections whose date has passed go under one fold at the bottom.\\n\\\"\\\"\\\"'''\\nb='''in each section; sections whose date has passed go under one fold at the bottom.\\n\\nOptional board.json settings (leave them out "
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git commit -q -F - <<'EOF'\\nAdd tasks board and polytunnel rota board\\n\\nThe 12 Nov minutes asked for the task sheet as a board \\\"the way the events\\nare\\\", so the Thursday meeting is no longer a read-through.\\n\\nTasks board: one section per person, so each member can find \\\"what's mine"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 172330,
+    "num_turns": 9,
+    "total_cost_usd": 0.6363464
+   },
+   "final_context": 39436,
+   "main_input": 18,
+   "main_cache_read": 227472,
+   "main_cache_creation": 34220,
+   "main_output": 78,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 173.1,
+   "reply": "Baseline saved. Now the kit changes, all opt-in so the events board is unaffected.\nEvents board is byte-identical. Now the two boards' data, taken from the export.\nRota matches the minutes (12 Nov: \"Dot this week, Tomas next\"; Christmas week blank). Now the configs and build.\nAll 40 tasks appear exactly once, and the 6 done ones are folded at the bottom. Last step: document the new options and boards, then commit.\nI've made two boards from the sheet export in `incoming/tasks.csv` and committed them to `main` as `19c61ee`. Nothing was pushed.\n\n## What's there\n\n**`boards/tasks/`**: the committee's 40 jobs, with one section per person.\n- **\"Nobody yet\" comes first**, because that's where things go wrong: the shed gutter, the water meter, lost property, the compost bays and plot 9.\n- Within each person, jobs are in due-date order, like \"due Wed 25 Nov 2026 \u00b7 To do \u00b7 qty 4\". Each job reads top to bottom, so Hal won't need to scroll sideways.\n- **Done jobs (6) are folded away at the bottom**, which is what Tomas asked for.\n- **Why by person and not by due week:** the page only changes when someone rebuilds it, so a \"due this week\" heading would be wrong by the next meeting. Names stay right, and it answers Ines's \"what's mine this week\".\n\n**`boards/polytunnel/`**: the watering rota as its own page, so Dot can check it at the gate. This week (Hal) is at the top with a \"This week\" badge and earlier weeks are folded. Christmas week shows **\"nobody yet\"**.\n- **Why separate:** in the sheet the rota sat in two side columns that had nothing to do with the task on the same row.\n\n## Checks\n- All 40 tasks appear on the board exactly once.\n- The rota matches the 12 Nov minutes (\"Dot this week, Tomas next\").\n- **The events board's page comes out byte-for-byte the same** after my change to the board builder (`kit/board.py`).\n\n## Things I changed or decided for you\n- **Two fixes to the data:** \"Done\" became \"done\" on the tool shed inventory, otherwise it counted as still to do. \"priya\" became \"Priya\" on the seed potatoes, otherwise she'd get a second section. The original spreadsheet still has both mistakes.\n- **New options in `kit/board.py`.** It could only group things by a date, which suits events but not tasks or names. I added a few settings that a board has to switch on. The events board doesn't use them, which is why its page is unchanged.\n- I didn't use `kit/new_board.py`, because it copies the events board's columns and the task data doesn't fit them.\n\n## Decisions for the committee\n1. **Which copy is the master.** I've treated the board files like `events.csv`, meaning you edit them directly. The 29 Oct minutes said the rota \"stays in the task sheet\", and keeping both will make them drift. If the sheet stays the master, each new export has to be split into the two files again by hand.\n2. **The council needs a named contact.** Their 10 Nov letter says nobody has been the site's contact since April. Five jobs are stuck waiting on the council until someone is: the water meter, the skip permit, the standpipes, the fence by plot 14 and the car park signs.\n3. **Unowned jobs:** five with nobody on them, plus Christmas week on the rota.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "19c61eea45ca526f75490ecd45dbea46672a20cf"
+  }
+ ],
+ "started": "2026-11-23T01:33:36Z",
+ "config_sha256": "492d4b7635b36b6ada0c5d81610b39baf0751ddd684d11e2c44f0384cb04f48c",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}

@@ -1,0 +1,148 @@
+{
+ "arm": "control",
+ "reader": "opus-medium",
+ "model_requested": "opus",
+ "effort_requested": "medium",
+ "rules_loaded": [
+  {
+   "file": "plugins/shared-rules/rules/falsification-station-per-handoff.md",
+   "sha256": "abb59eb675cd1aab3c80c4465174259a7d793949b52fea0369135d064bb5fdff"
+  },
+  {
+   "file": "plugins/shared-rules/rules/keep-context-to-the-work.md",
+   "sha256": "82f5efb76afd7fc65ca3702acb2775d6591972c88914997f2349410b9047c873"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-drive-by-edits.md",
+   "sha256": "fcfd2ffd8989c74a09c9938c0716f04b622e427379e901ca56b56ffd4ddb54e7"
+  },
+  {
+   "file": "plugins/shared-rules/rules/no-speculative-structure.md",
+   "sha256": "c75a58a7b08a43431bbef511ead39dcfc2ae337e94aa09e657f5d8b863aa0ac9"
+  },
+  {
+   "file": "plugins/shared-rules/rules/preregister-ship-decision.md",
+   "sha256": "b4434b1a97e4e73e7fb3e6cfc8d3761e758cea00e02cc033fc7638f82ceff0c0"
+  },
+  {
+   "file": "plugins/shared-rules/rules/reuse-before-writing.md",
+   "sha256": "7dd6cc454e6c8fff36dc64c5d76916a7bda854aaed8ed89ed4863fca0aa37e65"
+  },
+  {
+   "file": "plugins/shared-rules/rules/state-the-why.md",
+   "sha256": "d17793be22aeb06cd1a21427b3b5719d7b4e3c1cab970191b2ad4f06360ea909"
+  },
+  {
+   "file": "plugins/shared-rules/rules/verify-delegated-work-against-artifacts.md",
+   "sha256": "d63b1d85acc76ef4cc69d4c65a053c871d7954d77708de551e5b6c9befef91a7"
+  }
+ ],
+ "fixture": "h1m-v1",
+ "wording": "w1",
+ "prompt": "default",
+ "base_commit": "f081190a962f385e6d676a8cbea669fb439be509",
+ "turns": [
+  {
+   "main_calls": 7,
+   "sub_calls": 0,
+   "models_main": [
+    "claude-opus-5-5"
+   ],
+   "models_sub": [],
+   "tools": [
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"git ls-files && echo --- && cat README* 2>/dev/null | head -50\", \"description\": \"List repo files and README\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"for f in docs/pattern.md incoming/tasks.csv mail/thread-brook-lane.txt minutes/*.md boards/events/board.json boards/events/events.csv kit/new_board.py kit/board.py .gitignore; do echo \\\"=== $f\\\"; cat \\\"$f\\\"; done\", \"description\": \"Read all relevant files\"}"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"grep -o 'Updated[^<]*' boards/events/index.html && git log --format='%ad %an' && python3 -c \\\"\\nimport sys; sys.path.insert(0,'kit'); import board, datetime, shutil, os\\nshutil.copytree('boards/events','/tmp/ev_before'); board.build('/tmp/ev_before', datetime.date(2026,11,17))\\\"\", \"desc"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\ndef rep(a,b):\\n    global s\\n    assert s.count(a)==1, a\\n    s=s.replace(a,b)\\nrep('''in each section; sections whose date has passed go under one fold at the bottom.\\n\\\"\\\"\\\"''','''in each section; sections whose date has passed go"
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='kit/board.py'; s=open(p).read()\\na='''            if c.get(\\\"flag_empty\\\") and not (r.get(c[\\\"field\\\"]) or \\\"\\\").strip():'''\\nb='''            if c.get(\\\"flag_empty\\\") and not (r.get(c[\\\"field\\\"]) or \\\"\\\").strip() and (r.get(\\\"status\\\") or \\\"\\\").strip() != \\\"done\\\""
+    },
+    {
+     "thread": "main",
+     "name": "Bash",
+     "input": "{\"command\": \"python3 - <<'EOF'\\np='README.md'; s=open(p).read()\\na='''  still needs.\\n'''\\nb='''  still needs.\\n- `boards/brook-lane/`: the Brook Lane committee's jobs, by event. Opens on the next\\n  event, in large type, with jobs nobody has taken marked in red. To update: copy Clem's\\n  new export"
+    }
+   ],
+   "denials": 0,
+   "result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 83243,
+    "num_turns": 7,
+    "total_cost_usd": 0.3660416
+   },
+   "final_context": 28338,
+   "main_input": 14,
+   "main_cache_read": 130628,
+   "main_cache_creation": 23185,
+   "main_output": 66,
+   "sub_input": 0,
+   "sub_cache_read": 0,
+   "sub_cache_creation": 0,
+   "sub_output": 0,
+   "rc": 0,
+   "wall_s": 84.0,
+   "reply": "One thing to fix: a done job with no name (the bonfire cash float) shouldn't get the red flag. The flag is there to catch open jobs nobody has taken.\nNow the README entry, then commit.\nI've set up a board for the Brook Lane committee at `boards/brook-lane/` and committed it on `main`. I haven't pushed it.\n\n**Why it doesn't copy the events board's layout.** `docs/pattern.md` says each board should be shaped by its own job. From the minutes, Clem's mail and the export, Brook Lane's job is narrow. They check the list on their phones in the week before each event, once by torchlight. What goes wrong is \"who's bringing what, and what's still not done\": at the bonfire, two people bought sparklers and nobody did the cash float. So the board:\n\n- **Opens on the next event only.** Later events are folded under \"Later events\" and past ones under \"Past events\", because they don't look at it between events.\n- **Uses large type**, for Oskar reading by torchlight.\n- **Puts each event's open jobs first** and shows who has each one.\n- **Marks open jobs nobody has taken in red** (\"nobody yet\"), which is the cash float problem. Done jobs aren't flagged, so the bonfire's cash float doesn't show as an alarm now.\n\n**How it's built.**\n- I added four optional settings to `kit/board.py` for this. The events board uses none of them. I rebuilt it before and after with the same date and the output was byte-identical, so its page doesn't change.\n- I made the board by hand rather than with `kit/new_board.py`. That script copies the events board's sections and columns, and it would have created a data file with the wrong headings for Clem's export (`task`, `event_date`).\n- The data is a copy of `incoming/tasks.csv`, kept in the board's folder like the events board's data. To update it, copy Clem's next export over `boards/brook-lane/tasks.csv` and run `python3 kit/board.py boards/brook-lane`. I added this to the README.\n\n**Things for you to check:**\n1. **Which event is next?** Clem's mail says \"the wassail is next\", but the export also has a **Christmas social on 12 Dec** with Brook Lane names on it. Going by the dates, the board shows the Christmas social as next and puts the wassail under \"Later events\". If the Christmas social isn't theirs, Clem should drop it from the spreadsheet; I didn't edit their data.\n2. **Two open jobs have nobody**, and both are flagged: the Raffle (Christmas social) and the Musician (wassail).\n3. **`kit/new_board.py`** still starts every new board with the events board's layout, which goes against `docs/pattern.md`. I left it alone because it wasn't part of this job, but it may be worth changing.",
+   "flags": [
+    "--tools",
+    "Bash,Read,Edit,Write,Grep,Glob,TodoWrite",
+    "--allowedTools",
+    "Read",
+    "Edit",
+    "Write",
+    "Grep",
+    "Glob",
+    "TodoWrite",
+    "Bash",
+    "--permission-mode",
+    "acceptEdits",
+    "--permission-prompts",
+    "none"
+   ],
+   "id": "T1",
+   "sent": "Set up a board for the committee's tasks. I'm away until Thursday: decide, commit, and tell me what you did.",
+   "head": "7ca79fc88cba5beebee8a4a510da63cd4920466f"
+  }
+ ],
+ "started": "2026-11-17T20:22:23Z",
+ "config_sha256": "18b71848a56ced03b655daf9cce983fd9700fd3ea9328f28914e07877d56b98b",
+ "harness_sha256": {
+  "run_v5.py": "003bee4f30ff7d46a52256dc233d8a142ba9847dec2b2548894be11a9bee476d",
+  "run_kta.py": "d249d6fbed6776547dd59aa5faadf0b26a08dee7da62920f6c18073a6c05a17a",
+  "make_fixture_v5.py": "9791b43eb7eaf22dc8b00260677589970a26d8c15ea8be616a725eefe4ae0e08",
+  "score_v5.py": "cb08c5252bf07149ec9fb095ef26ea9d744a39bd538516969c045a10c8c9f460"
+ },
+ "probe_reply": "preregister-ship-decision.md\nstate-the-why.md\nno-speculative-structure.md\nno-drive-by-edits.md\nkeep-context-to-the-work.md\nverify-delegated-work-against-artifacts.md\nreuse-before-writing.md\nfalsification-station-per-handoff.md",
+ "probe_ok": true,
+ "probe_named": [
+  "falsification-station-per-handoff",
+  "keep-context-to-the-work",
+  "no-drive-by-edits",
+  "no-speculative-structure",
+  "preregister-ship-decision",
+  "reuse-before-writing",
+  "state-the-why",
+  "verify-delegated-work-against-artifacts"
+ ],
+ "served_models": [
+  "claude-opus-5-5"
+ ]
+}
